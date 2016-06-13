@@ -1,5 +1,6 @@
 <?php
 
+require_once $config['install_dir'].'/includes/device-groups.inc.php';
 
 function poll_sensor($device, $class, $unit) {
     global $config, $memcache, $agent_sensors;
@@ -44,6 +45,13 @@ function poll_sensor($device, $class, $unit) {
             }
             else if ($class == 'state') {
                 $sensor_value = trim(str_replace('"', '', snmp_walk($device, $sensor['sensor_oid'], '-Oevq', 'SNMPv2-MIB')));
+                if (!is_numeric($sensor_value)) {
+                    $state_value = dbFetchCell('SELECT `state_value` FROM `state_translations` LEFT JOIN `sensors_to_state_indexes` ON `state_translations`.`state_index_id` = `sensors_to_state_indexes`.`state_index_id` WHERE `sensors_to_state_indexes`.`sensor_id` = ? AND `state_translations`.`state_descr` LIKE ?', array($sensor['sensor_id'], $sensor_value));
+                    d_echo('State value of ' . $sensor_value . ' is ' . $state_value . "\n");
+                    if (is_numeric($state_value)) {
+                        $sensor_value = $state_value;
+                    }
+                }
             }
             else if ($class == 'signal') {
                $currentOS = $device['os'];
@@ -121,11 +129,11 @@ function poll_sensor($device, $class, $unit) {
         influx_update($device,'sensor',$tags,$fields);
 
         // FIXME also warn when crossing WARN level!!
-        if ($sensor['sensor_limit_low'] != '' && $sensor['sensor_current'] > $sensor['sensor_limit_low'] && $sensor_value <= $sensor['sensor_limit_low'] && $sensor['sensor_alert'] == 1) {
+        if ($sensor['sensor_limit_low'] != '' && $sensor['sensor_current'] > $sensor['sensor_limit_low'] && $sensor_value < $sensor['sensor_limit_low'] && $sensor['sensor_alert'] == 1) {
             echo 'Alerting for '.$device['hostname'].' '.$sensor['sensor_descr']."\n";
             log_event(ucfirst($class).' '.$sensor['sensor_descr'].' under threshold: '.$sensor_value." $unit (< ".$sensor['sensor_limit_low']." $unit)", $device, $class, $sensor['sensor_id']);
         }
-        else if ($sensor['sensor_limit'] != '' && $sensor['sensor_current'] < $sensor['sensor_limit'] && $sensor_value >= $sensor['sensor_limit'] && $sensor['sensor_alert'] == 1) {
+        else if ($sensor['sensor_limit'] != '' && $sensor['sensor_current'] < $sensor['sensor_limit'] && $sensor_value > $sensor['sensor_limit'] && $sensor['sensor_alert'] == 1) {
             echo 'Alerting for '.$device['hostname'].' '.$sensor['sensor_descr']."\n";
             log_event(ucfirst($class).' '.$sensor['sensor_descr'].' above threshold: '.$sensor_value." $unit (> ".$sensor['sensor_limit']." $unit)", $device, $class, $sensor['sensor_id']);
         }
@@ -266,6 +274,9 @@ function poll_device($device, $options) {
                 }
             }
         }//end if
+
+        // Update device_groups
+        UpdateGroupsForDevice($device['device_id']);
 
         if (!$options['m']) {
             // FIXME EVENTLOGGING -- MAKE IT SO WE DO THIS PER-MODULE?

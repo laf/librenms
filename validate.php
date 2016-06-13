@@ -59,6 +59,14 @@ if ($username !== 'root') {
 // load config.php now
 require_once 'includes/defaults.inc.php';
 require_once 'config.php';
+
+// make sure install_dir is set correctly, or the next includes will fail
+if(!file_exists($config['install_dir'].'/config.php')) {
+    print_fail('$config[\'install_dir\'] is not set correctly.  It should probably be set to: ' . getcwd());
+    exit;
+}
+
+// continue loading includes
 require_once 'includes/definitions.inc.php';
 require_once 'includes/functions.php';
 require_once 'includes/common.php';
@@ -73,6 +81,14 @@ if ($config['update_channel'] == 'master' && $cur_sha != $versions['github']['sh
 else {
     echo "Commit SHA: $cur_sha\n";
 }
+if($versions['local_branch'] != 'master') {
+    print_warn("Your local git branch is not master, this will prevent automatic updates.");
+}
+if($versions['git_modified'] === true) {
+    print_warn("Your local git contains modified files, this could prevent automatic updates.\nModified files:");
+    echo(implode("\n", $versions['git_modified_files']) . "\n");
+}
+
 echo "DB Schema: ".$versions['db_schema']."\n";
 echo "PHP: ".$versions['php_ver']."\n";
 echo "MySQL: ".$versions['mysql_ver']."\n";
@@ -109,7 +125,7 @@ if (isset($config['user'])) {
         // This isn't just the log directory, let's print the list to the user
         $files = explode(PHP_EOL, $find_result);
         if (is_array($files)) {
-            print_fail("We have found some files that are owned by a different user than $tmp_user, this will stop you updating automatically and / or rrd files being updated causing graphs to fail:\n");
+            print_fail("We have found some files that are owned by a different user than $tmp_user, this will stop you updating automatically and / or rrd files being updated causing graphs to fail:\nIf you don't run a bespoke install then you can fix this by running `chown -R $tmp_user:$tmp_user ".$config['install_dir']."`");
             foreach ($files as $file) {
                 echo "$file\n";
             }
@@ -136,11 +152,9 @@ if(strstr($strict_mode, 'STRICT_TRANS_TABLES')) {
     print_warn('You have MySQL STRICT_TRANS_TABLES enabled, it is advisable to disable this until full support has been added: https://dev.mysql.com/doc/refman/5.0/en/sql-mode.html');
 }
 
-// Test for MySQL InnoDB buffer size
-$innodb_buffer = innodb_buffer_check();
-if ($innodb_buffer['used'] > $innodb_buffer['size']) {
-    print_warn("Your Innodb buffer is full, consider increasing its size");
-    echo warn_innodb_buffer($innodb_buffer);
+$tz = ini_get('date.timezone');
+if (empty($tz)) {
+    print_fail('You have no timezone set for php: http://php.net/manual/en/datetime.configuration.php#ini.date.timezone');
 }
 
 // Test transports

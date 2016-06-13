@@ -98,11 +98,17 @@ LibreNMS contributors:
 - Michael Nguyen <mnguyen1289@gmail.com> (mnguyen1289)
 - Casey Schoonover <casey.schoonover@llcc.edu> (cschoonover91)
 - Chris A. Evans <thecityofguanyu@outlook.com> (thecityofguanyu)
+- Rainer Schüler <github@layer3.de> (rschueler)
+- Jussi Sorjonen <mieleton@mieleton.net> (mieleton)
+- Jens Langhammer <jens@beryju.org> (BeryJu)
+- Robert Verspuy <robert@exa.nl> (exarv)
+- Peter Tkatchenko <peter@flytrace.com> (Peter2121)
+- Marc Runkel <marc@runkel.org> (mrunkel)
+- Josh Driver <keeperofdakeys@gmail.com> (keeperofdakeys)
+- Felix Eckhofer <felix@eckhofer.com> (tribut)
 
 [1]: http://observium.org/ "Observium web site"
 Observium was written by:
 - Adam Armstrong
 - Tom Laermans
 - various others as indicated in the file contents and commit logs
-
-

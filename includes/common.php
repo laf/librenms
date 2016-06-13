@@ -488,7 +488,7 @@ function get_dev_attrib($device, $attrib_type, $attrib_value='') {
 
 function is_dev_attrib_enabled($device, $attrib, $default = true) {
     $val = get_dev_attrib($device, $attrib);
-    if ($val != NULL) {
+    if ($val != null) {
         // attribute is set
         return ($val != 0);
     }
@@ -699,8 +699,8 @@ function get_smokeping_files($device) {
         if ($handle = opendir($smokeping_dir)) {
             while (false !== ($file = readdir($handle))) {
                 if ($file != '.' && $file != '..') {
-                    if (eregi('.rrd', $file)) {
-                        if (eregi('~', $file)) {
+                    if (stripos($file, '.rrd') !== false) {
+                        if (strpos($file, '~') !== false) {
                             list($target,$slave) = explode('~', str_replace('.rrd', '', $file));
                             $target = str_replace('_', '.', $target);
                             $smokeping_files['in'][$target][$slave] = $file;
@@ -753,16 +753,11 @@ function round_Nth($val = 0, $round_to) {
  */
 function is_mib_poller_enabled($device)
 {
-    if (!is_module_enabled('poller', 'mib')) {
-        return false;
+    $val = get_dev_attrib($device, 'poll_mib');
+    if ($val == null) {
+        return is_module_enabled('poller', 'mib');
     }
-
-    if (!is_dev_attrib_enabled($device, 'poll_mib')) {
-        d_echo('MIB module disabled for '.$device['hostname']."\n");
-        return false;
-    }
-
-    return true;
+    return $val;
 } // is_mib_poller_enabled
 
 
@@ -1041,7 +1036,13 @@ function version_info($remote=true) {
         curl_setopt($api, CURLOPT_RETURNTRANSFER, 1);
         $output['github'] = json_decode(curl_exec($api),true);
     }
-    $output['local_sha']   = chop(`git rev-parse HEAD`);
+    $output['local_sha']    = rtrim(`git rev-parse HEAD`);
+    $output['local_branch'] = rtrim(`git rev-parse --abbrev-ref HEAD`);
+
+    exec('git diff --name-only --exit-code', $cmdoutput, $code);
+    $output['git_modified'] = ($code !== 0);
+    $output['git_modified_files'] = $cmdoutput;
+
     $output['db_schema']   = dbFetchCell('SELECT version FROM dbSchema');
     $output['php_ver']     = phpversion();
     $output['mysql_ver']   = dbFetchCell('SELECT version()');
