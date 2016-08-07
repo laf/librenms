@@ -50,3 +50,4 @@ if [ -z `git diff --exit-code` ]; then
     echo "No changes to the spec on this push; exiting."
     exit 0
 fi
+
