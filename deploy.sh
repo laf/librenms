@@ -35,6 +35,7 @@ echo "markdown_extensions:" >> mkdocs.yml
 echo "    - pymdownx.superfences" >> mkdocs.yml
 
 pip install --user mkdocs
+pip install --user pymdown-extensions
 mkdocs build --clean
 mv mkdocs.yml.orig mkdocs.yml
 
