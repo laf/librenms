@@ -7,6 +7,8 @@ pip install --user pymdown-extensions
 
 mkdir -p doc/html
 
+cd doc/html
+
 git init
 git remote add origin $FULL_REPO
 git fetch
