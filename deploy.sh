@@ -26,4 +26,3 @@ touch .
 git add -A .
 git commit -m "GH-Pages update by travis after $TRAVIS_COMMIT"
 git push origin gh-pages
-
