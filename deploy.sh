@@ -20,34 +20,29 @@ mkdir -p doc/html
 (
     cd doc/html
     git init
-    git remote add upstream https://${GH_TOKEN}@github.com/laf/docs.git
-    git fetch upstream
-    git reset upstream/gh-pages
-)
-
-cp mkdocs.yml mkdocs.yml.orig
-echo "site_url: https://laf.github.io/docs}" >> mkdocs.yml
-echo "markdown_extensions:" >> mkdocs.yml
-echo "    - pymdownx.superfences" >> mkdocs.yml
-
-pip install --user mkdocs
-pip install --user pymdown-extensions
-echo "Running mkdocs"
-mkdocs build --clean
-mv mkdocs.yml.orig mkdocs.yml
-echo "Moving on to commiting"
-
-(
-    cd doc/html
-    touch .
     git config user.name "${GIT_NAME}"
     git config user.email "${GIT_EMAIL}"
+    cp mkdocs.yml mkdocs.yml.orig
+    echo "site_url: https://laf.github.io/docs}" >> mkdocs.yml
+    echo "markdown_extensions:" >> mkdocs.yml
+    echo "    - pymdownx.superfences" >> mkdocs.yml
+
+    pip install --user mkdocs
+    pip install --user pymdown-extensions
+    echo "Running mkdocs"
+    cd ../../
+    mkdocs build --clean
+    mv mkdocs.yml.orig mkdocs.yml
+    echo "Moving on to commiting"
+
+    cd doc/html
+    touch .
     echo "Add all files ${GIT_NAME} and ${GIT_EMAIL}"
     git add -A .
     echo "Commit"
-    git commit -m "Rebuild pages at ${rev}"
+    git commit -m "Rebuild pages to gh-pages"
     echo "Push"
-    git push -q upstream HEAD:gh-pages
+    git push -q --force "https://${GH_TOKEN}@${GH_REF}" master:gh-pages > /dev/null 2>&1
 )
 
 # If there are no changes (e.g. this is a README update) then just bail.
