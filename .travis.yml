@@ -6,14 +6,8 @@ matrix:
   - php: 5.4
   - php: 5.5
   - php: 5.6
-    env:
-      - DEPLOY_DOCS="$(if [[ $TRAVIS_BRANCH == 'testing-docs' && $TRAVIS_PULL_REQUEST == 'false' ]]; then echo -n 'true' ; else echo -n 'false' ; fi)"
   allow_failures:
   - php: 7.0
   - php: hhvm
 after_success:
-  - if [[ $DEPLOY_DOCS == "true" ]]; then echo "Preparing to build and deploy documentation" ; bash ./deploy.sh ; echo "Completed deploying documentation" ; fi
-env:
-  global:
-    - GH_REF: github.com/laf/docs.git
-    - secure: dX6tzA0QYxKfrVjnKIQYkIitPLdTgEzQWvjCgl7MYKXquBf1PCaYwS1bWfDpJS5oxjsRRc+LhUJvHpWvyoHUYW+6kHorU8ZuQA6GXstWFt3e2ONvhLBu/zasyCe4nAVlho7jJ3DWX80GmGn9qttgkSoGHeqzEiXGr+TQj2byf615VWpxd4puhfPU1yjeNlPry6Qlsum+S6zzmSWs7E7gfz8okZ16EkJCts0JqspW+Mm88btKfs6ILcukqBomJr+fdAb8F9/m8WRceDfImSZIreMZ46v+ByCVcK9vgfBPitfptvh3LXlx9LkNR56AO7FDdyeBFFQwA5HdO0rIwWOrRP08hzu3iXkWeK7P1dOZgeKcnGNsNSf/tkrey0PAGSpXDFFqid9iLR2HNvAczgVKIu06Yhjnuz96NGqphcd7cWNMz6Gnfyw6gCBvK0b0GJfifsCyBVIJ+GBiqykwTfOP9ODMLHYx83pof626SvU3tib7A5KrTQes9iCZ+TgGaqgDF6IP/H6JGtVTXvhy81jPYaRoqwern8Mk8sDHHOgTrrd4Yx9cxm6raeBOugZnd9W7RELj98XQ6fWcydcSygjrE8PI8dI7izG3rt4X+MH7utFiKXjyYZtgNKMM0N+b8qJFlCrd3Cna4YWmjDSnGZpuPxhzQHQJalC8tr1h+Yv6xj0=
+  - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "testing-docs" && bash deploy.sh
