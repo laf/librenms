@@ -30,13 +30,14 @@ mkdir -p doc/html
 )
 
 pwd
-cp ../mkdocs.yml ../mkdocs.yml.orig
+ls -alh
+cp mkdocs.yml mkdocs.yml.orig
 echo "site_url: ${SITE_URL}" >> mkdocs.yml
 echo "markdown_extensions:" >> mkdocs.yml
 echo "    - pymdownx.superfences" >> mkdocs.yml
 
 mkdocs build --clean
-mv ../mkdocs.yml.orig ../mkdocs.yml
+mv mkdocs.yml.orig mkdocs.yml
 
 (
     cd doc/html
