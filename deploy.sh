@@ -1,6 +1,6 @@
 #!/bin/bash
 GH_REPO="@github.com/laf/docs.git"
-FULL_REPO="https://$(GH_TOKEN)$GH_REPO"
+FULL_REPO="https://${GH_TOKEN}$GH_REPO"
 
 pip install --user mkdocs
 pip install --user pymdown-extensions
