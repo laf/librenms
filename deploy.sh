@@ -40,9 +40,9 @@ echo "Moving on to commiting"
 (
     cd doc/html
     touch .
-    git config user.name "${GH_NAME}"
-    git config user.email "${GH_EMAIL}"
-    echo "Add all files ${GH_NAME} and ${GH_EMAIL}"
+    git config user.name "${GIT_NAME}"
+    git config user.email "${GIT_EMAIL}"
+    echo "Add all files ${GIT_NAME} and ${GIT_EMAIL}"
     git add -A .
     echo "Commit"
     git commit -m "Rebuild pages at ${rev}"
