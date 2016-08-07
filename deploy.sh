@@ -29,13 +29,13 @@ mkdir -p doc/html
     git reset upstream/gh-pages
 )
 
-cp mkdocs.yml mkdocs.yml.orig
+cp ../mkdocs.yml ../mkdocs.yml.orig
 echo "site_url: ${SITE_URL}" >> mkdocs.yml
 echo "markdown_extensions:" >> mkdocs.yml
 echo "    - pymdownx.superfences" >> mkdocs.yml
 
 mkdocs build --clean
-mv mkdocs.yml.orig mkdocs.yml
+mv ../mkdocs.yml.orig ../mkdocs.yml
 
 (
     cd doc/html
