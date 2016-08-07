@@ -34,14 +34,19 @@ echo "    - pymdownx.superfences" >> mkdocs.yml
 
 pip install --user mkdocs
 pip install --user pymdown-extensions
+echo "Running mkdocs"
 mkdocs build --clean
 mv mkdocs.yml.orig mkdocs.yml
+echo "Moving on to commiting"
 
 (
     cd doc/html
     touch .
+    echo "Add all files"
     git add -A .
+    echo "Commit"
     git commit -m "Rebuild pages at ${rev}"
+    echo "Push"
     git push -q upstream HEAD:gh-pages
 )
 
