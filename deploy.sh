@@ -29,6 +29,7 @@ mkdir -p doc/html
     git reset upstream/gh-pages
 )
 
+pwd
 cp ../mkdocs.yml ../mkdocs.yml.orig
 echo "site_url: ${SITE_URL}" >> mkdocs.yml
 echo "markdown_extensions:" >> mkdocs.yml
