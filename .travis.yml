@@ -18,5 +18,5 @@ env:
     - SITE_URL: https://laf.github.io/docs
     - GH_USER_NAME: "Neil Lathwood"
     - GH_USER_EMAIL: neil@lathwood.co.uk
-    - GH_REF: github.com/laf/docs.git
+    - GH_REF: github.com:laf/docs.git
     - secure: "Kd3nLIVFud/2hj4UEGgIptNNkUeT7tsR4IswgQZxqWiiyZBdvcfk+OZDuv6QKAcMaYd31UGHYH4jS/EKsTmg6SLQ32my0BPOs3XgM50EgT4E0CLz5SUjkWyLrM7fx2V7PWoIG7NvZvQV0FgmVekm0H+5Hep9G11wyEigj6WYSSDt1qvgt0Xy/haadBVDvTvVrb+p4InCSltlbxhAeBduaqhxb5TQM0gMnPArw4fBTS8lC0puXsMpHzjMztATPFj/16FWmstIHNHDZ2xN0GtcwNkmqLJVCqCP5a5GHSlWeLi0Vn+HZ04HeSepb7JYxAErSgRdTG0kwrwGq7aOx7Rb1IlKr0YpRk5tfKJQxXfgS7uj5RXDymgR9nnE2I1reSjWzBzImr2H0aXAE6nwUo1TErd3jMIPJIlXuHDr+GGTey4ZeJDu4ieT3WDjD2ivPCGUowVzZJ0iRZYYI7sgMQ58+LVKvFTlDalVOca1NFXadZwUNuHGBOEIwczuM+y05Rtr6gSVMrfzMDcyS9/zAV3gv6Jvf5VjAeeAyjx3uFgP/tNLJluDgdZu7RXgWk3b68iPfcXngXrvqCIrCjKCN7dQTv2NwaEMFUwv/BVJOx0j4dSb6QR5VtChChKE4Ur7ub3z/MVNjOXZOmkFzi0FKkf6ntu/T84pIio0Pa97oYhV7r0="
