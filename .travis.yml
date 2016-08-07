@@ -12,6 +12,7 @@ matrix:
   allow_failures:
     - php: 7.0
 
+script: bash ./deploy.sh
 env:
   global:
     - SITE_URL: https://laf.github.io/docs
