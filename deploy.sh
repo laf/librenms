@@ -20,8 +20,8 @@ mkdir -p doc/html
 (
     cd doc/html
     git init
-    git config user.name "${GH_NAME}"
-    git config user.email "${GH_EMAIL}"
+    git config --global user.name "${GH_NAME}"
+    git config --global user.email "${GH_EMAIL}"
     git remote add upstream https://${GH_TOKEN}@github.com/laf/docs.git
     git fetch upstream
     git reset upstream/gh-pages
