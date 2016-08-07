@@ -12,8 +12,6 @@ if [ "$TRAVIS_PULL_REQUEST" != "false" -o "$TRAVIS_BRANCH" != "$SOURCE_BRANCH" ]
 fi
 
 # Save some useful information
-REPO=`git config remote.origin.url`
-SSH_REPO=${REPO/https:\/\/github.com\//git@github.com:}
 rev=$(git rev-parse --short HEAD)
 
 # Clone the existing gh-pages for this repo into out/
@@ -24,7 +22,7 @@ mkdir -p doc/html
     git init
     git config user.name "${GH_USER_NAME}"
     git config user.email "${GH_USER_EMAIL}"
-    git remote add upstream "git@${GH_REF}"
+    git remote add upstream https://${GH_TOKEN}@${GH_REF}
     git fetch upstream
     git reset upstream/gh-pages
 )
