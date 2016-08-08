@@ -20,7 +20,7 @@ cd ../
 
 mkdocs build --clean
 
-cd doc/out
+cd out
 
 touch .
 git add -A .
