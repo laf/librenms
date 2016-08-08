@@ -17,7 +17,6 @@ git config user.email "travis@librenms.org"
 git checkout gh-pages
 
 copy ../mkdocs.yml .
-echo 'mkdocs.yml' >> .gitignore
 
 mkdocs build --clean
 
