@@ -5,9 +5,9 @@ FULL_REPO="https://${GH_TOKEN}$GH_REPO"
 pip install --user mkdocs
 pip install --user pymdown-extensions
 
-mkdir -p doc/html
+mkdir -p doc/out
 
-cd doc/html
+cd doc/out
 
 git init
 git remote add origin $FULL_REPO
@@ -20,7 +20,7 @@ cd ../../
 
 mkdocs build --clean
 
-cd doc/html
+cd doc/out
 
 touch .
 git add -A .
