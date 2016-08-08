@@ -1,11 +1,9 @@
 site_name: LibreNMS Documentation
 theme: mkdocs
-docs_dir: ../../doc
-site_dir: .
+docs_dir: doc
+site_dir: out
 site_url: https://laf.github.io/docs
 markdown_extensions:
     - pymdownx.superfences
-extra:
-    base_url: https://laf.github.io/docs
 extra_css:
     - librenms.css
