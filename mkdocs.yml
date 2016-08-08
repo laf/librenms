@@ -7,5 +7,8 @@ markdown_extensions:
     - pymdownx.superfences
 extra_css:
     - librenms.css
-google_analytics: false
 include_next_prev: false
+site_author: LibreNMS
+site_description: LibreNMS user and developer documentation
+repo_url: https://github.com/librenms/librenms
+repo_name: GitHub
