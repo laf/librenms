@@ -5,5 +5,7 @@ site_dir: .
 site_url: https://laf.github.io/docs
 markdown_extensions:
     - pymdownx.superfences
+extra:
+    base_url: https://laf.github.io/docs
 extra_css:
     - librenms.css
