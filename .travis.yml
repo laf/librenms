@@ -9,7 +9,11 @@ matrix:
     env:
       EXECUTE_BUILD_DOCS=true
   - php: 7.0
+    env:
+      EXECUTE_BUILD_DOCS=false
   - php: hhvm
+    env:
+      EXECUTE_BUILD_DOCS=false
   allow_failures:
   - php: 7.0
   - php: hhvm

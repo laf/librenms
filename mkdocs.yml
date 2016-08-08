@@ -7,3 +7,5 @@ markdown_extensions:
     - pymdownx.superfences
 extra_css:
     - librenms.css
+google_analytics: false
+include_next_prev: false

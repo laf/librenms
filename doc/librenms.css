@@ -1,5 +1,10 @@
+body {
+    background-image:none !important;
+}
+
 .dropdown-menu {
     height: auto !important;
     height: 200px !important;
     overflow-x: hidden !important;
 }
+
