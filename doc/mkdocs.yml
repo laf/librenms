@@ -1,6 +1,6 @@
 site_name: LibreNMS Documentation
 theme: mkdocs
-docs_dir: ../../
+docs_dir: ../../doc
 site_dir: .
 site_url: https://laf.github.io/docs
 markdown_extensions:
