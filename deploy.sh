@@ -16,11 +16,10 @@ git config user.name "docs-build"
 git config user.email "travis@librenms.org"
 git checkout gh-pages
 
-cd ../
+copy ../mkdocs.yml .
+echo 'mkdocs.yml' >> .gitignore
 
 mkdocs build --clean
-
-cd out
 
 touch .
 git add -A .
