@@ -3,8 +3,7 @@ body {
 }
 
 .dropdown-menu {
-    min-height: 100px;
-    height: 400px !important;
+    max-height: 400px !important;
     overflow-x: hidden !important;
 }
 
