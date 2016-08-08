@@ -16,7 +16,7 @@ git config user.name "docs-build"
 git config user.email "travis@librenms.org"
 git checkout gh-pages
 
-copy ../mkdocs.yml .
+cp ../mkdocs.yml .
 
 mkdocs build --clean
 
