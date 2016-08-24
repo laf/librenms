@@ -1,3 +1,4 @@
+source: Installation/Installation-CentOS-7-Apache.md
 > NOTE: These instructions assume you are the root user.  If you are not, prepend `sudo` to the shell commands (the ones that aren't at `mysql>` prompts) or temporarily become a user with root privileges with `sudo -s` or `sudo -i`.
 
 ### DB Server ###
@@ -21,7 +22,7 @@ FLUSH PRIVILEGES;
 exit
 ```
 
-`vim /etc/my.cnf`
+`vim /etc/my.cnf.d/server.cnf`
 
 Within the [mysqld] section please add:
 
@@ -41,7 +42,7 @@ yum install epel-release
 rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 rpm -Uvh https://mirror.webtatic.com/yum/el7/webtatic-release.rpm
 
-yum install php70w php70w-cli php70w-gd php70w-mysql php70w-snmp php70w-pear php70w-curl php70w-common php70w-fpm nginx net-snmp mariadb ImageMagick jwhois nmap mtr rrdtool MySQL-python net-snmp-utils cronie php70w-mcrypt fping git
+yum install php70w php70w-cli php70w-gd php70w-mysql php70w-snmp php70w-pear php70w-curl php70w-common httpd net-snmp mariadb ImageMagick jwhois nmap mtr rrdtool MySQL-python net-snmp-utils cronie php70w-mcrypt fping git
 
 pear install Net_IPv4-1.3.4
 pear install Net_IPv6-1.2.2b2
@@ -126,7 +127,11 @@ vim /etc/snmpd/snmpd.conf
 
 Edit the text which says `RANDOMSTRINGGOESHERE` and set your own community string.
 
-`service snmpd restart`
+```bash
+curl -o /usr/bin/distro https://raw.githubusercontent.com/librenms/librenms-agent/master/snmp/distro
+chmod +x /usr/bin/distro
+service snmpd restart
+```
 
 #### Cron job
 
@@ -152,6 +157,15 @@ That's it!  You now should be able to log in to http://librenms.example.com/.  P
 #### Add first device
 
 We now suggest that you add localhost as your first device from within the WebUI.
+
+#### What next?
+
+Now that you've installed LibreNMS, we'd suggest that you have a read of a few other docs to get you going:
+
+ - (Performance tuning)[http://docs.librenms.org/Support/Performance]
+ - (Alerting)[http://docs.librenms.org/Extensions/Alerting/]
+ - (Device Groups)[http://docs.librenms.org/Extensions/Device-Groups/]
+ - (Auto discovery)[http://docs.librenms.org/Extensions/Auto-Discovery/]
 
 #### Closing
 

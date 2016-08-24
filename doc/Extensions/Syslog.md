@@ -1,3 +1,4 @@
+source: Extensions/Syslog.md
 # Setting up syslog support
 
 This document will explain how to send syslog data to LibreNMS.
@@ -111,6 +112,16 @@ $template librenms,"%fromhost%||%syslogfacility%||%syslogpriority%||%syslogsever
 ```
 
 Ancient versions of rsyslog may require different syntax.
+
+This is an example for rsyslog 5 (default on Debian 7):
+```bash
+# Feed syslog messages to librenms
+$ModLoad omprog
+$template librenms,"%FROMHOST%||%syslogfacility-text%||%syslogpriority-text%||%syslogseverity%||%syslogtag%||%$YEAR%-%$MONTH%-%$DAY% %timegenerated:8:25%||%msg%||%programname%\n"
+
+$ActionOMProgBinary /opt/librenms/syslog.php
+*.* :omprog:;librenms
+```
 
 If your rsyslog server is recieving messages relayed by another syslog server, you may try replacing `%fromhost%` with `%hostname%`, since `fromhost` is the host the message was received from, not the host that generated the message.  The `fromhost` property is preferred as it avoids problems caused by devices sending incorrect hostnames in syslog messages.
 

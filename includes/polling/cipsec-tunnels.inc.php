@@ -13,6 +13,8 @@ foreach ($tunnels_db as $tunnel) {
     $tunnels[$tunnel['peer_addr']] = $tunnel;
 }
 
+$valid_tunnels = array();
+
 foreach ($ipsec_array as $index => $tunnel) {
     $tunnel = array_merge($tunnel, $ike_array[$tunnel['cipSecTunIkeTunnelIndex']]);
 
@@ -50,6 +52,7 @@ foreach ($ipsec_array as $index => $tunnel) {
 
     if (!is_array($tunnels[$tunnel['cikeTunRemoteValue']]) && !empty($tunnel['cikeTunRemoteValue'])) {
         $tunnel_id = dbInsert(array('device_id' => $device['device_id'], 'peer_addr' => $tunnel['cikeTunRemoteValue'], 'local_addr' => $tunnel['cikeTunLocalValue'], 'tunnel_name' => $tunnel['cikeTunLocalName']), 'ipsec_tunnels');
+        $valid_tunnels[] = $tunnel_id;
     }
     else {
         foreach ($db_oids as $db_oid => $db_value) {
@@ -57,6 +60,7 @@ foreach ($ipsec_array as $index => $tunnel) {
         }
 
         $updated = dbUpdate($db_update, 'ipsec_tunnels', '`tunnel_id` = ?', array($tunnels[$tunnel['cikeTunRemoteValue']]['tunnel_id']));
+        $valid_tunnels[] = $tunnels[$tunnel['cikeTunRemoteValue']]['tunnel_id'];
     }
 
     if (is_numeric($tunnel['cipSecTunHcInOctets']) && is_numeric($tunnel['cipSecTunHcInDecompOctets'])
@@ -70,13 +74,11 @@ foreach ($ipsec_array as $index => $tunnel) {
         $tunnel['cipSecTunOutUncompOctets'] = $tunnel['cipSecTunHcOutUncompOctets'];
     }
 
-    $rrd_file = $config['rrd_dir'].'/'.$device['hostname'].'/ipsectunnel-'.$address.'.rrd';
-
-    $rrd_create = $config['rrd_rra'];
-
+    $rrd_name = array('ipsectunnel', $address);
+    $rrd_def = array();
     foreach ($oids as $oid) {
         $oid_ds      = truncate(str_replace('cipSec', '', $oid), 19, '');
-        $rrd_create .= " DS:$oid_ds:COUNTER:600:U:1000000000";
+        $rrd_def[] = "DS:$oid_ds:COUNTER:600:U:1000000000";
     }
 
     $fields = array();
@@ -92,16 +94,19 @@ foreach ($ipsec_array as $index => $tunnel) {
     }
 
     if (isset($tunnel['cikeTunRemoteValue'])) {
-        if (!file_exists($rrd_file)) {
-            rrdtool_create($rrd_file, $rrd_create);
-        }
-        rrdtool_update($rrd_file, $fields);
-
-        $tags = array('address' => $address);
-        influx_update($device,'ipsectunnel',$tags,$fields);
+        $tags = compact('address', 'rrd_name', 'rrd_def');
+        data_update($device,'ipsectunnel',$tags,$fields);
 
         // $graphs['ipsec_tunnels'] = TRUE;
     }
 }//end foreach
 
-unset($rrd_file,$rrd_create,$fields,$oids, $data, $data_array, $oid, $tunnel);
+if (is_array($valid_tunnels)) {
+    d_echo($valid_tunnels);
+    if (empty($valid_tunnels)) {
+        $valid_tunnels = array(0);
+    }
+    dbDelete('ipsec_tunnels', "`tunnel_id` NOT IN (".implode(',', $valid_tunnels).") AND `device_id`=?", array($device['device_id']));
+}
+
+unset($rrd_name,$rrd_def,$fields,$oids, $data, $data, $oid, $tunnel);

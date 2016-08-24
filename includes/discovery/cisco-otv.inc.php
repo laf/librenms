@@ -59,8 +59,7 @@ if ($device['os_group'] == 'cisco') {
 
     $module = 'Cisco-OTV';
 
-    require_once 'includes/component.php';
-    $component = new component();
+    $component = new LibreNMS\Component();
     $components = $component->getComponents($device['device_id'],array('type'=>$module));
 
     // We only care about our device id.
@@ -116,11 +115,11 @@ if ($device['os_group'] == 'cisco') {
             // If we have set a message, we have an error, activate alert.
             if ($message !== false) {
                 $result['error'] = $message;
-                $result['status'] = 0;
+                $result['status'] = 2;
             }
             else {
                 $result['error'] = "";
-                $result['status'] = 1;
+                $result['status'] = 0;
             }
 
             // Let's log some debugging
@@ -154,11 +153,11 @@ if ($device['os_group'] == 'cisco') {
             // If we have set a message, we have an error, activate alert.
             if ($message !== false) {
                 $result['error'] = $message;
-                $result['status'] = 0;
+                $result['status'] = 1;
             }
             else {
                 $result['error'] = "";
-                $result['status'] = 1;
+                $result['status'] = 0;
             }
 
             // Set a default name, if for some unknown reason we cant find the parent VPN.

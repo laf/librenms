@@ -22,8 +22,7 @@ if ($_POST['device']) {
 
     if (count($enabled)) {
         $updated += dbDelete('applications', '`device_id` = ? AND `app_type` NOT IN ('.implode(',', $replace).')', $param);
-    }
-    else {
+    } else {
         $updated += dbDelete('applications', '`device_id` = ?', array($param));
     }
 
@@ -39,8 +38,7 @@ if ($_POST['device']) {
 
     if ($updated) {
         print_message('Applications updated!');
-    }
-    else {
+    } else {
         print_message('No changes.');
     }
 }//end if
@@ -71,8 +69,7 @@ $row = 1;
 foreach ($applications as $app) {
     if (is_integer($row / 2)) {
         $row_colour = $list_colour_a;
-    }
-    else {
+    } else {
         $row_colour = $list_colour_b;
     }
 
@@ -80,7 +77,7 @@ foreach ($applications as $app) {
     echo '      <td>';
     echo '        <input type=checkbox'.(in_array($app, $app_enabled) ? ' checked="1"' : '')." name='app_".$app."'>";
     echo '      </td>';
-    echo '      <td>'.ucfirst($app).'</td>';
+    echo '      <td>'.nicecase($app).'</td>';
     echo '    </tr>
         ';
 

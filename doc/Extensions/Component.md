@@ -1,3 +1,4 @@
+source: Extensions/Component.md
 Table of Content:
 
 - [About](#about)
@@ -23,7 +24,7 @@ Table of Content:
 The Component extension provides a generic database storage mechanism for discovery and poller modules.
 The Driver behind this extension was to provide the features of ports, in a generic manner to discovery/poller modules.
 
-It provides a status (Normal or Alert), the ability to Disable (do not poll), or Ignore (do not Alert).
+It provides a status (Nagios convention), the ability to Disable (do not poll), or Ignore (do not Alert).
 
 # <a name="database">Database Structure</a>
 
@@ -70,24 +71,10 @@ Because of this all fields of the component table are reserved, they cannot be u
 
 # <a name="using">Using Components</a>
 
-To use components in you application, first you need to include the code.
-
-From a Discovery/Poller module:
+Create an instance of the component class:
 
 ```php
-require_once 'includes/component.php';
-```
-
-From the html tree:
-
-```php
-require_once "../includes/component.php";
-```
-
-Once the code is loaded, create an instance of the component class:
-
-```php
-$COMPONENT = new component();
+$COMPONENT = new LibreNMS\Component();
 ```
 
 ## <a name="get">Retrieving Components</a>
@@ -144,7 +131,7 @@ Options can be supplied to `getComponents` to influence which and how components
 You can filter on any of the [reserved](#reserved) fields. Filters are created in the following format:
 
 ```php
-$OPTIONS['filter'][FIELD] = array ('OPERATOR', 'CRITERIA');
+$options['filter']['FIELD'] = array ('OPERATOR', 'CRITERIA');
 ```
 
 Where:
@@ -282,18 +269,23 @@ Please see the [API-Docs](http://docs.librenms.org/API/API-Docs/#api-route-25) f
 ## <a name="alert">Alerting</a>
 
 It is intended that discovery/poller modules will detect the status of a component during the polling cycle.
-If you are creating a poller module which can detect a fault condition simply set STATUS to 0 and ERROR to a message that indicates the problem.
+Status is logged using the Nagios convention for status codes, where:
+    0 = Ok,
+    1 = Warning,
+    2 = Critical
 
+If you are creating a poller module which can detect a fault condition simply set STATUS to something other than 0 and ERROR to a message that indicates the problem.
 
 To actually raise an alert, the user will need to create an alert rule. To assist with this several Alerting Macro's have been created:
 
-- ```%macro.component_alert``` - A component that is not disabled or ignored and in alert state.
-- ```%macro.component_normal``` - A component that is not disabled or ignored and NOT in alert state.
+- ```%macro.component_normal``` - A component that is not disabled or ignored and in a Normal state.
+- ```%macro.component_warning``` - A component that is not disabled or ignored and NOT in a Warning state.
+- ```%macro.component_critical``` - A component that is not disabled or ignored and NOT in a Critical state.
 
 To raise alerts for components, the following rules could be created:
 
-- ```%macros.component_alert = "1"``` - To alert on all components
-- ```%macros.component_alert = "1" && %component.type = "<Type of Component>"``` - To alert on all components of a particular type.
+- ```%macros.component_critical = "1"``` - To alert on all Critical components
+- ```%macros.component_critical = "1" && %component.type = "<Type of Component>"``` - To alert on all Critical components of a particular type.
 
 If there is a particular component you would like excluded from alerting, simply set the ignore field to 1.
 
@@ -314,4 +306,3 @@ To see an example of how the component module can used, please see the following
     - includes/polling/cisco-otv.inc.php
     - html/includes/graphs/device/cisco-otv-mac.inc.php
     - html/pages/routing/cisco-otv.inc.php
-

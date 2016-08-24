@@ -1,3 +1,4 @@
+source: Extensions/Proxmox.md
 # Proxmox graphing
 It is possible to create graphs of the Proxmox **VMs** that run on your monitored machines. Currently, only traffic graphs are created. One for each interface on each VM. Possibly, IO graphs will be added later on.
 
@@ -12,7 +13,7 @@ In config.php, enable Proxmox:
 $config['enable_proxmox'] = 1;
 ```
 
-Then, install [librenms-agent](http://docs.librenms.org/Extensions/Agent-Setup/) on the machines running Proxmox and enable the Proxmox-script using:
+Then, install [librenms-agent](http://docs.librenms.org/Extensions/Applications/) on the machines running Proxmox and enable the Proxmox-script using:
 
 ```bash
 cp /opt/librenms-agent/proxmox /usr/lib/check_mk_agent/local/proxmox

@@ -1,3 +1,4 @@
+source: Installation/Installing-LibreNMS.md
 # Installing LibreNMS
 
 We have some pre-built VirtualBox images you can use to get started:
@@ -18,12 +19,13 @@ If you want to install yourself then we have some new documentation which should
 
 [RHEL / CentOS 7 Nginx](http://docs.librenms.org/Installation/Installation-CentOS-7-Nginx/)
 
+### Old Install Docs
 If the above are missing or incomplete then you can try our old docs below.
 
-[Debian/Ubuntu](http://docs.librenms.org/Installation/Installation-(Debian-Ubuntu)/)
+[Debian/Ubuntu](http://docs.librenms.org/Installation/Installation-Ubuntu-1404-Apache/)
 
-[RHEL/CentOS](http://docs.librenms.org/Installation/Installation-(RHEL-CentOS)/
+[RHEL/CentOS](http://docs.librenms.org/Installation/Installation-CentOS-6-Apache-Nginx/)
 
-[Debian/Ubuntu Lighttpd](http://docs.librenms.org/Installation/Installation-Lighttpd-(Debian-Ubuntu)/)
+[Debian/Ubuntu Lighttpd](http://docs.librenms.org/Installation/Installation-Ubuntu-1404-Lighttpd/)
 
-[Debian/Ubuntu Nginx](http://docs.librenms.org/Installation/Installation-Nginx-(Debian-Ubuntu)/)
+[Debian/Ubuntu Nginx](http://docs.librenms.org/Installation/Installation-Ubuntu-1404-Nginx/)

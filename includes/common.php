@@ -16,6 +16,21 @@
  * the source code distribution for details.
  */
 
+function generate_priority_icon($priority) {
+    $map = array(
+        "emerg"     => "server_delete",
+        "alert"     => "cancel",
+        "crit"      => "application_lightning",
+        "err"       => "application_delete",
+        "warning"   => "application_error",
+        "notice"    => "application_edit",
+        "info"      => "application",
+        "debug"     => "bug",
+    );
+
+    return '<img src="images/16/' . $map[$priority] .'.png" title="' . $priority . '">';
+}
+
 function format_number_short($number, $sf) {
     // This formats a number so that we only send back three digits plus an optional decimal point.
     // Example: 723.42 -> 723    72.34 -> 72.3    2.23 -> 2.23
@@ -81,9 +96,8 @@ function isCli() {
 }
 
 function print_error($text) {
-    global $console_color;
     if (isCli()) {
-        print $console_color->convert("%r".$text."%n\n", false);
+        c_echo("%r".$text."%n\n");
     }
     else {
         echo('<div class="alert alert-danger"><img src="images/16/exclamation.png" align="absmiddle"> '.$text.'</div>');
@@ -92,7 +106,7 @@ function print_error($text) {
 
 function print_message($text) {
     if (isCli()) {
-        print Console_Color2::convert("%g".$text."%n\n", false);
+        c_echo("%g".$text."%n\n");
     }
     else {
         echo('<div class="alert alert-success"><img src="images/16/tick.png" align="absmiddle"> '.$text.'</div>');
@@ -100,8 +114,6 @@ function print_message($text) {
 }
 
 function delete_port($int_id) {
-    global $config;
-
     $interface = dbFetchRow("SELECT * FROM `ports` AS P, `devices` AS D WHERE P.port_id = ? AND D.device_id = P.device_id", array($int_id));
 
     $interface_tables = array('adjacencies', 'ipaddr', 'ip6adjacencies', 'ip6addr', 'mac_accounting', 'bill_ports', 'pseudowires', 'ports');
@@ -129,27 +141,33 @@ function sgn($int) {
     }
 }
 
-function get_sensor_rrd($device, $sensor) {
+function get_sensor_rrd($device, $sensor)
+{
+    return rrd_name($device['hostname'], get_sensor_rrd_name($device, $sensor));
+}
+
+function get_sensor_rrd_name($device, $sensor) {
     global $config;
 
     # For IPMI, sensors tend to change order, and there is no index, so we prefer to use the description as key here.
     if ($config['os'][$device['os']]['sensor_descr'] || $sensor['poller_type'] == "ipmi") {
-        $rrd_file = $config['rrd_dir']."/".$device['hostname']."/".safename("sensor-".$sensor['sensor_class']."-".$sensor['sensor_type']."-".$sensor['sensor_descr'] . ".rrd");
+        return array('sensor', $sensor['sensor_class'], $sensor['sensor_type'], $sensor['sensor_descr']);
+    } else {
+        return array('sensor', $sensor['sensor_class'], $sensor['sensor_type'], $sensor['sensor_index']);
     }
-    else {
-        $rrd_file = $config['rrd_dir']."/".$device['hostname']."/".safename("sensor-".$sensor['sensor_class']."-".$sensor['sensor_type']."-".$sensor['sensor_index'] . ".rrd");
+}
+
+function getPortRrdName($port_id, $suffix='')
+{
+    if(!empty($suffix)) {
+        $suffix = '-' . $suffix;
     }
 
-    return($rrd_file);
+    return "port-id$port_id$suffix";
 }
 
 function get_port_rrdfile_path ($hostname, $port_id, $suffix = '') {
-    global $config;
-
-    if (! empty ($suffix))
-        $suffix = '-' . $suffix;
-
-    return trim ($config['rrd_dir']) . '/' . safename ($hostname) . '/' . 'port-id' . safename($port_id) . safename ($suffix) . '.rrd';
+    return rrd_name($hostname, getPortRrdName($port_id, $suffix));
 }
 
 function get_port_by_index_cache($device_id, $ifIndex) {
@@ -605,6 +623,26 @@ function d_echo($text, $no_debug_text = null) {
     }
 } // d_echo
 
+/**
+ * Output using console color if possible
+ * https://github.com/pear/Console_Color2/blob/master/examples/documentation
+ *
+ * @param string $string the string to print with console color
+ * @param bool $enabled if set to false, this function does nothing
+ */
+function c_echo($string, $enabled = true)
+{
+    if(!$enabled) {
+        return;
+    }
+    global $console_color;
+
+    if($console_color) {
+        echo $console_color->convert($string);
+    } else {
+        echo preg_replace('/%((%)|.)/', '', $string);
+    }
+}
 
 /*
  * convenience function - please use this instead of 'if ($debug) { print_r ...; }'
@@ -998,7 +1036,6 @@ Set <tt>$config[\'poller_modules\'][\'mib\'] = 1;</tt> in <tt>config.php</tt> to
 function ceph_rrd($gtype) {
     global $device;
     global $vars;
-    global $config;
 
     if ($gtype == "osd") {
         $var = $vars['osd'];
@@ -1007,8 +1044,7 @@ function ceph_rrd($gtype) {
         $var = $vars['pool'];
     }
 
-    $rrd = join('-', array('app', 'ceph', $vars['id'], $gtype, $var)).'.rrd';
-    return join('/', array($config['rrd_dir'], $device['hostname'], $rrd));
+    return rrd_name($device['hostname'], array('app', 'ceph', $vars['id'], $gtype, $var));
 } // ceph_rrd
 
 /**
@@ -1038,7 +1074,9 @@ function version_info($remote=true) {
         curl_setopt($api, CURLOPT_RETURNTRANSFER, 1);
         $output['github'] = json_decode(curl_exec($api),true);
     }
-    $output['local_sha']    = rtrim(`git rev-parse HEAD`);
+    list($local_sha, $local_date) = explode('|', rtrim(`git show --pretty='%H|%ct' -s HEAD`));
+    $output['local_sha']    = $local_sha;
+    $output['local_date']   = $local_date;
     $output['local_branch'] = rtrim(`git rev-parse --abbrev-ref HEAD`);
 
     $output['db_schema']   = dbFetchCell('SELECT version FROM dbSchema');
@@ -1298,3 +1336,54 @@ function ResolveGlues($tables,$target,$x=0,$hist=array(),$last=array()) {
     return false;
 }
 
+/**
+ * Determine if a given string contains a given substring.
+ *
+ * @param  string  $haystack
+ * @param  string|array  $needles
+ * @return bool
+ */
+function str_contains($haystack, $needles)
+{
+    foreach ((array) $needles as $needle) {
+        if ($needle != '' && strpos($haystack, $needle) !== false) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Determine if a given string ends with a given substring.
+ *
+ * @param  string  $haystack
+ * @param  string|array  $needles
+ * @return bool
+ */
+function ends_with($haystack, $needles)
+{
+    foreach ((array)$needles as $needle) {
+        if ((string)$needle === substr($haystack, -strlen($needle))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+/**
+ * Determine if a given string starts with a given substring.
+ *
+ * @param  string $haystack
+ * @param  string|array $needles
+ * @return bool
+ */
+function starts_with($haystack, $needles)
+{
+    foreach ((array)$needles as $needle) {
+        if ($needle != '' && strpos($haystack, $needle) === 0) {
+            return true;
+        }
+    }
+    return false;
+}
