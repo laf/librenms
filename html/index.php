@@ -7,7 +7,6 @@
  *
  * @package    librenms
  * @subpackage webinterface
- * @author     Adam Armstrong <adama@memetic.org>
  * @copyright  (C) 2006 - 2012 Adam Armstrong
  *
  */
@@ -35,14 +34,16 @@ function catchFatal()
     }
 }
 
-if (strpos($_SERVER['PATH_INFO'], "debug")) {
-    $debug = "1";
+if (strpos($_SERVER['REQUEST_URI'], "debug")) {
+    $debug = true;
     ini_set('display_errors', 0);
     ini_set('display_startup_errors', 1);
     ini_set('log_errors', 1);
     ini_set('error_reporting', E_ALL);
     set_error_handler('logErrors');
     register_shutdown_function('catchFatal');
+    $sql_debug = array();
+    $php_debug = array();
 } else {
     $debug = false;
     ini_set('display_errors', 0);
@@ -384,6 +385,7 @@ if ($no_refresh !== true && $config['page_refresh'] != 0) {
     </script>');
 } else {
     echo('<script type="text/javascript">
+    var no_refresh = ' . var_export((bool)$no_refresh, true) . ';
     $(document).ready(function() {
         $("#countdown_timer").html("Refresh disabled");
         $("#countdown_timer_status").html("<i class=\"fa fa-pause fa-fw\"></i>");

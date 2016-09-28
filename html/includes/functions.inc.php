@@ -73,8 +73,11 @@ function nicecase($item)
         case 'nfs-v3-stats':
             return 'NFS v3 Stats';
 
-        case 'ntpd':
-            return 'NTPD (Server)';
+        case 'ntp-client':
+            return 'NTP Client';
+
+        case 'ntp-server':
+            return 'NTP Server';
 
         case 'os-updates':
             return 'OS Updates';
@@ -84,6 +87,12 @@ function nicecase($item)
 
         case 'dhcp-stats':
             return 'DHCP Stats';
+
+        case 'ups-nut':
+            return 'UPS nut';
+
+        case 'ups-apcups':
+            return 'UPS apcups';
 
         default:
             return ucfirst($item);
@@ -574,7 +583,7 @@ function generate_port_link($port, $text = null, $type = null, $overlib = 1, $si
     $graph_array = array();
     $port        = ifNameDescr($port);
     if (!$text) {
-        $text = fixIfName($port['label']);
+        $text = fixifName($port['label']);
     }
 
     if ($type) {
@@ -1203,7 +1212,7 @@ function generate_dynamic_config_panel($title, $config_groups, $items = array(),
             $output .= '
             <div class="form-group has-feedback">
                 <label for="'.$item['name'].'"" class="col-sm-4 control-label">'.$item['descr'].' </label>
-                <div data-toggle="tooltip" title="'.$config_groups[$item['name']]['config_descr'].'" class="toolTip glyphicon glyphicon-question-sign"></div>
+                <div data-toggle="tooltip" title="'.$config_groups[$item['name']]['config_descr'].'" class="toolTip fa fa-fw fa-lg fa-question-circle"></div>
                 <div class="col-sm-4">
             ';
             if ($item['type'] == 'checkbox') {
@@ -1211,6 +1220,11 @@ function generate_dynamic_config_panel($title, $config_groups, $items = array(),
             } elseif ($item['type'] == 'text') {
                 $output .= '
                 <input id="'.$item['name'].'" class="form-control" type="text" name="global-config-input" value="'.$config_groups[$item['name']]['config_value'].'" data-config_id="'.$config_groups[$item['name']]['config_id'].'">
+                <span class="form-control-feedback"><i class="fa" aria-hidden="true"></i></span>
+                ';
+            } elseif ($item['type'] == 'numeric') {
+                $output .= '
+                <input id="'.$item['name'].'" class="form-control" onkeypress="return (event.charCode == 8 || event.charCode == 0) ? null : event.charCode >= 48 && event.charCode <= 57" type="text" name="global-config-input" value="'.$config_groups[$item['name']]['config_value'].'" data-config_id="'.$config_groups[$item['name']]['config_id'].'">
                 <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
                 ';
             } elseif ($item['type'] == 'select') {
@@ -1236,7 +1250,7 @@ function generate_dynamic_config_panel($title, $config_groups, $items = array(),
                 }
                 $output .='
                 </select>
-                <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                <span class="form-control-feedback"><i class="fa" aria-hidden="true"></i></span>
                 ';
             }
             $output .= '
@@ -1328,4 +1342,22 @@ function ipmiSensorName($hardwareId, $sensorIpmi, $rewriteArray)
     } else {
         return $sensorIpmi;
     }
+}
+
+/**
+ * @param $filename
+ * @param $content
+ */
+function file_download($filename, $content)
+{
+    $length = strlen($content);
+    header('Content-Description: File Transfer');
+    header('Content-Type: text/plain');
+    header("Content-Disposition: attachment; filename=$filename");
+    header('Content-Transfer-Encoding: binary');
+    header('Content-Length: ' . $length);
+    header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+    header('Expires: 0');
+    header('Pragma: public');
+    echo $content;
 }

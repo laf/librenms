@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Observium Network Management and Monitoring System
+ * LibreNMS Network Management and Monitoring System
  * Copyright (C) 2006-2011, Observium Developers - http://www.observium.org
  *
  * This program is free software: you can redistribute it and/or modify
@@ -37,19 +37,20 @@ if (empty($uptime)) {
 
         $uptime = floor($hrSystemUptime / 100);
         echo 'Using hrSystemUptime ('.$uptime."s)\n";
-    }
-    else {
+    } else {
         $uptime = floor($poll_device['sysUpTime'] / 100);
-        echo 'Using SNMP Agent Uptime ('.$uptime."s)\n";
+        echo 'Using SNMP Agent Uptime ('.$uptime."s)\n  ";
     }//end if
 }//end if
 
-if ($snmp_uptime > $uptime && is_numeric($snmp_uptime)) {
-    $uptime = $snmp_uptime;
-    d_echo('hrSystemUptime or sysUpTime looks like to have rolled, using snmpEngineTime instead');
+if ($device["os"] != "edgeswitch") {
+    if ($snmp_uptime > $uptime && is_numeric($snmp_uptime)) {
+        $uptime = $snmp_uptime;
+        d_echo('hrSystemUptime or sysUpTime looks like to have rolled, using snmpEngineTime instead');
+    }
 }
 
-if (is_numeric($uptime)) {
+if (is_numeric($uptime) && $config['os'][$os]['bad_uptime'] !== true) {
     if ($uptime < $device['uptime']) {
         log_event('Device rebooted after '.formatUptime($device['uptime']), $device, 'reboot', $device['uptime']);
     }

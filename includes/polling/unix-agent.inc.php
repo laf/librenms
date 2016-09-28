@@ -3,7 +3,7 @@
 if ($device['os_group'] == 'unix') {
     echo $config['project_name'].' UNIX Agent: ';
 
-    $agent_port = get_dev_attrib($device,'override_Unixagent_port');
+    $agent_port = get_dev_attrib($device, 'override_Unixagent_port');
     if (empty($agent_port)) {
         $agent_port = $config['unix-agent']['port'];
     }
@@ -23,8 +23,7 @@ if ($device['os_group'] == 'unix') {
 
     if (!$agent) {
         echo 'Connection to UNIX agent failed on port '.$port.'.';
-    }
-    else {
+    } else {
         // fetch data while not eof and not timed-out
         while ((!feof($agent)) && (!$agentinfo['timed_out'])) {
             $agent_raw .= fgets($agent, 128);
@@ -58,7 +57,6 @@ if ($device['os_group'] == 'unix') {
             "ceph",
             "mysql",
             "nginx",
-            "ntpd",
             "powerdns",
             "powerdns-recursor",
             "proxmox",
@@ -75,8 +73,7 @@ if ($device['os_group'] == 'unix') {
 
             if (!empty($sa) && !empty($sb)) {
                 $agent_data[$sa][$sb] = trim($data);
-            }
-            else {
+            } else {
                 $agent_data[$section] = trim($data);
             }
         }//end foreach
@@ -100,14 +97,14 @@ if ($device['os_group'] == 'unix') {
             dbDelete('processes', 'device_id = ?', array($device['device_id']));
             $data=array();
             foreach (explode("\n", $agent_data['ps']) as $process) {
-                $process = preg_replace('/\((.*),([0-9]*),([0-9]*),([0-9\:\.]*),([0-9]*)\)\ (.*)/', '\\1|\\2|\\3|\\4|\\5|\\6', $process);
+                $process = preg_replace('/\((.*),([0-9]*),([0-9]*),([0-9\:\.\-]*),([0-9]*)\)\ (.*)/', '\\1|\\2|\\3|\\4|\\5|\\6', $process);
                 list($user, $vsz, $rss, $cputime, $pid, $command) = explode('|', $process, 6);
                 if (!empty($command)) {
                     $data[]=array('device_id' => $device['device_id'], 'pid' => $pid, 'user' => $user, 'vsz' => $vsz, 'rss' => $rss, 'cputime' => $cputime, 'command' => $command);
                 }
             }
             if (count($data) > 0) {
-                dbBulkInsert('processes',$data);
+                dbBulkInsert('processes', $data);
             }
             echo "\n";
         }

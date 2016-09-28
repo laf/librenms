@@ -112,6 +112,7 @@ $ifmib_oids = array(
     'ifDescr',
     'ifAdminStatus',
     'ifOperStatus',
+    'ifLastChange',
     'ifType',
     'ifPhysAddress',
     'ifMtu',
@@ -122,24 +123,25 @@ $ifmib_oids = array(
 );
 
 echo 'Caching Oids: ';
-$port_stats = snmpwalk_cache_oid($device, 'ifXEntry', $port_stats, 'IF-MIB');
+
+if (!in_array($device['hardware'], $config['os'][$device['os']]['bad_ifXEntry'])) {
+    $port_stats = snmpwalk_cache_oid($device, 'ifXEntry', $port_stats, 'IF-MIB');
+}
 
 $hc_test = array_slice($port_stats, 0, 1);
 if (!isset($hc_test[0]['ifHCInOctets']) && !is_numeric($hc_test[0]['ifHCInOctets'])) {
-    $port_stats = snmpwalk_cache_oid($device, 'ifEntry', $port_stats, 'IF-MIB');
-}
-else {
+    $port_stats = snmpwalk_cache_oid($device, 'ifEntry', $port_stats, 'IF-MIB', null, '-OQUst');
+} else {
     foreach ($ifmib_oids as $oid) {
         echo "$oid ";
-        $port_stats = snmpwalk_cache_oid($device, $oid, $port_stats, 'IF-MIB');
+        $port_stats = snmpwalk_cache_oid($device, $oid, $port_stats, 'IF-MIB', null, '-OQUst');
     }
 }
 
 if ($config['enable_ports_etherlike']) {
     echo 'dot3Stats ';
     $port_stats = snmpwalk_cache_oid($device, 'dot3StatsEntry', $port_stats, 'EtherLike-MIB');
-}
-else {
+} else {
     echo 'dot3StatsDuplexStatus';
     $port_stats = snmpwalk_cache_oid($device, 'dot3StatsDuplexStatus', $port_stats, 'EtherLike-MIB');
 }
@@ -195,8 +197,7 @@ if ($device['os_group'] == 'cisco') {
     $port_stats = snmpwalk_cache_oid($device, 'vmVlan', $port_stats, 'CISCO-VLAN-MEMBERSHIP-MIB');
     $port_stats = snmpwalk_cache_oid($device, 'vlanTrunkPortEncapsulationOperType', $port_stats, 'CISCO-VTP-MIB');
     $port_stats = snmpwalk_cache_oid($device, 'vlanTrunkPortNativeVlan', $port_stats, 'CISCO-VTP-MIB');
-}
-else {
+} else {
     $port_stats = snmpwalk_cache_oid($device, 'dot1qPortVlanTable', $port_stats, 'Q-BRIDGE-MIB');
 }//end if
 
@@ -212,19 +213,20 @@ d_echo($port_stats);
 // or maybe other means in the future. The default port association mode still is ifIndex for
 // compatibility reasons.
 $port_association_mode = $config['default_port_association_mode'];
-if ($device['port_association_mode'])
-    $port_association_mode = get_port_assoc_mode_name ($device['port_association_mode']);
+if ($device['port_association_mode']) {
+    $port_association_mode = get_port_assoc_mode_name($device['port_association_mode']);
+}
 
 // Query known ports and mapping table in order of discovery to make sure
 // the latest discoverd/polled port is in the mapping tables.
-$ports_mapped = get_ports_mapped ($device['device_id'], true);
+$ports_mapped = get_ports_mapped($device['device_id'], true);
 $ports = $ports_mapped['ports'];
 
 //
 // Rename any old RRD files still named after the previous ifIndex based naming schema.
 foreach ($ports_mapped['maps']['ifIndex'] as $ifIndex => $port_id) {
     foreach (array ('', '-adsl', '-dot3') as $suffix) {
-        $old_rrd_name = "port-$ifIndex$suffix.rrd";
+        $old_rrd_name = "port-$ifIndex$suffix";
         $new_rrd_name = getPortRrdName($port_id, ltrim($suffix, '-'));
 
         rrd_file_rename($device, $old_rrd_name, $new_rrd_name);
@@ -240,7 +242,7 @@ foreach ($port_stats as $ifIndex => $port) {
     $ifName = $port['ifName'];
 
     // Get port_id according to port_association_mode used for this device
-    $port_id = get_port_id ($ports_mapped, $port, $port_association_mode);
+    $port_id = get_port_id($ports_mapped, $port, $port_association_mode);
 
     if (is_port_valid($port, $device)) {
         echo 'valid';
@@ -268,7 +270,7 @@ foreach ($port_stats as $ifIndex => $port) {
               * can be legally set to 0, which would yield True when checking if the
               * value is empty().
               */
-            if ($config['ignore_unmapable_port'] === True and in_array ($port[$port_association_mode], array ('', Null))) {
+            if ($config['ignore_unmapable_port'] === true and in_array($port[$port_association_mode], array ('', null))) {
                 continue;
             }
 
@@ -277,10 +279,8 @@ foreach ($port_stats as $ifIndex => $port) {
             $ports[$port_id] = dbFetchRow('SELECT * FROM `ports` WHERE `port_id` = ?', array($port_id));
             echo 'Adding: '.$ifName.'('.$ifIndex.')('.$port_id.')';
             // print_r($ports);
-        }
-
-        // Port re-discovered after previous deletion?
-        else if ($ports[$port_id]['deleted'] == 1) {
+        } // Port re-discovered after previous deletion?
+        elseif ($ports[$port_id]['deleted'] == 1) {
             dbUpdate(array('deleted' => '0'), 'ports', '`port_id` = ?', array($port_id));
             $ports[$port_id]['deleted'] = '0';
         }
@@ -299,11 +299,9 @@ foreach ($port_stats as $ifIndex => $port) {
         $ports[$port_id]['ifIndex'] = $ifIndex;
         $port_stats[$ifIndex]['port_id'] = $port_id;
 
-	/* Build a list of all ports, identified by their port_id, found within this poller run. */
-	$ports_found[] = $port_id;
-    }
-
-    // Port vanished (mark as deleted)
+    /* Build a list of all ports, identified by their port_id, found within this poller run. */
+        $ports_found[] = $port_id;
+    } // Port vanished (mark as deleted)
     else {
         if ($ports[$port_id]['deleted'] != '1') {
             dbUpdate(array('deleted' => '1'), 'ports', '`port_id` = ?', array($port_id));
@@ -331,7 +329,7 @@ foreach ($ports as $port) {
      * If this port did not show up in $port_stats before it has been deleted
      * since the last poller run. Mark it deleted in the database and go on.
      */
-    if (! in_array ($port_id, $ports_found)) {
+    if (! in_array($port_id, $ports_found)) {
         if ($port['deleted'] != '1') {
             dbUpdate(array('deleted' => '1'), 'ports', '`device_id` = ? AND `port_id` = ?', array($device['device_id'], $port_id));
             echo "$port_info_string deleted.\n";
@@ -425,6 +423,13 @@ foreach ($ports as $port) {
             $this_port['ifDuplex'] = $this_port['dot3StatsDuplexStatus'];
         }
 
+        // update ifLastChange. only in the db, not rrd
+        if (isset($this_port['ifLastChange']) && is_numeric($this_port['ifLastChange'])) {
+            $port['update']['ifLastChange'] = $this_port['ifLastChange'];
+        } elseif ($port['ifLastChange'] != 0) {
+            $port['update']['ifLastChange'] = 0;  // no data, so use the same as device uptime
+        }
+
         // Set VLAN and Trunk from Cisco
         if (isset($this_port['vlanTrunkPortEncapsulationOperType']) && $this_port['vlanTrunkPortEncapsulationOperType'] != 'notApplicable') {
             $this_port['ifTrunk'] = $this_port['vlanTrunkPortEncapsulationOperType'];
@@ -445,8 +450,8 @@ foreach ($ports as $port) {
         // FIXME use $q_bridge_mib[$this_port['ifIndex']] to see if it is a trunk (>1 array count)
         echo 'VLAN == '.$this_port['ifVlan'];
 
-	// When devices do not provide ifAlias data, populate with ifDescr data if configured
-        if ($this_port['ifAlias'] == '' || $this_port['ifAlias'] == NULL) {
+    // When devices do not provide ifAlias data, populate with ifDescr data if configured
+        if ($this_port['ifAlias'] == '' || $this_port['ifAlias'] == null) {
             $this_port['ifAlias'] = $this_port['ifDescr'];
             d_echo('Using ifDescr as ifAlias');
         }
@@ -454,7 +459,6 @@ foreach ($ports as $port) {
         // Update IF-MIB data
         $tune_port = false;
         foreach ($data_oids as $oid) {
-
             if ($oid == 'ifAlias') {
                 if ($attribs['ifName:'.$port['ifName']]) {
                     $this_port['ifAlias'] = $port['ifAlias'];
@@ -471,12 +475,13 @@ foreach ($ports as $port) {
                 log_event($oid.': '.$port[$oid].' -> NULL', $device, 'interface', $port['port_id']);
                 if ($debug) {
                     d_echo($oid.': '.$port[$oid].' -> NULL ');
-                }
-                else {
+                } else {
                     echo $oid.' ';
                 }
-            }
-            else if ($port[$oid] != $this_port[$oid]) {
+            } elseif ($port[$oid] != $this_port[$oid]) {
+                // if the value is different, update it
+
+                // rrdtune if needed
                 $port_tune = $attribs['ifName_tune:'.$port['ifName']];
                 $device_tune = $attribs['override_rrdtool_tune'];
                 if ($port_tune == "true" ||
@@ -486,15 +491,19 @@ foreach ($ports as $port) {
                         $tune_port = true;
                     }
                 }
+
+                // set the update data
                 $port['update'][$oid] = $this_port[$oid];
+
+                // store the previous values for alerting
                 if ($oid == 'ifOperStatus' || $oid == 'ifAdminStatus') {
                     $port['update'][$oid.'_prev'] = $port[$oid];
                 }
+
                 log_event($oid.': '.$port[$oid].' -> '.$this_port[$oid], $device, 'interface', $port['port_id']);
                 if ($debug) {
                     d_echo($oid.': '.$port[$oid].' -> '.$this_port[$oid].' ');
-                }
-                else {
+                } else {
                     echo $oid.' ';
                 }
             }
@@ -518,8 +527,7 @@ foreach ($ports as $port) {
                     if (!isset($port_ifAlias[$attrib])) {
                         $port_ifAlias[$attrib] = array('NULL');
                         $log_port              = 'NULL';
-                    }
-                    else {
+                    } else {
                         $log_port = $port_ifAlias[$attrib];
                     }
 
@@ -637,7 +645,7 @@ foreach ($ports as $port) {
         );
 
         if ($tune_port === true) {
-            rrdtool_tune('port',$rrdfile,$this_port['ifSpeed']);
+            rrdtool_tune('port', $rrdfile, $this_port['ifSpeed']);
         }
 
         $port_descr_type = $port['port_descr_type'];

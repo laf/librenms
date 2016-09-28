@@ -8,8 +8,29 @@ If you have rrdcached 1.5.5 or above, we can also tune over rrdcached.
 To enable this set the following config:
 
 ```php
-$config['rrdtool_version'] = 1.5.5;
+$config['rrdtool_version'] = '1.5.5';
 ```
+
+### Support matrix
+
+Shared FS: Is a shared filesystem required?
+
+Features: Supported features in the version indicated.
+
+          G = Graphs.
+
+          C = Create RRD files.
+
+          U = Update RRD files.
+
+          T = Tune RRD files.
+
+| Version | Shared FS | Features |
+| ------- | :-------: | -------- |
+| 1.4.x   | Yes       | G,U      |
+| <1.5.5  | Yes       | G,U      |
+| >=1.5.5 | No        | G,C,U    |
+| >=1.6.x | No        | G,C,U    |
 
 ### RRDCached installation CentOS 6
 This example is based on a fresh LibreNMS install, on a minimal CentOS 6 installation.

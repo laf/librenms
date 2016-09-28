@@ -121,8 +121,8 @@ Once you have completed the web installer steps. Please add the following to `co
 #### Configure snmpd
 
 ```bash
-cp /opt/librenms/snmpd.conf.example /etc/snmpd/snmpd.conf
-vim /etc/snmpd/snmpd.conf
+cp /opt/librenms/snmpd.conf.example /etc/snmp/snmpd.conf
+vim /etc/snmp/snmpd.conf
 ```
 
 Edit the text which says `RANDOMSTRINGGOESHERE` and set your own community string.
@@ -145,7 +145,7 @@ systemctl enable httpd
 systemctl enable mariadb
 ```
 
-Now run validate your install and make sure everything is ok:
+Run validate.php as root in the librenms directory:
 
 ```bash
 cd /opt/librenms
@@ -162,10 +162,10 @@ We now suggest that you add localhost as your first device from within the WebUI
 
 Now that you've installed LibreNMS, we'd suggest that you have a read of a few other docs to get you going:
 
- - (Performance tuning)[http://docs.librenms.org/Support/Performance]
- - (Alerting)[http://docs.librenms.org/Extensions/Alerting/]
- - (Device Groups)[http://docs.librenms.org/Extensions/Device-Groups/]
- - (Auto discovery)[http://docs.librenms.org/Extensions/Auto-Discovery/]
+ - [Performance tuning](http://docs.librenms.org/Support/Performance)
+ - [Alerting](http://docs.librenms.org/Extensions/Alerting/)
+ - [Device Groups](http://docs.librenms.org/Extensions/Device-Groups/)
+ - [Auto discovery](http://docs.librenms.org/Extensions/Auto-Discovery/)
 
 #### Closing
 

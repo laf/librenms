@@ -121,6 +121,20 @@ LibreNMS contributors:
 - Phil Regnauld <regnauld@x0.dk> (reegnauld)
 - Russell Morris <github@rkmorris.us> (arrmo)
 - Bennett Blodinger <bennett.blodinger@gmail.com> (benwa)
+- Michael Hansen <nerdalertdk@gmail.com> (nerdalertdk)
+- Daniel Cox <danielcoxman@gmail.com> (ospfbgp) 
+- Joseph Cunningham <joey.was@gmail.com> (joeywas)
+- Michael Van Delft <librenms@xo.tc> (HybridAU)
+- Piotr Jurga <deutor1361@gmail.com> (deutor)
+- Jonathon Koyle <jonathon.koyle@gmail.com> (jonathon-k)
+- Tamas Szabo <jobs@szatam.com> (szatam)
+- Dennis Væversted <dv@zitcom.dk> (dvaeversted)
+- Morgan Henreaux <morgan@henreaux.com> (mhenreaux)
+- Yves Boudreau <yves.boudreau@bgp.ca> (boudreau)
+- Konrad Bechler <konrad@bechler.pl> (kbechler)
+- Florent Bruchez <ftbz@me.com> (ftbz)
+- Bartosz Radwan <b.radwan@citypartner.pl> (bartoszradwan)
+- Kate Gerry <kate@fansubber.com> (kate66)
 
 [1]: http://observium.org/ "Observium web site"
 Observium was written by:
