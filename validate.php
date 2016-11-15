@@ -85,14 +85,19 @@ require_once 'includes/alerts.inc.php';
 $versions = version_info();
 $cur_sha = $versions['local_sha'];
 
-echo "==========================================================\n";
-echo "LibreNMS Version: $cur_sha\n";
-echo "DB Schema: ".$versions['db_schema']."\n";
-echo "PHP: ".$versions['php_ver']."\n";
-echo "MySQL: ".$versions['mysql_ver']."\n";
-echo "RRDTool: ".$versions['rrdtool_ver']."\n";
-echo "SNMP: ".$versions['netsnmp_ver']."\n";
-echo "==========================================================\n\n";
+echo <<< EOF
+==========================================================
+Component | Version
+--------- | -------
+LibreNMS  | {$cur_sha}
+DB Schema | {$versions['db_schema']}
+PHP       | {$versions['php_ver']}
+MySQL     | {$versions['mysql_ver']}
+RRDTool   | {$versions['rrdtool_ver']}
+SNMP      | {$versions['netsnmp_ver']}
+==========================================================
+\n
+EOF;
 
 // Check we are running this as the root user
 if (function_exists('posix_getpwuid')) {
@@ -101,8 +106,8 @@ if (function_exists('posix_getpwuid')) {
 } else {
     $username = getenv('USERNAME') ?: getenv('USER'); //http://php.net/manual/en/function.get-current-user.php
 }
-if ($username !== 'root') {
-    print_fail("You need to run this script as root");
+if (!($username === 'root' || (isset($config['user']) && $username === $config['user']))) {
+    print_fail('You need to run this script as root' . (isset($config['user']) ? ' or '.$config['user'] : ''));
 }
 
 if ($config['update_channel'] == 'master' && $cur_sha != $versions['github']['sha']) {
@@ -165,9 +170,14 @@ if (strstr($strict_mode, 'STRICT_TRANS_TABLES')) {
     print_fail('You have MySQL STRICT_TRANS_TABLES enabled, please disable this until full support has been added: https://dev.mysql.com/doc/refman/5.0/en/sql-mode.html');
 }
 
-$tz = ini_get('date.timezone');
-if (empty($tz)) {
-    print_fail('You have no timezone set for php: http://php.net/manual/en/datetime.configuration.php#ini.date.timezone');
+$ini_tz = ini_get('date.timezone');
+$sh_tz = rtrim(shell_exec('date +%Z'));
+$php_tz = date('T');
+
+if (empty($ini_tz)) {
+    print_fail('You have no timezone set for php: http://php.net/manual/en/datetime.configuration.php#ini.date.timezone.');
+} elseif ($sh_tz !== $php_tz) {
+    print_fail("You have a different system timezone ($sh_tz) specified to the php configured timezone ($php_tz), please correct this.");
 }
 
 // Test transports
@@ -238,9 +248,9 @@ if (dbFetchCell('SELECT COUNT(`device_id`) FROM `devices` WHERE `last_discovered
 // check poller
 if (dbFetchCell('SELECT COUNT(`device_id`) FROM `devices` WHERE `last_polled` IS NOT NULL') == 0) {
     print_fail('The poller has never run, check the cron job');
-} elseif (dbFetchCell("SELECT COUNT(`device_id`) FROM `devices` WHERE `last_polled` <= DATE_ADD(NOW(), INTERVAL - 5 minute) AND `ignore` = 0 AND `disabled` = 0 AND `status` = 1") > 0) {
+} elseif (dbFetchCell("SELECT COUNT(`device_id`) FROM `devices` WHERE `last_polled` < DATE_ADD(NOW(), INTERVAL - 5 minute) AND `ignore` = 0 AND `disabled` = 0 AND `status` = 1") > 0) {
     print_fail("The poller has not run in the last 5 minutes, check the cron job");
-} elseif (dbFetchCell("SELECT COUNT(`device_id`) FROM `devices` WHERE (`last_polled` <= DATE_ADD(NOW(), INTERVAL - 5 minute) OR `last_polled` IS NULL) AND `ignore` = 0 AND `disabled` = 0 AND `status` = 1") > 0) {
+} elseif (dbFetchCell("SELECT COUNT(`device_id`) FROM `devices` WHERE (`last_polled` < DATE_ADD(NOW(), INTERVAL - 5 minute) OR `last_polled` IS NULL) AND `ignore` = 0 AND `disabled` = 0 AND `status` = 1") > 0) {
     print_warn("Some devices have not been polled in the last 5 minutes, check your poll log");
 }
 

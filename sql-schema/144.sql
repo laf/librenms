@@ -1,1 +1,1 @@
-ALTER TABLE `alert_rules` ADD `query` TEXT NOT NULL AFTER `name`;
+ALTER TABLE `ports_vlans` ADD `untagged` TINYINT NOT NULL DEFAULT '0' AFTER `cost`;

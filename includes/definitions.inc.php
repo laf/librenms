@@ -5,27 +5,19 @@ require_once $config['install_dir'].'/includes/dbFacile.php';
 require_once $config['install_dir'].'/includes/mergecnf.inc.php';
 
 // Connect to database
-if ($config['db']['extension'] == 'mysqli') {
-    $database_link = mysqli_connect('p:'.$config['db_host'], $config['db_user'], $config['db_pass']);
-} else {
-    $database_link = mysql_pconnect($config['db_host'], $config['db_user'], $config['db_pass']);
-}
+$database_link = mysqli_connect('p:'.$config['db_host'], $config['db_user'], $config['db_pass']);
 
 if (!$database_link) {
-    echo '<h2>MySQL Error</h2>';
-    if ($config['db']['extension'] == 'mysqli') {
-        echo mysqli_error($database_link);
+    if (isCli()) {
+        c_echo("[%RFAIL%n]  Could not connect to MySQL\n");
     } else {
-        echo mysql_error();
+        echo '<h2>MySQL Error: could not connect</h2>';
     }
+    echo mysqli_error($database_link);
     die;
 }
 
-if ($config['db']['extension'] == 'mysqli') {
-    $database_db = mysqli_select_db($database_link, $config['db_name']);
-} else {
-    $database_db = mysql_select_db($config['db_name'], $database_link);
-}
+$database_db = mysqli_select_db($database_link, $config['db_name']);
 
 if ($config['memcached']['enable'] === true) {
     if (class_exists('Memcached')) {
@@ -813,6 +805,10 @@ $config['os'][$os]['type']             = 'wireless';
 $config['os'][$os]['icon']             = 'saf';
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
 $config['os'][$os]['over'][0]['text']  = 'Traffic';
+$config['os'][$os]['over'][1]['graph'] = 'device_saf_radioRxLevel';
+$config['os'][$os]['over'][1]['text']  = 'Rx Level';
+$config['os'][$os]['over'][2]['graph'] = 'device_ping_perf';
+$config['os'][$os]['over'][2]['text']  = 'Ping Times';
 
 // Sub10
 $os = 'sub10';
@@ -921,6 +917,17 @@ $config['os'][$os]['icon']             = 'fortinet';
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
 $config['os'][$os]['over'][0]['text']  = 'Device Traffic';
 $config['os'][$os]['over'][1]['graph'] = 'device_fortigate_cpu';
+$config['os'][$os]['over'][1]['text']  = 'CPU Usage';
+$config['os'][$os]['over'][2]['graph'] = 'device_mempool';
+$config['os'][$os]['over'][2]['text']  = 'Memory Usage';
+
+$os = 'fortiswitch';
+$config['os'][$os]['text']             = 'Fortinet FortiSwitch';
+$config['os'][$os]['type']             = 'network';
+$config['os'][$os]['icon']             = 'fortinet';
+$config['os'][$os]['over'][0]['graph'] = 'device_bits';
+$config['os'][$os]['over'][0]['text']  = 'Device Traffic';
+$config['os'][$os]['over'][1]['graph'] = 'device_processor';
 $config['os'][$os]['over'][1]['text']  = 'CPU Usage';
 $config['os'][$os]['over'][2]['graph'] = 'device_mempool';
 $config['os'][$os]['over'][2]['text']  = 'Memory Usage';
@@ -1081,6 +1088,13 @@ $config['os'][$os]['over'][1]['graph'] = 'device_processor';
 $config['os'][$os]['over'][1]['text']  = 'CPU Usage';
 $config['os'][$os]['over'][2]['graph'] = 'device_mempool';
 $config['os'][$os]['over'][2]['text']  = 'Memory Usage';
+
+$os = 'dell-rcs';
+$config['os'][$os]['text']             = 'Dell Remote Console';
+$config['os'][$os]['type']             = 'appliance';
+$config['os'][$os]['icon']             = 'dell';
+$config['os'][$os]['over'][0]['graph'] = 'device_bits';
+$config['os'][$os]['over'][0]['text']  = 'Device Traffic';
 
 $os = 'avaya-ers';
 $config['os'][$os]['text']             = 'ERS Firmware';
@@ -1400,6 +1414,7 @@ $config['os'][$os]['over'][2]['text']  = 'Memory';
 
 $os = 'zywall';
 $config['os'][$os]['text']             = 'ZyXEL ZyWALL';
+$config['os'][$os]['group']            = 'zyxel';
 $config['os'][$os]['type']             = 'firewall';
 $config['os'][$os]['over'][0]['graph'] = 'device_bits';
 $config['os'][$os]['over'][0]['text']  = 'Traffic';
@@ -1417,24 +1432,28 @@ $config['os'][$os]['over'][2]['graph'] = 'device_mempool';
 $config['os'][$os]['over'][2]['text']  = 'Memory Usage';
 
 $os = 'prestige';
-$config['os'][$os]['text'] = 'ZyXEL Prestige';
-$config['os'][$os]['type'] = 'network';
-$config['os'][$os]['icon'] = 'zyxel';
+$config['os'][$os]['text']             = 'ZyXEL Prestige';
+$config['os'][$os]['group']            = 'zyxel';
+$config['os'][$os]['type']             = 'network';
+$config['os'][$os]['icon']             = 'zyxel';
 
 $os = 'zynos';
-$config['os'][$os]['text'] = 'ZyXEL Ethernet Switch';
-$config['os'][$os]['type'] = 'network';
-$config['os'][$os]['icon'] = 'zyxel';
+$config['os'][$os]['text']             = 'ZyXEL Ethernet Switch';
+$config['os'][$os]['group']            = 'zyxel';
+$config['os'][$os]['type']             = 'network';
+$config['os'][$os]['icon']             = 'zyxel';
 
 $os = 'zyxelnwa';
-$config['os'][$os]['text'] = 'ZyXEL NWA';
-$config['os'][$os]['type'] = 'network';
-$config['os'][$os]['icon'] = 'zyxel';
+$config['os'][$os]['text']             = 'ZyXEL NWA';
+$config['os'][$os]['group']            = 'zyxel';
+$config['os'][$os]['type']             = 'network';
+$config['os'][$os]['icon']             = 'zyxel';
 
 $os = 'ies';
-$config['os'][$os]['text'] = 'ZyXEL DSLAM';
-$config['os'][$os]['type'] = 'network';
-$config['os'][$os]['icon'] = 'zyxel';
+$config['os'][$os]['text']             = 'ZyXEL DSLAM';
+$config['os'][$os]['group']            = 'zyxel';
+$config['os'][$os]['type']             = 'network';
+$config['os'][$os]['icon']             = 'zyxel';
 
 $os = 'allied';
 $config['os'][$os]['text']             = 'AlliedWare';
@@ -1450,6 +1469,20 @@ $config['os'][$os]['type']             = 'power';
 $config['os'][$os]['icon']             = 'mge';
 $config['os'][$os]['over'][0]['graph'] = 'device_current';
 $config['os'][$os]['over'][0]['text']  = 'Current';
+
+$os = 'sinetica';
+$config['os'][$os]['text']             = 'Sinetica UPS';
+$config['os'][$os]['group']            = 'ups';
+$config['os'][$os]['type']             = 'power';
+$config['os'][$os]['over'][0]['graph'] = 'device_current';
+$config['os'][$os]['over'][0]['text']  = 'Current';
+
+$os = 'netagent2';
+$config['os'][$os]['text']             = 'NET Agent II UPS';
+$config['os'][$os]['group']            = 'ups';
+$config['os'][$os]['type']             = 'power';
+$config['os'][$os]['over'][0]['graph'] = 'device_load';
+$config['os'][$os]['over'][0]['text']  = 'Load';
 
 $os = 'mgepdu';
 $config['os'][$os]['text'] = 'MGE PDU';
@@ -1839,6 +1872,14 @@ $config['os'][$os]['over'][1]['graph'] = 'device_processor';
 $config['os'][$os]['over'][1]['text']  = 'CPU Usage';
 $config['os'][$os]['over'][2]['graph'] = 'device_mempool';
 $config['os'][$os]['over'][2]['text']  = 'Memory Usage';
+$config['os'][$os]['icon']             = 'pbn';
+
+// PBN CPE, Pacific Broadband Networks
+$os = 'pbn-cp';
+$config['os'][$os]['text']             = 'PBN P2P CP100 Series Platform';
+$config['os'][$os]['type']             = 'network';
+$config['os'][$os]['over'][0]['graph'] = 'device_bits';
+$config['os'][$os]['over'][0]['text']  = 'Device Traffic';
 $config['os'][$os]['icon']             = 'pbn';
 
 // Enterasys
@@ -2288,6 +2329,15 @@ $config['graph_types']['device']['ubnt_airfiber_RFTotPktsRx']['section'] = 'wire
 $config['graph_types']['device']['ubnt_airfiber_RFTotPktsRx']['order'] = '7';
 $config['graph_types']['device']['ubnt_airfiber_RFTotPktsRx']['descr'] = 'RF Total Packets Rx';
 
+// Unifi Support
+$config['graph_types']['device']['ubnt_unifi_RadioCu_0']['section'] = 'wireless';
+$config['graph_types']['device']['ubnt_unifi_RadioCu_0']['order'] = '0';
+$config['graph_types']['device']['ubnt_unifi_RadioCu_0']['descr'] = 'Radio0 Capacity Used';
+
+$config['graph_types']['device']['ubnt_unifi_RadioCu_1']['section'] = 'wireless';
+$config['graph_types']['device']['ubnt_unifi_RadioCu_1']['order'] = '1';
+$config['graph_types']['device']['ubnt_unifi_RadioCu_1']['descr'] = 'Radio1 Capacity Used';
+
 // Siklu support
 $config['graph_types']['device']['siklu_rfAverageRssi']['section'] = 'wireless';
 $config['graph_types']['device']['siklu_rfAverageRssi']['order'] = '0';
@@ -2536,6 +2586,11 @@ $config['graph_types']['device']['ib_dhcp_messages']['descr']                 = 
 $config['graph_types']['device']['waas_cwotfostatsactiveoptconn']['section']      = 'graphs';
 $config['graph_types']['device']['waas_cwotfostatsactiveoptconn']['order']        = '0';
 $config['graph_types']['device']['waas_cwotfostatsactiveoptconn']['descr']        = 'Optimized TCP Connections';
+
+// SonicWALL Sessions
+$config['graph_types']['device']['sonicwall_sessions']['section']      = 'firewall';
+$config['graph_types']['device']['sonicwall_sessions']['order']        = '0';
+$config['graph_types']['device']['sonicwall_sessions']['descr']        = 'Active Sessions';
 
 $config['graph_types']['device']['bits']['section']               = 'netstats';
 $config['graph_types']['device']['bits']['order']                 = '0';

@@ -12,7 +12,7 @@ function bulk_sensor_snmpget($device, $sensors)
             return $data['sensor_oid'];
         }, $chunk);
         $oids = implode(' ', $oids);
-        $multi_response = snmp_get_multi_oid($device, $oids, '-OUQn');
+        $multi_response = snmp_get_multi_oid($device, $oids, '-OUQnt');
         $cache = array_merge($cache, $multi_response);
     }
     return $cache;
@@ -159,7 +159,9 @@ function poll_device($device, $options)
     unset($array);
     $device_start = microtime(true);
     // Start counting device poll time
-    echo $device['hostname'].' '.$device['device_id'].' '.$device['os'].' ';
+    echo 'Hostname: ' . $device['hostname'] . PHP_EOL;
+    echo 'Device ID: ' . $device['device_id'] . PHP_EOL;
+    echo 'OS: ' . $device['os'];
     $ip = dnslookup($device);
 
     if (!empty($ip) && $ip != inet6_ntop($device['ip'])) {
@@ -170,10 +172,10 @@ function poll_device($device, $options)
 
     if ($config['os'][$device['os']]['group']) {
         $device['os_group'] = $config['os'][$device['os']]['group'];
-        echo '('.$device['os_group'].')';
+        echo ' ('.$device['os_group'].')';
     }
 
-    echo "\n";
+    echo PHP_EOL.PHP_EOL;
 
     unset($poll_update);
     unset($poll_update_query);
@@ -182,7 +184,7 @@ function poll_device($device, $options)
     $update_array = array();
 
     $host_rrd = $config['rrd_dir'].'/'.$device['hostname'];
-    if (!is_dir($host_rrd)) {
+    if ($config['norrd'] !== true && !is_dir($host_rrd)) {
         mkdir($host_rrd);
         echo "Created directory : $host_rrd\n";
     }
@@ -245,7 +247,14 @@ function poll_device($device, $options)
             }
         }
         foreach ($config['poller_modules'] as $module => $module_status) {
-            if ($force_module === true || $attribs['poll_'.$module] || ( $module_status && !isset($attribs['poll_'.$module]))) {
+            $os_module_status = $config['os'][$device['os']]['poller_modules'][$module];
+            d_echo("Modules status: Global" . (isset($module_status) ? ($module_status ? '+ ' : '- ') : '  '));
+            d_echo("OS" . (isset($os_module_status) ? ($os_module_status ? '+ ' : '- ') : '  '));
+            d_echo("Device" . (isset($attribs['poll_' . $module]) ? ($attribs['poll_' . $module] ? '+ ' : '- ') : '  '));
+            if ($force_module === true ||
+                $attribs['poll_'.$module] ||
+                ($os_module_status && !isset($attribs['poll_'.$module])) ||
+                ($module_status && !isset($os_module_status) && !isset($attribs['poll_' . $module]))) {
                 $module_start = 0;
                 $module_time  = 0;
                 $module_start = microtime(true);
@@ -272,9 +281,11 @@ function poll_device($device, $options)
                     unlink($oldrrd);
                 }
             } elseif (isset($attribs['poll_'.$module]) && $attribs['poll_'.$module] == '0') {
-                echo "Module [ $module ] disabled on host.\n";
+                echo "Module [ $module ] disabled on host.\n\n";
+            } elseif (isset($os_module_status) && $os_module_status == '0') {
+                echo "Module [ $module ] disabled on os.\n\n";
             } else {
-                echo "Module [ $module ] disabled globally.\n";
+                echo "Module [ $module ] disabled globally.\n\n";
             }
         }
 
