@@ -67,7 +67,6 @@ require $install_dir . '/includes/mergecnf.inc.php';
 require $install_dir . '/includes/functions.php';
 require $install_dir . '/includes/rewrites.php';  // FIXME both definitions and functions
 
-
 if (module_selected('web', $init_modules)) {
     chdir($install_dir . '/html');
     require $install_dir . '/html/includes/functions.inc.php';

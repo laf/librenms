@@ -742,6 +742,7 @@ $config['discovery_modules']['cisco-cbqos']    = 0;
 $config['discovery_modules']['stp']            = 1;
 $config['discovery_modules']['cisco-otv']      = 1;
 $config['discovery_modules']['ntp']            = 1;
+$config['discovery_modules']['wifi']           = 1;
 
 $config['modules_compat']['rfc1628']['liebert']    = 1;
 $config['modules_compat']['rfc1628']['netmanplus'] = 1;
