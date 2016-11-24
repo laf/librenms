@@ -37,7 +37,7 @@ class Unifi
 
     public function logout()
     {
-        print_r($this->curl);
+        //print_r($this->curl);
     }
 
 }

@@ -46,7 +46,7 @@ class Curl
         }
 
         if (($content = curl_exec($curl)) === FALSE) {
-            throw new Exception('Curl error');
+            print_r(curl_error($curl));
         }
         curl_close ($curl);
         return $content;
@@ -70,11 +70,13 @@ class Curl
     public function setHeader()
     {
         curl_setopt($this->curl, CURLOPT_HEADER, 1);
+        return $this->curl;
     }
 
     public function setReferer()
     {
         curl_setopt($this->curl, CURLOPT_REFERER, $this->url.'/login');
+        return $this->curl;
     }
 
 }
