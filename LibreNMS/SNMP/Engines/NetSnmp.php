@@ -21,7 +21,7 @@
  * @author     Tony Murray <murraytony@gmail.com>
  */
 
-namespace LibreNMS\SNMP;
+namespace LibreNMS\SNMP\Engines;
 
 use LibreNMS\SNMP\Contracts\SnmpEngine;
 
