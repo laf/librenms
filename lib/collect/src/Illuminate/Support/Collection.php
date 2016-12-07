@@ -10,14 +10,11 @@ use CachingIterator;
 use Illuminate\Contracts\Support\JsonSerializable;
 use IteratorAggregate;
 use InvalidArgumentException;
-use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Arrayable;
 
 class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate, Jsonable
 {
-//    use Macroable;
-
     /**
      * The items contained in the collection.
      *
