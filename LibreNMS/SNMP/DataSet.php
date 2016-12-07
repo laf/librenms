@@ -27,5 +27,39 @@ use Illuminate\Support\Collection;
 
 class DataSet extends Collection
 {
+    public function getByIndex($index = null)
+    {
+        return $this->getByField('index', $index);
+    }
 
+    public function getByBaseOID($base_oid = null)
+    {
+        return $this->getByField('base_oid', $base_oid);
+    }
+
+    public function getByField($field, $index = null)
+    {
+        return $this->optionalFilter($field, $index)->groupBy(function ($item) use ($field) {
+            return $item[$field];
+        });
+    }
+
+
+    /**
+     * Optionally filter this object.
+     * Do nothing if $index is null
+     *
+     * @param string|null $index
+     * @return Collection
+     */
+    private function optionalFilter($field, $index)
+    {
+        if ($index === null) {
+            return $this;
+        }
+
+        return $this->filter(function ($item) use ($field, $index) {
+            return $item[$field] === $index;
+        });
+    }
 }

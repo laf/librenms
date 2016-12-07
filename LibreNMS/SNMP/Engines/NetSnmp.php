@@ -25,7 +25,38 @@ namespace LibreNMS\SNMP\Engines;
 
 use LibreNMS\SNMP\Contracts\SnmpEngine;
 
-class NetSnmp implements SnmpEngine
+class NetSnmp extends Base
 {
 
+    /**
+     * @param array $device
+     * @param string|array $oids single or array of oids to walk
+     * @param string $mib Additional mibs to search, optionally you can specify full oid names
+     * @param string $mib_dir Additional mib directory, should be rarely needed, see definitions to add per os mib dirs
+     * @return string exact results from snmpget
+     */
+    public function getRaw($device, $oids, $options = null, $mib = null, $mib_dir = null)
+    {
+        var_dump($mib);
+        $cmd = gen_snmpget_cmd($device, $oids, $options, $mib, $mib_dir);
+        d_echo($cmd . PHP_EOL);
+        $output = shell_exec($cmd);
+
+        d_echo($output . PHP_EOL);
+
+        return $output;
+    }
+
+    /**
+     * @param array $device
+     * @param string $oid single oid to walk
+     * @param string $options Options to send to snmpwalk
+     * @param string $mib Additional mibs to search, optionally you can specify full oid names
+     * @param string $mib_dir Additional mib directory, should be rarely needed, see definitions to add per os mib dirs
+     * @return string exact results from snmpwalk
+     */
+    public function walkRaw($device, $oid, $options = null, $mib = null, $mib_dir = null)
+    {
+        return shell_exec(gen_snmpwalk_cmd($device, $oid, $options, $mib, $mib_dir));
+    }
 }
