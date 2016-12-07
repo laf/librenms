@@ -44,14 +44,17 @@ require $install_dir . '/LibreNMS/ClassLoader.php';
 $classLoader = new LibreNMS\ClassLoader();
 $classLoader->registerClass('Console_Color2', $config['install_dir'] . '/lib/console_colour.php');
 $classLoader->registerClass('Console_Table', $config['install_dir'] . '/lib/console_table.php');
-$classLoader->registerClass('PHPMailer', $config['install_dir'] . "/lib/phpmailer/class.phpmailer.php");
-$classLoader->registerClass('SMTP', $config['install_dir'] . "/lib/phpmailer/class.smtp.php");
 $classLoader->registerClass('PasswordHash', $config['install_dir'] . '/html/lib/PasswordHash.php');
-//    $classLoader->registerDir($install_dir . '/tests', 'LibreNMS\Tests');
 $classLoader->register();
+
+// Third party autoloaders
 if (version_compare(PHP_VERSION, '5.4', '>=')) {
     require $install_dir . '/lib/influxdb-php/vendor/autoload.php';
 }
+require $install_dir . '/lib/htmlpurifier-4.8.0-lite/library/HTMLPurifier.auto.php';
+require $install_dir . '/lib/collect/vendor/autoload.php';
+require $install_dir . '/lib/phpmailer/PHPMailerAutoload.php';
+
 
 // function only files
 require_once $install_dir . '/includes/common.php';
@@ -66,7 +69,6 @@ require $install_dir . '/includes/services.inc.php';
 require $install_dir . '/includes/mergecnf.inc.php';
 require $install_dir . '/includes/functions.php';
 require $install_dir . '/includes/rewrites.php';  // FIXME both definitions and functions
-require $install_dir . '/lib/htmlpurifier-4.8.0-lite/library/HTMLPurifier.auto.php';
 
 if (module_selected('web', $init_modules)) {
     chdir($install_dir . '/html');
