@@ -23,13 +23,16 @@
  * @author     Tony Murray <murraytony@gmail.com>
  */
 
-namespace LibreNMS\SNMP;
+namespace LibreNMS;
 
 use LibreNMS\SNMP\Contracts\SnmpEngine;
+use LibreNMS\SNMP\DataSet;
+use LibreNMS\SNMP\Engines\NetSnmp;
 
 class SNMP
 {
-    private static $engine = null;
+    /** @var SnmpEngine */
+    private static $engine;
 
     //TODO use interface
     private static function getInstance(SnmpEngine $engine = null)
@@ -51,13 +54,12 @@ class SNMP
      * @param string|array $oids single or array of oids to get
      * @param string $mib Additional mibs to search, optionally you can specify full oid names
      * @param string $mib_dir Additional mib directory, should be rarely needed, see definitions to add per os mib dirs
-     * @return array array or object of results, format to be determined
+     * @return DataSet collection of results
      */
     public static function get($device, $oids, $mib = null, $mib_dir = null)
     {
         // return cached result or get from device
-        // parse data
-        // return formatted array or object
+        return self::getInstance()->get($device, $oids, $mib, $mib_dir);
     }
 
     /**
@@ -69,7 +71,7 @@ class SNMP
      */
     public static function getRaw($device, $oids, $options = null, $mib = null, $mib_dir = null)
     {
-        // snmpget data from device
+        return self::getInstance()->getRaw($device, $oids, $options, $mib, $mib_dir);
     }
 
 
@@ -78,13 +80,12 @@ class SNMP
      * @param string|array $oids single or array of oids to walk
      * @param string $mib Additional mibs to search, optionally you can specify full oid names
      * @param string $mib_dir Additional mib directory, should be rarely needed, see definitions to add per os mib dirs
-     * @return array array or object of results, format to be determined
+     * @return DataSet collection of results
      */
     public static function walk($device, $oids, $mib = null, $mib_dir = null)
     {
         // return cached result or get from device
-        // parse data
-        // return formatted array or object
+        return self::getInstance()->walk($device, $oids, $mib, $mib_dir);
     }
 
     /**
@@ -97,6 +98,6 @@ class SNMP
      */
     public static function walkRaw($device, $oid, $options = null, $mib = null, $mib_dir = null)
     {
-        // snmpwalk data from device
+        return self::getInstance()->walkRaw($device, $oid, $options, $mib, $mib_dir);
     }
 }

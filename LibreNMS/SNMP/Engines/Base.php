@@ -1,6 +1,8 @@
 <?php
 /**
- * Mock.php
+ * Base.php
+ *
+ * A base implementation of get() and walk(),  children need to supply getRaw() and walkRaw()
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,58 +27,33 @@ namespace LibreNMS\SNMP\Engines;
 
 use LibreNMS\SNMP\Contracts\SnmpEngine;
 use LibreNMS\SNMP\DataSet;
-use LibreNMS\SNMP\OIDData;
+use LibreNMS\SNMP\Parse;
 
-class Mock extends Base
+abstract class Base implements SnmpEngine
 {
+
+    /**
+     * @param array $device
+     * @param string|array $oids single or array of oids to get
+     * @param string $mib Additional mibs to search, optionally you can specify full oid names
+     * @param string $mib_dir Additional mib directory, should be rarely needed, see definitions to add per os mib dirs
+     * @return DataSet collection of results
+     */
+    public function get($device, $oids, $mib = null, $mib_dir = null)
+    {
+        return Parse::rawResult($this->getRaw($device, $oids, null, $mib, $mib_dir));
+    }
+
 
     /**
      * @param array $device
      * @param string|array $oids single or array of oids to walk
      * @param string $mib Additional mibs to search, optionally you can specify full oid names
      * @param string $mib_dir Additional mib directory, should be rarely needed, see definitions to add per os mib dirs
-     * @return string exact results from snmpget
+     * @return DataSet collection of results
      */
-    public function getRaw($device, $oids, $options = null, $mib = null, $mib_dir = null)
+    public function walk($device, $oids, $mib = null, $mib_dir = null)
     {
-        // TODO: Implement getRaw() method.
-    }
-
-    /**
-     * @param array $device
-     * @param string $oid single oid to walk
-     * @param string $options Options to send to snmpwalk
-     * @param string $mib Additional mibs to search, optionally you can specify full oid names
-     * @param string $mib_dir Additional mib directory, should be rarely needed, see definitions to add per os mib dirs
-     * @return string exact results from snmpwalk
-     */
-    public function walkRaw($device, $oid, $options = null, $mib = null, $mib_dir = null)
-    {
-        // TODO: Implement walkRaw() method.
-    }
-
-    private function loadSnmpRec($community)
-    {
-        global $config;
-        $data = DataSet::make();
-
-        $contents = file_get_contents($config['install_dir'] . "/tests/snmpsim/$community.snmprec");
-        $line = strtok($contents, "\r\n");
-        while ($line !== false) {
-            list($oid, $type, $value) = explode('|', $line, 3);
-            if ($type == 4) {
-                $value = trim($value);
-            } elseif ($type == 6) {
-                $value = trim($value, '.');
-            }
-
-            $data->push(OIDData::make(array(
-                compact('oid', 'type', 'value')
-            )));
-
-            $line = strtok("\r\n");
-        }
-
-        return $data;
+        return Parse::rawResult($this->walkRaw($device, $oids, null, $mib, $mib_dir));
     }
 }
