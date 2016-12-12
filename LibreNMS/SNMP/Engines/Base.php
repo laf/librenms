@@ -41,7 +41,7 @@ abstract class Base implements SnmpEngine
      */
     public function get($device, $oids, $mib = null, $mib_dir = null)
     {
-        return Parse::rawResult($this->getRaw($device, $oids, null, $mib, $mib_dir));
+        return Parse::rawOutput($this->getRaw($device, $oids, null, $mib, $mib_dir));
     }
 
 
@@ -54,6 +54,6 @@ abstract class Base implements SnmpEngine
      */
     public function walk($device, $oids, $mib = null, $mib_dir = null)
     {
-        return Parse::rawResult($this->walkRaw($device, $oids, null, $mib, $mib_dir));
+        return Parse::rawOutput($this->walkRaw($device, $oids, null, $mib, $mib_dir));
     }
 }

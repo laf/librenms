@@ -34,8 +34,7 @@ class SNMP
     /** @var SnmpEngine */
     private static $engine;
 
-    //TODO use interface
-    private static function getInstance(SnmpEngine $engine = null)
+    public static function getInstance(SnmpEngine $engine = null)
     {
         // Note, because this is static, there will only be one SnmpEngine instance
         if ($engine === null) {

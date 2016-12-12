@@ -30,50 +30,34 @@ class Parse
 
     public static function rawOID($oid)
     {
-        $result = collect();
         $parts = collect(explode('.', $oid));
         if (count($parts) > 1) {
-            $result->put('index', $parts->last());
+            return collect(array(
+                'index' => $parts->last(),
+                'base_oid' => implode('.', $parts->slice(0, count($parts) - 1)->all())
+            ));
+        } else {
+            return collect(array(
+                'base_oid' => $oid
+            ));
         }
-        $result->put('base_oid', implode('.', $parts->slice(0, count($parts)-1)->all()));
-
-        return $result;
     }
 
     public static function rawValue($data)
     {
-        $data = explode(': ', $data, 2);
-
-        $func = strtolower($data[0]) . 'Type';
-        if (method_exists(__CLASS__, $func)) {
-            return forward_static_call(array(__CLASS__, $func), $data[1]);
-        }
-
-        return OIDData::make();
-    }
-
-    /**
-     * Get a typed number from a string
-     *
-     * @param string $number
-     * @return float|int
-     */
-    public static function number($number)
-    {
-        return ctype_digit($number) ? intval($number) : floatval($number);
+        list($type, $value) = explode(': ', $data, 2);
+        return Parse::value($type, $value);
     }
 
     /**
      * @param string $rawData
      * @return DataSet
      */
-    public static function rawResult($rawData)
+    public static function rawOutput($rawData)
     {
         $result = array();
         $separator = "\r\n";
         $line = strtok($rawData, $separator);
-
-//        var_dump($rawData);
 
         $tmp_oid = '';
         $tmp_value = '';
@@ -81,9 +65,9 @@ class Parse
             if (str_contains($line, ' = ')) {
                 list($tmp_oid, $tmp_value) = explode(' = ', $line, 2);
             } else {
-                $tmp_value .= $line;
+                $tmp_value .= "\n" . $line;
             }
-            echo "Parsed: $tmp_oid <> $tmp_value\n";
+//            echo "Parsed: $tmp_oid <> $tmp_value\n";
             $line = strtok($separator);
 
             if ($line === false || str_contains($line, ' = ')) {
@@ -94,53 +78,59 @@ class Parse
         return DataSet::make($result);
     }
 
-    /**
-     * @param $value
-     * @return \Illuminate\Support\Collection
-     */
-    public static function stringType($value)
+    public static function value($type, $value)
     {
-        $value = trim($value, "\"");
-        return collect(array(
-            'type'   => 'string',
-            'string' => $value,
-            'value'  => $value
-        ));
-    }
-
-    /**
-     * @param $value
-     * @return \Illuminate\Support\Collection
-     */
-    public static function timeticksType($value)
-    {
-        $matched = preg_match('/\(([0-9]+)\) ([0-9:\.]+)/', $value, $matches);
-        if ($matched) {
-            return collect(array(
-                'type'    => 'timeticks',
-                'seconds' => $matches[1],
-                'time'    => $matches[2],
-                'value'   => $matches[1]
-            ));
+        $type = strtolower($type);
+        $function = $type . 'Type';
+        if (method_exists(__CLASS__, $function)) {
+            return forward_static_call(array(__CLASS__, $function), $value);
         }
-        $seconds = self::number($value);
-        return collect(array(
-            'type'    => 'timeticks',
-            'seconds' => $seconds,
-            'value'   => $seconds
-        ));
+
+        return Format::generic($type, $value);
     }
 
     /**
-     * @param $value
-     * @return \Illuminate\Support\Collection
+     * @param $input
+     * @return OIDData
      */
-    public static function oidType($value)
+    public static function integerType($input)
     {
-        return collect(array(
-            'type'   => 'oid',
-            'string' => $value,
-            'value'  => $value
-        ));
+        if (is_numeric($input)) {
+            Format::integerType(intval($input));
+        }
+
+        if (preg_match('/(.+)\(([0-9]+)\)/', $input, $matches)) {
+            $descr = $matches[1];
+            $int = $matches[2];
+            return Format::integerType($int, $descr);
+        }
+
+        return Format::integerType(null);
+    }
+
+    /**
+     * @param $input
+     * @return OIDData
+     */
+    public static function stringType($input)
+    {
+        return Format::stringType(trim($input, "\""));
+    }
+
+    /**
+     * @param $input
+     * @return OIDData
+     */
+    public static function timeticksType($input)
+    {
+        if (is_numeric($input)) {
+            return Format::timeticksType($input);
+        } else {
+            $matched = preg_match('/\(([0-9]+)\) (.+)/', $input, $matches);
+            if ($matched) {
+                return Format::timeticksType($matches[1], $matches[2]);
+            }
+        }
+        return Format::timeticksType(null);
     }
 }
