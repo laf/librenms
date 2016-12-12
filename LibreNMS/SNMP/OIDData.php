@@ -29,8 +29,8 @@ class OIDData extends Collection
 {
     public static function makeRaw($oid, $raw_value)
     {
-        return (new self(compact('oid', 'raw_value')))
-            ->merge(Parse::rawOID(new self(compact('oid', 'raw_value'))))
+        $new = new self(compact('oid', 'raw_value'));
+        return $new->merge(Parse::rawOID($oid))
             ->merge(Parse::rawValue($raw_value));
     }
 }

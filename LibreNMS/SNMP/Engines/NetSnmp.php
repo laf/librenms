@@ -27,7 +27,6 @@ use LibreNMS\SNMP\Contracts\SnmpEngine;
 
 class NetSnmp extends Base
 {
-
     /**
      * @param array $device
      * @param string|array $oids single or array of oids to walk
@@ -37,9 +36,9 @@ class NetSnmp extends Base
      */
     public function getRaw($device, $oids, $options = null, $mib = null, $mib_dir = null)
     {
-        var_dump($mib);
+        global $debug;
         $cmd = gen_snmpget_cmd($device, $oids, $options, $mib, $mib_dir);
-        d_echo($cmd . PHP_EOL);
+        c_echo('SNMP[%c'.$cmd."%n]\n", $debug);
         $output = shell_exec($cmd);
 
         d_echo($output . PHP_EOL);
