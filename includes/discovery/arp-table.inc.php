@@ -47,7 +47,11 @@ foreach ($vrfs_lite_cisco as $vrf) {
 
 
     // group data
-    $live_ips = $arp_data->pluck('ipv4_address')->all();
+    $live_ips = $arp_data->pluck('ipv4_address');
+    $removed_entries = $existing_data->reject(function ($entry) use ($live_ips) {
+        return $live_ips->contains($entry['ipv4_address']);
+    });
+
 
     $arp_data = $arp_data->groupBy(function ($entry) use ($existing_data) {
         if ($existing_data->contains($entry)) {
@@ -58,9 +62,6 @@ foreach ($vrfs_lite_cisco as $vrf) {
         return 'New';
     });
 
-    $removed_entries = $existing_data->reject(function ($entry) use ($live_ips) {
-        return in_array($entry['ipv4_address'], $live_ips);
-    });
     if (!$removed_entries->isEmpty()) {
         $arp_data->put('Removed', $removed_entries);
     }
@@ -69,31 +70,7 @@ foreach ($vrfs_lite_cisco as $vrf) {
     // Update database
     $arp_data->each(function ($group, $key) use ($device, $existing_data) {
         print "$key: " . count($group) . PHP_EOL;
-
-        if ($key == 'Changed') {
-            $group->each(function ($entry) use ($device, $existing_data) {
-                extract($entry);
-                $old_mac = $existing_data->where('ipv4_address', $ipv4_address)->collapse()->get('mac_address');
-                log_event("MAC change: $ipv4_address : " . mac_clean_to_readable($old_mac) . ' -> '
-                    . mac_clean_to_readable($mac_address), $device, 'interface', $port_id);
-                dbUpdate(
-                    array('mac_address' => $mac_address),
-                    'ipv4_mac',
-                    'port_id=? AND ipv4_address=? AND context_name=?',
-                    array($port_id, $ipv4_address, $context_name)
-                );
-            });
-        } elseif ($key == 'Removed') {
-            $group->each(function ($entry) {
-                dbDelete(
-                    'ipv4_mac',
-                    '`port_id` = ? AND `mac_address`=? AND `ipv4_address`=? AND `context_name`=?',
-                    array_values($entry)
-                );
-            });
-        } elseif ($key == 'New') {
-            dbBulkInsert($group, 'ipv4_mac');
-        }
+        update_arp_table($device, $key, $group, $existing_data);
     });
 
     unset($arp_data, $existing_data, $removed_entries, $live_ips);
