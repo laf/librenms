@@ -44,6 +44,11 @@ class DataSet extends Collection
         });
     }
 
+    public function filterBaseOID($base_oid)
+    {
+        return $this->optionalFilter('base_oid', $base_oid);
+    }
+
 
     /**
      * Optionally filter this object.

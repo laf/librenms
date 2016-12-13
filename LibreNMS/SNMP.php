@@ -99,4 +99,30 @@ class SNMP
     {
         return self::getInstance()->walkRaw($device, $oid, $options, $mib, $mib_dir);
     }
+
+
+    /**
+     * @param array $device
+     * @param string $oid
+     * @param string $mib
+     * @param string $mib_dir
+     * @return string
+     */
+    public static function translate($device, $oid, $mib = null, $mib_dir = null)
+    {
+        return self::getInstance()->translate($device, $oid, $mib, $mib_dir);
+    }
+
+    /**
+     * @param array $device
+     * @param string $oid
+     * @param string $mib
+     * @param string $mib_dir
+     * @return string
+     */
+    public static function translateNumeric($device, $oid, $mib = null, $mib_dir = null)
+    {
+        return self::getInstance()->translateNumeric($device, $oid, $mib, $mib_dir);
+    }
+
 }

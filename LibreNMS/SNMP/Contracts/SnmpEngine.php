@@ -62,4 +62,22 @@ interface SnmpEngine
      * @return string exact results from snmpwalk
      */
     public function walkRaw($device, $oid, $options = null, $mib = null, $mib_dir = null);
+
+    /**
+     * @param array $device
+     * @param string $oid
+     * @param string $mib
+     * @param string $mib_dir
+     * @return string
+     */
+    public function translate($device, $oid, $mib = null, $mib_dir = null);
+
+    /**
+     * @param array $device
+     * @param string $oid
+     * @param string $mib
+     * @param string $mib_dir
+     * @return string
+     */
+    public function translateNumeric($device, $oid, $mib = null, $mib_dir = null);
 }

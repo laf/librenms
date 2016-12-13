@@ -54,6 +54,10 @@ abstract class Base implements SnmpEngine
      */
     public function walk($device, $oids, $mib = null, $mib_dir = null)
     {
-        return Parse::rawOutput($this->walkRaw($device, $oids, null, $mib, $mib_dir));
+        $results = DataSet::make();
+        foreach ((array)$oids as $oid) {
+            $results = $results->merge(Parse::rawOutput($this->walkRaw($device, $oid, null, $mib, $mib_dir)));
+        }
+        return $results;
     }
 }
