@@ -42,17 +42,12 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
 } elseif (isset($_GET['username']) && isset($_GET['password'])) {
     $_SESSION['username'] = clean($_GET['username']);
     $_SESSION['password'] = $_GET['password'];
+} elseif (isset($_SERVER['REMOTE_USER'])) {
+    $_SESSION['username'] = $_SERVER['REMOTE_USER'];
 }
 
 if (!isset($config['auth_mechanism'])) {
     $config['auth_mechanism'] = 'mysql';
-}
-
-if (file_exists('includes/authentication/'.$config['auth_mechanism'].'.inc.php')) {
-    include_once 'includes/authentication/'.$config['auth_mechanism'].'.inc.php';
-} else {
-    print_error('ERROR: no valid auth_mechanism defined!');
-    exit();
 }
 
 $auth_success = 0;

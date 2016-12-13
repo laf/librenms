@@ -605,7 +605,7 @@ function generate_port_link($port, $text = null, $type = null, $overlib = 1, $si
 
     $content = '<div class=list-large>'.$port['hostname'].' - '.fixifName($port['label']).'</div>';
     if ($port['ifAlias']) {
-        $content .= escape_quotes($port['ifAlias']).'<br />';
+        $content .= display($port['ifAlias']).'<br />';
     }
 
     $content              .= "<div style=\'width: 850px\'>";
@@ -856,7 +856,7 @@ function generate_ap_link($args, $text = null, $type = null)
 
     $content = '<div class=list-large>'.$args['text'].' - '.fixifName($args['label']).'</div>';
     if ($args['ifAlias']) {
-        $content .= $args['ifAlias'].'<br />';
+        $content .= display($args['ifAlias']).'<br />';
     }
 
     $content              .= "<div style=\'width: 850px\'>";
@@ -1055,19 +1055,6 @@ function clean_bootgrid($string)
 }//end clean_bootgrid()
 
 
-// Insert new config items
-function add_config_item($new_conf_name, $new_conf_value, $new_conf_type, $new_conf_desc)
-{
-    if (dbInsert(array('config_name' => $new_conf_name, 'config_value' => $new_conf_value, 'config_default' => $new_conf_value, 'config_type' => $new_conf_type, 'config_desc' => $new_conf_desc, 'config_group' => '500_Custom Settings', 'config_sub_group' => '01_Custom settings', 'config_hidden' => '0', 'config_disabled' => '0'), 'config')) {
-        $db_inserted = 1;
-    } else {
-        $db_inserted = 0;
-    }
-
-    return ($db_inserted);
-}//end add_config_item()
-
-
 function get_config_by_group($group)
 {
     $group = array($group);
@@ -1223,6 +1210,11 @@ function generate_dynamic_config_panel($title, $config_groups, $items = array(),
             } elseif ($item['type'] == 'text') {
                 $output .= '
                 <input id="'.$item['name'].'" class="form-control" type="text" name="global-config-input" value="'.$config_groups[$item['name']]['config_value'].'" data-config_id="'.$config_groups[$item['name']]['config_id'].'">
+                <span class="form-control-feedback"><i class="fa" aria-hidden="true"></i></span>
+                ';
+            } elseif ($item['type'] == 'password') {
+                $output .= '
+                <input id="'.$item['name'].'" class="form-control" type="password" name="global-config-input" value="'.$config_groups[$item['name']]['config_value'].'" data-config_id="'.$config_groups[$item['name']]['config_id'].'">
                 <span class="form-control-feedback"><i class="fa" aria-hidden="true"></i></span>
                 ';
             } elseif ($item['type'] == 'numeric') {
