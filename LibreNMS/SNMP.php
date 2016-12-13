@@ -64,6 +64,7 @@ class SNMP
     /**
      * @param array $device
      * @param string|array $oids single or array of oids to walk
+     * @param null $options Options to send to snmpget
      * @param string $mib Additional mibs to search, optionally you can specify full oid names
      * @param string $mib_dir Additional mib directory, should be rarely needed, see definitions to add per os mib dirs
      * @return string exact results from snmpget
@@ -124,5 +125,4 @@ class SNMP
     {
         return self::getInstance()->translateNumeric($device, $oid, $mib, $mib_dir);
     }
-
 }

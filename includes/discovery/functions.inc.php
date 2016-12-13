@@ -12,7 +12,9 @@
  * See COPYING for more details.
  */
 
+use Illuminate\Support\Collection;
 use LibreNMS\Exceptions\HostExistsException;
+use LibreNMS\SNMP\OIDData;
 
 function discover_new_device($hostname, $device = '', $method = '', $interface = '')
 {
@@ -954,10 +956,10 @@ function ignore_storage($descr)
  * Parse snmp data into an array containing the keys:
  * index, ipv4_address, mac_address
  *
- * @param \LibreNMS\SNMP\OIDData $data
+ * @param OIDData $data
  * @return array|null
  */
-function parse_arp_data(\LibreNMS\SNMP\OIDData $data, $device)
+function parse_arp_data(OIDData $data, $device)
 {
     $interface = get_port_by_index_cache($device['device_id'], $data['index']);
     if ($data['base_oid'] == 'IP-MIB::ipNetToMediaPhysAddress') {
@@ -974,4 +976,43 @@ function parse_arp_data(\LibreNMS\SNMP\OIDData $data, $device)
         'ipv4_address' => $ip,
         'context_name' => (string) $device['context_name']
     );
+}
+
+/**
+ * @param array $device device array
+ * @param string $operation Changed, Removed, or New
+ * @param Collection $data list of data to operate on, see parse_arp_data()
+ * @param Collection $existing_data existing arp data from the database
+ * @throws Exception Thrown when an invalid operation is passed
+ */
+function update_arp_table($device, $operation, Collection $data, Collection $existing_data)
+{
+    if ($operation == 'Changed') {
+        $data->each(function ($entry) use ($device, $existing_data) {
+            list($port_id, $mac_address, $ipv4_address, $context_name) = $entry;
+            $old_mac = $existing_data->where('ipv4_address', $ipv4_address)->collapse()->get('mac_address');
+
+            log_event("MAC change: $ipv4_address : " . mac_clean_to_readable($old_mac) . ' -> '
+                . mac_clean_to_readable($mac_address), $device, 'interface', $port_id);
+            dbUpdate(
+                array('mac_address' => $mac_address),
+                'ipv4_mac',
+                'port_id=? AND ipv4_address=? AND context_name=?',
+                array($port_id, $ipv4_address, $context_name)
+            );
+        });
+    } elseif ($operation == 'Removed') {
+        $data->each(function ($entry) {
+            dbDelete(
+                'ipv4_mac',
+                '`port_id` = ? AND `mac_address`=? AND `ipv4_address`=? AND `context_name`=?',
+                array_values($entry)
+            );
+        });
+    } elseif ($operation == 'New') {
+        dbBulkInsert($data, 'ipv4_mac');
+    } elseif ($operation == 'Unchanged') {
+        return;
+    }
+    throw new Exception('Unsupported Operation');
 }
