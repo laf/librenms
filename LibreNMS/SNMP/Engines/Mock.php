@@ -150,8 +150,7 @@ class Mock implements SnmpEngine
     private function getTypeString($type)
     {
         // FIXME: strings here might be wrong for some types
-        static $types = null;
-        $types = collect(array(
+        static $types = array(
             2 => 'integer32',
             4 => 'string',
             5 => 'null',
@@ -162,9 +161,9 @@ class Mock implements SnmpEngine
             67 => 'timeticks',
             68 => 'opaque',
             70 => 'counter64'
-        ));
+        );
          // FIXME: is the default right here?
-        return $types->get($type, null);
+        return $types[$type];
     }
 
     private static $cached_translations = array(
@@ -176,7 +175,7 @@ class Mock implements SnmpEngine
         'GAMATRONIC-MIB::psUnitManufacture.0' => '1.3.6.1.4.1.6050.1.1.2.0',
     );
 
-    private static function translate($oid, $mib = null, $mibdir = null)
+    public function translate($device, $oid, $mib = null, $mibdir = null)
     {
         global $config;
 

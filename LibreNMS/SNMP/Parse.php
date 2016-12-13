@@ -32,11 +32,23 @@ class Parse
     {
         $parts = collect(explode('.', $oid));
         if (count($parts) > 1) {
+            // if the oid contains a name, index is the first thing after that
+            if (str_contains($parts->first(), '::')) {
+                return collect(array(
+                    'base_oid' => $parts->first(),
+                    'index' => $parts[1],
+                    'extra_oid' => $parts->slice(2)->values()->map(function ($item) {
+                        return trim($item, '"');
+                    })->all()
+                ));
+            }
+            // otherwise, assume index is the last item
             return collect(array(
                 'index' => $parts->last(),
                 'base_oid' => implode('.', $parts->slice(0, count($parts) - 1)->all())
             ));
         } else {
+            // there are no segments in this oid
             return collect(array(
                 'base_oid' => $oid
             ));

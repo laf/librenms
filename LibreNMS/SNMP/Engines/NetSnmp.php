@@ -24,6 +24,7 @@
 namespace LibreNMS\SNMP\Engines;
 
 use LibreNMS\SNMP\Contracts\SnmpEngine;
+use LibreNMS\SNMP\DataSet;
 
 class NetSnmp extends Base
 {
@@ -36,14 +37,7 @@ class NetSnmp extends Base
      */
     public function getRaw($device, $oids, $options = null, $mib = null, $mib_dir = null)
     {
-        global $debug;
-        $cmd = gen_snmpget_cmd($device, $oids, $options, $mib, $mib_dir);
-        c_echo('SNMP[%c'.$cmd."%n]\n", $debug);
-        $output = shell_exec($cmd);
-
-        d_echo($output . PHP_EOL);
-
-        return $output;
+        return $this->exec(gen_snmpget_cmd($device, $oids, $options, $mib, $mib_dir));
     }
 
     /**
@@ -56,6 +50,69 @@ class NetSnmp extends Base
      */
     public function walkRaw($device, $oid, $options = null, $mib = null, $mib_dir = null)
     {
-        return shell_exec(gen_snmpwalk_cmd($device, $oid, $options, $mib, $mib_dir));
+        return $this->exec(gen_snmpwalk_cmd($device, $oid, $options, $mib, $mib_dir));
+    }
+
+    /**
+     * @param array $device
+     * @param string $oid
+     * @param string $mib
+     * @param string $mib_dir
+     * @return string
+     */
+    public function translate($device, $oid, $mib = null, $mib_dir = null)
+    {
+
+
+        $cmd  = 'snmptranslate '.mibdir($mib_dir, $device);
+        if ($mib !== null) {
+            $cmd .= " -m $mib";
+        }
+        if (!$this->isNumericOid($oid)) {
+            $cmd .= ' -IR';
+        }
+        $cmd .= " $oid";
+//        $cmd .= ' 2>/dev/null';
+        return $this->exec($cmd);
+    }
+
+    /**
+     * @param array $device
+     * @param string $oid
+     * @param string $mib
+     * @param string $mib_dir
+     * @return string
+     */
+    public function translateNumeric($device, $oid, $mib = null, $mib_dir = null)
+    {
+        if ($this->isNumericOid($oid)) {
+            return $oid;
+        }
+
+        $cmd  = 'snmptranslate '.mibdir($mib_dir, $device);
+        if ($mib !== null) {
+            $cmd .= " -m $mib";
+        }
+        $cmd .= " -IR -On $oid";
+//        $cmd .= ' 2>/dev/null';
+        return $this->exec($cmd);
+    }
+
+    private function exec($cmd)
+    {
+        global $debug;
+        c_echo('SNMP[%c'.$cmd."%n]\n", $debug);
+        $output = rtrim(shell_exec($cmd));
+        d_echo($output . PHP_EOL);
+        return $output;
+    }
+
+    /**
+     * @param $oid
+     * @return bool
+     */
+    private function isNumericOid($oid)
+    {
+        return (bool)preg_match('/[0-9\.]+/', $oid);
     }
 }

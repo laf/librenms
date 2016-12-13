@@ -949,3 +949,29 @@ function ignore_storage($descr)
 
     return $deny;
 }
+
+/**
+ * Parse snmp data into an array containing the keys:
+ * index, ipv4_address, mac_address
+ *
+ * @param \LibreNMS\SNMP\OIDData $data
+ * @return array|null
+ */
+function parse_arp_data(\LibreNMS\SNMP\OIDData $data, $device)
+{
+    $interface = get_port_by_index_cache($device['device_id'], $data['index']);
+    if ($data['base_oid'] == 'IP-MIB::ipNetToMediaPhysAddress') {
+        $ip = implode('.', $data['extra_oid']);
+    } elseif ($data['extra_oid'][0] == 'ipv4') {
+        $ip = $data['extra_oid'][1];
+    } else {
+        return null;
+    }
+
+    return array(
+        'port_id' => $interface['port_id'],
+        'mac_address' => implode(array_map('zeropad', explode(':', $data['value']))),
+        'ipv4_address' => $ip,
+        'context_name' => (string) $device['context_name']
+    );
+}
