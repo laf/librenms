@@ -37,10 +37,12 @@ class SNMP
     public static function getInstance(SnmpEngine $engine = null)
     {
         // Note, because this is static, there will only be one SnmpEngine instance
-        if ($engine === null) {
-            self::$engine = new NetSNMP(); // default engine
-        } else {
-            self::$engine = $engine;
+        if (self::$engine === null) {
+            if ($engine === null) {
+                self::$engine = new NetSNMP(); // default engine
+            } else {
+                self::$engine = $engine;
+            }
         }
 
         return self::$engine;

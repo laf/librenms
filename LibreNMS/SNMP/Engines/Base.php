@@ -31,6 +31,15 @@ use LibreNMS\SNMP\Parse;
 
 abstract class Base implements SnmpEngine
 {
+    /**
+     * Gets the name of this SNMP Engine
+     * @return string
+     */
+    public function getName()
+    {
+        $reflectionClass = new \ReflectionClass($this);
+        return $reflectionClass->getShortName();
+    }
 
     /**
      * @param array $device

@@ -27,6 +27,12 @@ use LibreNMS\SNMP\DataSet;
 interface SnmpEngine
 {
     /**
+     * Gets the name of this SNMP Engine
+     * @return string
+     */
+    public function getName();
+
+    /**
      * @param array $device
      * @param string|array $oids single or array of oids to get
      * @param string $mib Additional mibs to search, optionally you can specify full oid names
