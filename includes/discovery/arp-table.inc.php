@@ -23,57 +23,52 @@
  * @author     Tony Murray <murraytony@gmail.com>
  */
 
+use Illuminate\Support\Collection;
 use LibreNMS\SNMP;
 
 if (key_exists('vrf_lite_cisco', $device) && (count($device['vrf_lite_cisco'])!=0)) {
     $vrfs_lite_cisco = $device['vrf_lite_cisco'];
 } else {
-    $vrfs_lite_cisco = array(array('context_name'=>null));
+    $vrfs_lite_cisco = array(array('context_name'=>''));
 }
 
 foreach ($vrfs_lite_cisco as $vrf) {
     $device['context_name'] = $vrf['context_name'];
 
     // collect data from device and database
-    $arp_data = SNMP::walk($device, array('ipNetToMediaPhysAddress', 'ipNetToPhysicalPhysAddress'), 'IP-MIB')
+    $arp_entries = SNMP::walk($device, array('ipNetToMediaPhysAddress', 'ipNetToPhysicalPhysAddress'), 'IP-MIB')
         ->map(function ($entry) use ($device) {
             return parse_arp_data($entry, $device);
         })->filter(null);
-
 
     $sql = "SELECT M.* from ipv4_mac AS M, ports AS I WHERE M.port_id=I.port_id AND I.device_id=? AND M.context_name=?";
     $params = array($device['device_id'], $device['context_name']);
     $existing_data = collect(dbFetchRows($sql, $params));
 
 
-    // group data
-    $live_ips = $arp_data->pluck('ipv4_address');
-    $removed_entries = $existing_data->reject(function ($entry) use ($live_ips) {
-        return $live_ips->contains($entry['ipv4_address']);
-    });
-
-
-    $arp_data = $arp_data->groupBy(function ($entry) use ($existing_data) {
+    // group data and update
+    $live_ips = $arp_entries->pluck('ipv4_address');
+    $arp_entries->groupBy(function ($entry) use ($existing_data) {
+        // group up the entries returned from the device
         if ($existing_data->contains($entry)) {
             return 'Unchanged';
         } elseif ($existing_data->contains('ipv4_address', $entry['ipv4_address'])) {
             return 'Changed';
         }
         return 'New';
+    })->put('Removed', $existing_data->reject(function ($entry) use ($live_ips) {
+        // get a list of removed entries
+        return $live_ips->contains($entry['ipv4_address']);
+    }))->reject(function (Collection $removed) {
+        // reject empty groups
+        return $removed->isEmpty();
+    })->each(function ($data, $group) use ($device, $existing_data) {
+        // Update database
+        print "$group: " . count($data) . PHP_EOL;
+        update_arp_table($device, $group, $data, $existing_data);
     });
 
-    if (!$removed_entries->isEmpty()) {
-        $arp_data->put('Removed', $removed_entries);
-    }
-
-
-    // Update database
-    $arp_data->each(function ($group, $key) use ($device, $existing_data) {
-        print "$key: " . count($group) . PHP_EOL;
-        update_arp_table($device, $key, $group, $existing_data);
-    });
-
-    unset($arp_data, $existing_data, $removed_entries, $live_ips);
+    unset($arp_entries, $existing_data, $removed_entries, $live_ips);
     unset($device['context_name']);
 }
 unset($vrfs_lite_cisco);
