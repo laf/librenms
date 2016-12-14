@@ -1014,5 +1014,5 @@ function update_arp_table($device, $operation, Collection $data, Collection $exi
     } elseif ($operation == 'Unchanged') {
         return;
     }
-    throw new Exception('Unsupported Operation');
+//    throw new Exception('Unsupported Operation');
 }
