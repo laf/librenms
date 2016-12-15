@@ -29,7 +29,7 @@ use LibreNMS\SNMP\DataSet;
 use LibreNMS\SNMP\OIDData;
 use SNMP;
 
-class PhpSnmp extends Base
+class PhpSnmp extends FormattedBase
 {
     /** @var SNMP $snmp */
     private $snmp;
@@ -60,23 +60,6 @@ class PhpSnmp extends Base
         return $this->formatDataSet($result);
     }
 
-    /**
-     * @param array $device
-     * @param string|array $oids single or array of oids to walk
-     * @param string $mib Additional mibs to search, optionally you can specify full oid names
-     * @param string $mib_dir Additional mib directory, should be rarely needed, see definitions to add per os mib dirs
-     * @return string exact results from snmpget
-     */
-    public function getRaw($device, $oids, $options = null, $mib = null, $mib_dir = null)
-    {
-        $this->initSnmp($device);
-        $result = $this->snmp->get($oids);
-        if ($result === false) {
-            throw new \Exception($this->snmp->getError());
-        }
-        return $this->formatString($result);
-    }
-
     public function walk($device, $oids, $mib = null, $mib_dir = null)
     {
         $this->initSnmp($device);
@@ -92,24 +75,6 @@ class PhpSnmp extends Base
         }
 
         return $output;
-    }
-
-    /**
-     * @param array $device
-     * @param string $oid single oid to walk
-     * @param string $options Options to send to snmpwalk
-     * @param string $mib Additional mibs to search, optionally you can specify full oid names
-     * @param string $mib_dir Additional mib directory, should be rarely needed, see definitions to add per os mib dirs
-     * @return string exact results from snmpwalk
-     */
-    public function walkRaw($device, $oid, $options = null, $mib = null, $mib_dir = null)
-    {
-        $this->initSnmp($device);
-        $result = $this->snmp->walk($oid);
-        if ($result === false) {
-            throw new \Exception($this->snmp->getError());
-        }
-        return $this->formatString($result);
     }
 
     /**

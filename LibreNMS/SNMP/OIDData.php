@@ -29,35 +29,15 @@ class OIDData extends Collection
 {
     public static function makeRaw($oid, $raw_value)
     {
-        $new = new self(compact('oid', 'raw_value'));
-        return $new->merge(Parse::rawOID($oid))
+        return self::make()
+            ->merge(Parse::rawOID($oid))
             ->merge(Parse::rawValue($raw_value));
     }
 
-    public static function makeSnmprec($entry)
+    public static function makeType($oid, $type, $value)
     {
-        list($oid, $type, $data) = collect(explode('|', $entry));
-        $value = self::getTypeString($type) . ": " . $data;
-
-        return self::makeRaw($oid, $value);
-    }
-
-    private static function getTypeString($type)
-    {
-        // FIXME: strings here might be wrong for some types
-        static $types = array(
-            2 => 'integer32',
-            4 => 'string',
-            5 => 'null',
-            6 => 'oid',
-            64 => 'ipaddress',
-            65 => 'counter32',
-            66 => 'gauge32',
-            67 => 'timeticks',
-            68 => 'opaque',
-            70 => 'counter64'
-        );
-        // FIXME: is the default right here?
-        return $types[$type];
+        return self::make()
+            ->merge(Parse::rawOID($oid))
+            ->merge(Parse::value($type, $value));
     }
 }

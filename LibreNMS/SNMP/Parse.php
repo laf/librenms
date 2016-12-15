@@ -30,11 +30,13 @@ class Parse
 
     public static function rawOID($oid)
     {
+        // TODO: extract format
         $parts = collect(explode('.', $oid));
         if (count($parts) > 1) {
             // if the oid contains a name, index is the first thing after that
             if (str_contains($parts->first(), '::')) {
-                return collect(array(
+                return OIDData::make(array(
+                    'oid' => $oid,
                     'base_oid' => $parts->first(),
                     'index' => $parts[1],
                     'extra_oid' => $parts->slice(2)->values()->map(function ($item) {
@@ -43,22 +45,18 @@ class Parse
                 ));
             }
             // otherwise, assume index is the last item
-            return collect(array(
+            return OIDData::make(array(
+                'oid' => $oid,
                 'index' => $parts->last(),
                 'base_oid' => implode('.', $parts->slice(0, count($parts) - 1)->all())
             ));
         } else {
             // there are no segments in this oid
-            return collect(array(
+            return OIDData::make(array(
+                'oid' => $oid,
                 'base_oid' => $oid
             ));
         }
-    }
-
-    public static function rawValue($data)
-    {
-        list($type, $value) = explode(': ', $data, 2);
-        return Parse::value($type, $value);
     }
 
     /**
@@ -90,8 +88,15 @@ class Parse
         return DataSet::make($result);
     }
 
+    public static function rawValue($raw_value)
+    {
+        list($type, $value) = explode(': ', $raw_value, 2);
+        return Parse::value($type, $value);
+    }
+
     public static function value($type, $value)
     {
+
         $type = strtolower($type);
         $function = $type . 'Type';
         if (method_exists(__CLASS__, $function)) {
@@ -99,6 +104,32 @@ class Parse
         }
 
         return Format::generic($type, $value);
+    }
+
+    public static function snmprec($entry)
+    {
+        list($oid, $type, $data) = explode('|', $entry, 3);
+        return OIDData::makeType($oid, self::getSnmprecTypeString($type), $data);
+    }
+
+    private static function getSnmprecTypeString($type)
+    {
+        // FIXME: dos this belong here?
+        // FIXME: strings here might be wrong for some types
+        static $types = array(
+            2 => 'integer32',
+            4 => 'string',
+            5 => 'null',
+            6 => 'oid',
+            64 => 'ipaddress',
+            65 => 'counter32',
+            66 => 'gauge32',
+            67 => 'timeticks',
+            68 => 'opaque',
+            70 => 'counter64'
+        );
+        // FIXME: is the default right here?
+        return $types[$type];
     }
 
     /**
