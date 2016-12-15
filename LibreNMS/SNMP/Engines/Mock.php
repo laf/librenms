@@ -27,9 +27,10 @@ use Illuminate\Support\Collection;
 use LibreNMS\SNMP\Contracts\SnmpEngine;
 use LibreNMS\SNMP\DataSet;
 use LibreNMS\SNMP\Format;
+use LibreNMS\SNMP\OIDData;
 use LibreNMS\SNMP\Parse;
 
-class Mock implements SnmpEngine
+class Mock extends FormattedBase
 {
     /** @var Collection  */
     private $snmpRecData;
@@ -39,38 +40,12 @@ class Mock implements SnmpEngine
         $this->snmpRecData = new Collection;
     }
 
-
-    /**
-     * @param array $device
-     * @param string|array $oids single or array of oids to walk
-     * @param string $mib Additional mibs to search, optionally you can specify full oid names
-     * @param string $mib_dir Additional mib directory, should be rarely needed, see definitions to add per os mib dirs
-     * @return string exact results from snmpget
-     */
-    public function getRaw($device, $oids, $options = null, $mib = null, $mib_dir = null)
-    {
-        // TODO: Implement getRaw() method.
-    }
-
-    /**
-     * @param array $device
-     * @param string $oid single oid to walk
-     * @param string $options Options to send to snmpwalk
-     * @param string $mib Additional mibs to search, optionally you can specify full oid names
-     * @param string $mib_dir Additional mib directory, should be rarely needed, see definitions to add per os mib dirs
-     * @return string exact results from snmpwalk
-     */
-    public function walkRaw($device, $oid, $options = null, $mib = null, $mib_dir = null)
-    {
-        // TODO: Implement walkRaw() method.
-    }
-
     private function getSnmpRec($community)
     {
         global $config;
 
         if ($this->snmpRecData->has($community)) {
-            return $this->snmpRecData['community'];
+            return $this->snmpRecData[$community];
         }
 
         $data = DataSet::make();
@@ -78,17 +53,8 @@ class Mock implements SnmpEngine
         $contents = file_get_contents($config['install_dir'] . "/tests/snmpsim/$community.snmprec");
         $line = strtok($contents, "\r\n");
         while ($line !== false) {
-            list($oid, $type, $value) = explode('|', $line, 3);
-            if ($type == 4) {
-                $value = trim($value);
-            } elseif ($type == 6) {
-                $value = trim($value, '.');
-            }
-
-            $type = $this->getTypeString($type);
-            $data->put($oid, collect(
-                compact('type', 'value')
-            ));
+            $entry = Parse::snmprec($line);
+            $data[$entry['oid']] = $entry;
 
             $line = strtok("\r\n");
         }
@@ -108,25 +74,12 @@ class Mock implements SnmpEngine
     {
         $oids = collect(is_string($oids) ? explode(' ', $oids) : $oids);
 
-        $numeric_oids = collect($oids->reduce(function ($array, $oid) {
-            echo "Translating: $oid\n";
-            $array[] = array('original_oid' => $oid, 'oid' => Mock::translate($oid));
-            return $array;
-        }, array()));
-        var_dump($oids, $numeric_oids->pluck('oid'));
+        $numeric_oids = $oids->map(array(__CLASS__, 'translate'));
+//        var_dump($oids, $numeric_oids);
 
         $data = $this->getSnmpRec($device['community']);
 
-        $target_data = $data->only($numeric_oids->pluck('oid')->all());
-//        var_dump($numeric_oids, $target_data);
-//        $target_data->each(function (Collection $item) {
-//            echo gettype($item) . ' - ' . get_class($item) .PHP_EOL;
-//
-//            var_dump($item->keys());
-//        });
-        $result = $target_data->map(function ($item, $key) {
-            return Format::value($item['type'], $item['value'])->merge(Parse::rawOid($key));
-        });
+        $result = $data->only($numeric_oids->all())->values();
 
         return $result;
     }
@@ -185,7 +138,7 @@ class Mock implements SnmpEngine
         }
 
         // check if is numeric oid
-        if (preg_match('/^[\.\d]*$/', $oid)) {
+        if ($this->isNumericOid($oid)) {
             return ltrim($oid, '.');
         }
 
@@ -214,6 +167,33 @@ class Mock implements SnmpEngine
      */
     public function walk($device, $oids, $mib = null, $mib_dir = null)
     {
-        // TODO: Implement walk() method.
+        $oids = collect((array)$oids);
+        $data = $this->getSnmpRec($device['community']);
+
+        $self = $this; // ugliness for php 5.3
+        $numeric_oids = $oids->map(function ($oid) use ($self, $device, $mib, $mib_dir) {
+            return $self->translateNumeric($device, $oid, $mib, $mib_dir);
+        });
+
+        $output = $data->filter(function ($_, $key) use ($numeric_oids) {
+            return starts_with($key, $numeric_oids);
+        });
+
+
+        return $output;
     }
+
+    /**
+     * @param array $device
+     * @param string $oid
+     * @param string $mib
+     * @param string $mib_dir
+     * @return string
+     */
+    public function translateNumeric($device, $oid, $mib = null, $mib_dir = null)
+    {
+        // TODO: Implement translateNumeric() method.
+    }
+
+
 }

@@ -27,6 +27,12 @@ namespace LibreNMS\SNMP;
 
 class Format
 {
+
+    public static function oid($oid, $base_oid, $index, $extra_oid)
+    {
+        return OIDData::make(compact('oid', 'base_oid', 'index', 'extra_oid'));
+    }
+
     /**
      * @param string $type
      * @param mixed $value

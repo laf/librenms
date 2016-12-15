@@ -27,6 +27,13 @@ use Illuminate\Support\Collection;
 
 class DataSet extends Collection
 {
+    public function toRawString()
+    {
+        return $this->reduce(function ($entry, $output) {
+            return $output . $entry['oid'] . ' = ' . strtoupper($entry['type']) . ': '. $entry['value'] . PHP_EOL;
+        }, '');
+    }
+
     public function getByIndex($index = null)
     {
         return $this->getByField('index', $index);

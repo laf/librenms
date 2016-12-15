@@ -27,6 +27,7 @@ namespace LibreNMS\SNMP\Engines;
 
 use LibreNMS\SNMP\Contracts\SnmpEngine;
 use LibreNMS\SNMP\DataSet;
+use LibreNMS\SNMP\Format;
 use LibreNMS\SNMP\Parse;
 
 abstract class Base implements SnmpEngine
@@ -42,31 +43,11 @@ abstract class Base implements SnmpEngine
     }
 
     /**
-     * @param array $device
-     * @param string|array $oids single or array of oids to get
-     * @param string $mib Additional mibs to search, optionally you can specify full oid names
-     * @param string $mib_dir Additional mib directory, should be rarely needed, see definitions to add per os mib dirs
-     * @return DataSet collection of results
+     * @param $oid
+     * @return bool
      */
-    public function get($device, $oids, $mib = null, $mib_dir = null)
+    protected function isNumericOid($oid)
     {
-        return Parse::rawOutput($this->getRaw($device, $oids, null, $mib, $mib_dir));
-    }
-
-
-    /**
-     * @param array $device
-     * @param string|array $oids single or array of oids to walk
-     * @param string $mib Additional mibs to search, optionally you can specify full oid names
-     * @param string $mib_dir Additional mib directory, should be rarely needed, see definitions to add per os mib dirs
-     * @return DataSet collection of results
-     */
-    public function walk($device, $oids, $mib = null, $mib_dir = null)
-    {
-        $results = DataSet::make();
-        foreach ((array)$oids as $oid) {
-            $results = $results->merge(Parse::rawOutput($this->walkRaw($device, $oid, null, $mib, $mib_dir)));
-        }
-        return $results;
+        return (bool)preg_match('/[0-9\.]+/', $oid);
     }
 }
