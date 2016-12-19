@@ -23,10 +23,10 @@
 
 namespace LibreNMS\SNMP\Engines;
 
-use LibreNMS\SNMP\Contracts\SnmpEngine;
-use LibreNMS\SNMP\DataSet;
+use Illuminate\Support\Collection;
+use LibreNMS\SNMP\Contracts\SnmpTranslator;
 
-class NetSnmp extends RawBase
+class NetSnmp extends RawBase implements SnmpTranslator
 {
     /**
      * @param array $device
@@ -56,47 +56,87 @@ class NetSnmp extends RawBase
 
     /**
      * @param array $device
-     * @param string $oid
+     * @param string|array $oids
+     * @param string $options
      * @param string $mib
      * @param string $mib_dir
      * @return string
+     * @internal param string $oid
      */
-    public function translate($device, $oid, $mib = null, $mib_dir = null)
+    public function translate($device, $oids, $options = null, $mib = null, $mib_dir = null)
     {
-
-
-        $cmd  = 'snmptranslate '.mibdir($mib_dir, $device);
-        if ($mib !== null) {
+        $oids = collect((array)$oids);
+        $cmd  = 'snmptranslate '.$this->getMibDir($mib_dir, $device);
+        if (isset($mib)) {
             $cmd .= " -m $mib";
         }
-        if (!$this->isNumericOid($oid)) {
-            $cmd .= ' -IR';
-        }
-        $cmd .= " $oid";
-//        $cmd .= ' 2>/dev/null';
-        return $this->exec($cmd);
+        $cmd .= " $options ";
+        $cmd .= $oids->implode(' ');
+        $cmd .= ' 2>/dev/null';
+
+        $output = collect(explode("\n\n", $this->exec($cmd)));
+
+        $result = $oids->combine(array_pad($output->all(), $oids->count(), null));
+
+        return $result->count() == 1 ? $result->first() : $result->all();
     }
 
     /**
      * @param array $device
-     * @param string $oid
+     * @param string|array $oids
      * @param string $mib
      * @param string $mib_dir
-     * @return string
+     * @return Collection
+     * @throws \Exception
      */
-    public function translateNumeric($device, $oid, $mib = null, $mib_dir = null)
+    public function translateNumeric($device, $oids, $mib = null, $mib_dir = null)
     {
-        if ($this->isNumericOid($oid)) {
-            return $oid;
+        $self = $this; // php5.3 bs
+        $oids = collect($oids)->map(function ($oid) use ($self, $mib) {
+            return $self->formatOid($oid, $mib);
+        });
+
+
+        $result = collect();
+        foreach ($oids as $oid) {
+            if (self::isNumericOid($oid)) {
+                $result[$oid] = $oid;
+            } elseif ($this->oidIsCached($oid)) {
+                $result[$oid] = $this->getCachedOid($oid);
+            } else {
+                $result[$oid] = null;
+            }
         }
 
-        $cmd  = 'snmptranslate '.mibdir($mib_dir, $device);
-        if ($mib !== null) {
-            $cmd .= " -m $mib";
+        $oids_to_translate = $result->filter(function ($item) {
+            return is_null($item);
+        })->keys();
+
+        $translated = $this->translate($device, $oids_to_translate->all(), '-IR', $mib, $mib_dir);
+//        $translated = $this->runTranslate($oids_to_translate, $mib, $mib_dir);
+
+        $final = $result->merge($translated);
+        var_dump($final);
+
+        return $final->values();
+    }
+
+    private function oidIsCached($oid)
+    {
+        return array_key_exists($oid, self::$cached_translations);
+    }
+
+    private function getCachedOid($oid)
+    {
+        self::$cached_translations[$oid];
+    }
+
+    private function formatOid($oid, $mib)
+    {
+        if (!str_contains($oid, '::') && $mib !== null && !str_contains($mib, ':') && !self::isNumericOid($oid)) {
+            return "$mib::$oid";
         }
-        $cmd .= " -IR -On $oid";
-//        $cmd .= ' 2>/dev/null';
-        return $this->exec($cmd);
+        return $oid;
     }
 
     private function exec($cmd)
@@ -104,9 +144,67 @@ class NetSnmp extends RawBase
         global $debug;
         c_echo('SNMP[%c'.$cmd."%n]\n", $debug);
         $output = rtrim(shell_exec($cmd));
-        d_echo($output . PHP_EOL);
+        d_echo("[$output]" . PHP_EOL);
         return $output;
     }
 
+    private static $cached_translations = array(
+        'SNMPv2-MIB::sysDescr.0' => '.1.3.6.1.2.1.1.1.0',
+        'SNMPv2-MIB::sysObjectID.0' => '.1.3.6.1.2.1.1.2.0',
+        'ENTITY-MIB::entPhysicalDescr.1' => '.1.3.6.1.2.1.47.1.1.1.1.2.1',
+        'ENTITY-MIB::entPhysicalMfgName.1' => '.1.3.6.1.2.1.47.1.1.1.1.12.1',
+        'SML-MIB::product-Name.0' => '.1.3.6.1.4.1.2.6.182.3.3.1.0',
+        'GAMATRONIC-MIB::psUnitManufacture.0' => '.1.3.6.1.4.1.6050.1.1.2.0',
+    );
 
+    /**
+     * Generate the mib search directory argument for snmpcmd
+     * If null return the default mib dir
+     * If $mibdir is empty '', return an empty string
+     *
+     * @param string $mibdir should be the name of the directory within $config['mib_dir']
+     * @param array $device
+     * @return string The option string starting with -M
+     */
+    private function getMibDir($mibdir = null, $device = array())
+    {
+        global $config;
+
+        // get mib directories from the device
+        $extra_dir = '';
+        if (file_exists($config['mib_dir'] . '/' . $device['os'])) {
+            $extra_dir .= $config['mib_dir'] . '/' . $device['os'] . ':';
+        }
+
+        if (isset($device['os_group']) && file_exists($config['mib_dir'] . '/' . $device['os_group'])) {
+            $extra_dir .= $config['mib_dir'] . '/' . $device['os_group'] . ':';
+        }
+
+        if (isset($config['os_groups'][$device['os_group']]['mib_dir'])) {
+            if (is_array($config['os_groups'][$device['os_group']]['mib_dir'])) {
+                foreach ($config['os_groups'][$device['os_group']]['mib_dir'] as $k => $dir) {
+                    $extra_dir .= $config['mib_dir'] . '/' . $dir . ':';
+                }
+            }
+        }
+
+        if (isset($config['os'][$device['os']]['mib_dir'])) {
+            if (is_array($config['os'][$device['os']]['mib_dir'])) {
+                foreach ($config['os'][$device['os']]['mib_dir'] as $k => $dir) {
+                    $extra_dir .= $config['mib_dir'] . '/' . $dir . ':';
+                }
+            }
+        }
+
+        if (is_null($mibdir)) {
+            return " -M $extra_dir${config['mib_dir']}";
+        }
+
+        if (empty($mibdir)) {
+            return '';
+        }
+
+        // automatically set up includes
+        return " -M $extra_dir{$config['mib_dir']}/$mibdir:{$config['mib_dir']}";
+    }
 }

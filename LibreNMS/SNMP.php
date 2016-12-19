@@ -26,6 +26,7 @@
 namespace LibreNMS;
 
 use LibreNMS\SNMP\Contracts\SnmpEngine;
+use LibreNMS\SNMP\Contracts\SnmpTranslator;
 use LibreNMS\SNMP\DataSet;
 use LibreNMS\SNMP\Engines\NetSnmp;
 
@@ -33,19 +34,50 @@ class SNMP
 {
     /** @var SnmpEngine */
     private static $engine;
+    private static $translator;
 
+    /**
+     * Get the SnmpEngine instance.  This is called automatically by \LibreNMS\SNMP.
+     * NetSNMP is currently the default implementation.
+     * The private instance will be set to any passed engine,
+     * discarding the old engine and any data it might have cached.
+     *
+     * @param SnmpEngine|null $engine
+     * @return SnmpEngine|NetSnmp
+     */
     public static function getInstance(SnmpEngine $engine = null)
     {
-        // Note, because this is static, there will only be one SnmpEngine instance
+        if ($engine !== null) {
+            self::$engine = $engine;
+        }
+
         if (self::$engine === null) {
-            if ($engine === null) {
-                self::$engine = new NetSNMP(); // default engine
-            } else {
-                self::$engine = $engine;
-            }
+            self::$engine = new NetSNMP(); // default engine
         }
 
         return self::$engine;
+    }
+
+    /**
+     * @param SnmpTranslator|null $translator
+     * @return SnmpTranslator
+     */
+    public static function getTranslator(SnmpTranslator $translator = null)
+    {
+        if ($translator !== null) {
+            self::$translator = $translator;
+        }
+
+        if (self::$translator === null) {
+            if (self::getInstance() instanceof SnmpTranslator) {
+                // try to use the SnmpEngine
+                self::$translator = self::$engine;
+            } else {
+                self::$translator = new NetSnmp();
+            }
+        }
+
+        return self::$translator;
     }
 
     // ---- Public Interface ----
@@ -107,13 +139,14 @@ class SNMP
     /**
      * @param array $device
      * @param string $oid
+     * @param string $options
      * @param string $mib
      * @param string $mib_dir
      * @return string
      */
-    public static function translate($device, $oid, $mib = null, $mib_dir = null)
+    public static function translate($device, $oid, $options = null, $mib = null, $mib_dir = null)
     {
-        return self::getInstance()->translate($device, $oid, $mib, $mib_dir);
+        return self::getTranslator()->translate($device, $oid, $options, $mib, $mib_dir);
     }
 
     /**
@@ -125,6 +158,6 @@ class SNMP
      */
     public static function translateNumeric($device, $oid, $mib = null, $mib_dir = null)
     {
-        return self::getInstance()->translateNumeric($device, $oid, $mib, $mib_dir);
+        return self::getTranslator()->translateNumeric($device, $oid, $mib, $mib_dir);
     }
 }
