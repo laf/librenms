@@ -151,13 +151,13 @@ class SNMP
 
     /**
      * @param array $device
-     * @param string $oid
+     * @param string|array $oids
      * @param string $mib
      * @param string $mib_dir
-     * @return string
+     * @return string|array
      */
-    public static function translateNumeric($device, $oid, $mib = null, $mib_dir = null)
+    public static function translateNumeric($device, $oids, $mib = null, $mib_dir = null)
     {
-        return self::getTranslator()->translateNumeric($device, $oid, $mib, $mib_dir);
+        return self::getTranslator()->translateNumeric($device, $oids, $mib, $mib_dir);
     }
 }

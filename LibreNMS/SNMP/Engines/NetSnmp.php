@@ -65,6 +65,10 @@ class NetSnmp extends RawBase implements SnmpTranslator
      */
     public function translate($device, $oids, $options = null, $mib = null, $mib_dir = null)
     {
+        if (empty($oids)) {
+            return $oids;
+        }
+
         $oids = collect((array)$oids);
         $cmd  = 'snmptranslate '.$this->getMibDir($mib_dir, $device);
         if (isset($mib)) {
@@ -86,7 +90,7 @@ class NetSnmp extends RawBase implements SnmpTranslator
      * @param string|array $oids
      * @param string $mib
      * @param string $mib_dir
-     * @return Collection
+     * @return string|array
      * @throws \Exception
      */
     public function translateNumeric($device, $oids, $mib = null, $mib_dir = null)
@@ -112,13 +116,12 @@ class NetSnmp extends RawBase implements SnmpTranslator
             return is_null($item);
         })->keys();
 
-        $translated = $this->translate($device, $oids_to_translate->all(), '-IR', $mib, $mib_dir);
+        $translated = $this->translate($device, $oids_to_translate->all(), '-IR -On', $mib, $mib_dir);
 //        $translated = $this->runTranslate($oids_to_translate, $mib, $mib_dir);
 
-        $final = $result->merge($translated);
-        var_dump($final);
+        $result = $oids->combine($result->merge($translated)->all());
 
-        return $final->values();
+        return $result->count() == 1 ? $result->first() : $result->all();
     }
 
     private function oidIsCached($oid)
