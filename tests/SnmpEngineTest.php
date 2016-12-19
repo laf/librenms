@@ -35,6 +35,8 @@ class SnmpEngineTest extends \PHPUnit_Framework_TestCase
      */
     public function testSnmpTranslate()
     {
+        $this->assertEquals('', SNMP::translate(Mock::genDevice(), ''));
+        $this->assertEquals(array(), SNMP::translate(Mock::genDevice(), array()));
         $this->assertEquals('UCD-SNMP-MIB::prTable', SNMP::translate(Mock::genDevice(), '1.3.6.1.4.1.2021.2'));
 
         $oids = array('system', 'ifTable');
@@ -50,7 +52,7 @@ class SnmpEngineTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, SNMP::translate(Mock::genDevice(), $oids, '-IR -On'));
     }
 
-    public function testNetSnmpTranslateFailure()
+    public function testSnmpTranslateFailure()
     {
         $oids = array('SNMPv2-MIB::system', '.1.3.6.1.2.1.1', 'fldsmdfr', '.1.3.6.1.2.1.1.5.0');
         $expected = array(
@@ -59,10 +61,22 @@ class SnmpEngineTest extends \PHPUnit_Framework_TestCase
             'fldsmdfr' => null,
             '.1.3.6.1.2.1.1.5.0' => null
         );
-
         $this->assertEquals($expected, SNMP::translate(Mock::genDevice(), $oids));
 
         $expected['.1.3.6.1.2.1.1'] = null;
-        $this->assertEquals($expected, SNMP::translate(Mock::genDevice(), $oids, '-IR', null, ''));
+        $this->assertEquals($expected, SNMP::translate(Mock::genDevice(), $oids, '-IR'));
+    }
+
+    public function testSnmpTranslateNumeric()
+    {
+        $this->assertEquals('', SNMP::translateNumeric(Mock::genDevice(), ''));
+        $this->assertEquals(array(), SNMP::translateNumeric(Mock::genDevice(), array()));
+
+        $oids = array('SNMPv2-MIB::system', 'UCD-SNMP-MIB::ssCpuUser.0');
+        $expected = array(
+            'SNMPv2-MIB::system' => '.1.3.6.1.2.1.1',
+            'UCD-SNMP-MIB::ssCpuUser.0' => '.1.3.6.1.4.1.2021.11.9.0'
+        );
+        $this->assertEquals($expected, SNMP::translateNumeric(Mock::genDevice(), $oids));
     }
 }

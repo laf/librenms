@@ -76,7 +76,7 @@ class Mock extends FormattedBase
 //        $numeric_oids = $oids->map(function ($oid) use ($self, $device, $mib, $mib_dir) {
 //            return $self->translateNumeric($device, $oid, $mib, $mib_dir);
 //        });
-        $numeric_oids = SNMP::translateNumeric($device, $oids, $mib, $mib_dir);
+        $numeric_oids = SNMP::translateNumeric($device, $oids);
         var_dump($numeric_oids);
 
         $data = $this->getSnmpRec($device['community']);
