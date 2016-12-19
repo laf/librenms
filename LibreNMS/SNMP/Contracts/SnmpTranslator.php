@@ -1,8 +1,8 @@
 <?php
 /**
- * Base.php
+ * SnmpTranslator.php
  *
- * A base implementation of get() and walk(),  children need to supply getRaw() and walkRaw()
+ * -Description-
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,31 +23,27 @@
  * @author     Tony Murray <murraytony@gmail.com>
  */
 
-namespace LibreNMS\SNMP\Engines;
+namespace LibreNMS\SNMP\Contracts;
 
-use LibreNMS\SNMP\Contracts\SnmpEngine;
-use LibreNMS\SNMP\DataSet;
-use LibreNMS\SNMP\Format;
-use LibreNMS\SNMP\Parse;
 
-abstract class Base implements SnmpEngine
+interface SnmpTranslator
 {
     /**
-     * Gets the name of this SNMP Engine
-     * @return string
+     * @param array $device
+     * @param string|array $oids
+     * @param string $options
+     * @param string $mib
+     * @param string $mib_dir
+     * @return string|array
      */
-    public function getName()
-    {
-        $reflectionClass = new \ReflectionClass($this);
-        return $reflectionClass->getShortName();
-    }
+    public function translate($device, $oids, $options = null, $mib = null, $mib_dir = null);
 
     /**
-     * @param $oid
-     * @return bool
+     * @param array $device
+     * @param string|array $oids
+     * @param string $mib
+     * @param string $mib_dir
+     * @return string|array
      */
-    public function isNumericOid($oid)
-    {
-        return (bool)preg_match('/^[0-9\.]+$/', $oid);
-    }
+    public function translateNumeric($device, $oids, $mib = null, $mib_dir = null);
 }

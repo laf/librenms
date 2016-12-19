@@ -38,6 +38,7 @@ require $install_dir . '/LibreNMS/ClassLoader.php';
 $classLoader = new LibreNMS\ClassLoader();
 $classLoader->registerDir($install_dir . '/tests', 'LibreNMS\Tests');
 $classLoader->register();
+require $install_dir . '/lib/collect/vendor/autoload.php';
 
 require $install_dir . '/includes/common.php';
 require $install_dir . '/html/includes/functions.inc.php';

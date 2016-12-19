@@ -24,15 +24,13 @@
 namespace LibreNMS\SNMP\Engines;
 
 use Illuminate\Support\Collection;
-use LibreNMS\SNMP\Contracts\SnmpEngine;
 use LibreNMS\SNMP\DataSet;
-use LibreNMS\SNMP\Format;
-use LibreNMS\SNMP\OIDData;
 use LibreNMS\SNMP\Parse;
+use LibreNMS\SNMP;
 
 class Mock extends FormattedBase
 {
-    /** @var Collection  */
+    /** @var Collection */
     private $snmpRecData;
 
     public function __construct()
@@ -74,17 +72,21 @@ class Mock extends FormattedBase
     {
         $oids = collect(is_string($oids) ? explode(' ', $oids) : $oids);
 
-        $numeric_oids = $oids->map(array(__CLASS__, 'translate'));
-//        var_dump($oids, $numeric_oids);
+//        $self = $this;
+//        $numeric_oids = $oids->map(function ($oid) use ($self, $device, $mib, $mib_dir) {
+//            return $self->translateNumeric($device, $oid, $mib, $mib_dir);
+//        });
+        $numeric_oids = SNMP::translateNumeric($device, $oids, $mib, $mib_dir);
+        var_dump($numeric_oids);
 
         $data = $this->getSnmpRec($device['community']);
 
-        $result = $data->only($numeric_oids->all())->values();
+        $result = $data->only($numeric_oids)->values();
 
         return $result;
     }
 
-    public static function genDevice($community)
+    public static function genDevice($community = null)
     {
         return array(
             'device_id' => 1,
@@ -100,64 +102,6 @@ class Mock extends FormattedBase
         );
     }
 
-    private function getTypeString($type)
-    {
-        // FIXME: strings here might be wrong for some types
-        static $types = array(
-            2 => 'integer32',
-            4 => 'string',
-            5 => 'null',
-            6 => 'oid',
-            64 => 'ipaddress',
-            65 => 'counter32',
-            66 => 'gauge32',
-            67 => 'timeticks',
-            68 => 'opaque',
-            70 => 'counter64'
-        );
-         // FIXME: is the default right here?
-        return $types[$type];
-    }
-
-    private static $cached_translations = array(
-        'SNMPv2-MIB::sysDescr.0' => '1.3.6.1.2.1.1.1.0',
-        'SNMPv2-MIB::sysObjectID.0' => '1.3.6.1.2.1.1.2.0',
-        'ENTITY-MIB::entPhysicalDescr.1' => '1.3.6.1.2.1.47.1.1.1.1.2.1',
-        'ENTITY-MIB::entPhysicalMfgName.1' => '1.3.6.1.2.1.47.1.1.1.1.12.1',
-        'SML-MIB::product-Name.0' => '1.3.6.1.4.1.2.6.182.3.3.1.0',
-        'GAMATRONIC-MIB::psUnitManufacture.0' => '1.3.6.1.4.1.6050.1.1.2.0',
-    );
-
-    public function translate($device, $oid, $mib = null, $mibdir = null)
-    {
-        global $config;
-
-        // check cache
-        if (isset(self::$cached_translations[$oid])) {
-            return self::$cached_translations[$oid];
-        }
-
-        // check if is numeric oid
-        if ($this->isNumericOid($oid)) {
-            return ltrim($oid, '.');
-        }
-
-        // translate
-        $cmd = "snmptranslate -IR -On $oid";
-        $cmd .= ' -M ' . (isset($mibdir) ? $config['mib_dir'] . ":".$config['mib_dir']."/$mibdir" : $config['mib_dir']);
-        if (isset($mib) && $mib) {
-            $cmd .= " -m $mib";
-        }
-
-        $number = shell_exec($cmd);
-
-        if (empty($number)) {
-            throw new \Exception('Could not translate oid: ' . $oid . PHP_EOL . 'Tried: ' . $cmd);
-        }
-
-        return trim($number, ". \n\r");
-    }
-
     /**
      * @param array $device
      * @param string|array $oids single or array of oids to walk
@@ -170,30 +114,15 @@ class Mock extends FormattedBase
         $oids = collect((array)$oids);
         $data = $this->getSnmpRec($device['community']);
 
-        $self = $this; // ugliness for php 5.3
-        $numeric_oids = $oids->map(function ($oid) use ($self, $device, $mib, $mib_dir) {
-            return $self->translateNumeric($device, $oid, $mib, $mib_dir);
-        });
+        $numeric_oids = array_map(function ($oid) {
+            return ltrim($oid, '.');
+        }, (array)SNMP::translateNumeric($device, $oids, $mib, $mib_dir));
 
-        $output = $data->filter(function ($_, $key) use ($numeric_oids) {
-            return starts_with($key, $numeric_oids);
+        $output = $data->filter(function ($oid) use ($numeric_oids) {
+            return starts_with($oid['oid'], $numeric_oids->all());
         });
 
 
         return $output;
     }
-
-    /**
-     * @param array $device
-     * @param string $oid
-     * @param string $mib
-     * @param string $mib_dir
-     * @return string
-     */
-    public function translateNumeric($device, $oid, $mib = null, $mib_dir = null)
-    {
-        // TODO: Implement translateNumeric() method.
-    }
-
-
 }
