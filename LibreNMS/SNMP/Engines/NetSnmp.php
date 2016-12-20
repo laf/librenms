@@ -23,7 +23,6 @@
 
 namespace LibreNMS\SNMP\Engines;
 
-use Illuminate\Support\Collection;
 use LibreNMS\SNMP\Contracts\SnmpTranslator;
 
 class NetSnmp extends RawBase implements SnmpTranslator
@@ -38,6 +37,7 @@ class NetSnmp extends RawBase implements SnmpTranslator
     public function getRaw($device, $oids, $options = null, $mib = null, $mib_dir = null)
     {
         $oids = is_array($oids) ? implode(' ', $oids) : $oids;
+        // TODO: make sure gen_snmpget_cmd uses snmpbulkget
         return $this->exec(gen_snmpget_cmd($device, $oids, $options, $mib, $mib_dir));
     }
 
@@ -147,7 +147,7 @@ class NetSnmp extends RawBase implements SnmpTranslator
         global $debug;
         c_echo('SNMP[%c'.$cmd."%n]\n", $debug);
         $output = rtrim(shell_exec($cmd));
-        d_echo("[$output]" . PHP_EOL);
+        d_echo("[$output]\n");
         return $output;
     }
 

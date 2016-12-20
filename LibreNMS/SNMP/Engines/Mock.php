@@ -24,9 +24,9 @@
 namespace LibreNMS\SNMP\Engines;
 
 use Illuminate\Support\Collection;
+use LibreNMS\SNMP;
 use LibreNMS\SNMP\DataSet;
 use LibreNMS\SNMP\Parse;
-use LibreNMS\SNMP;
 
 class Mock extends FormattedBase
 {
@@ -36,6 +36,29 @@ class Mock extends FormattedBase
     public function __construct()
     {
         $this->snmpRecData = new Collection;
+    }
+
+    /**
+     * Generate fake device for testing.
+     *
+     * @param string $community name of the snmprec file to load
+     * @param int $port port for snmpsim, should be defined by SNMPSIM
+     * @return array
+     */
+    public static function genDevice($community = null, $port = 11161)
+    {
+        return array(
+            'device_id' => 1,
+            'hostname' => '127.0.0.1',
+            'snmpver' => 'v2c',
+            'port' => $port,
+            'timeout' => 3,
+            'retries' => 0,
+            'snmp_max_repeaters' => 10,
+            'community' => $community,
+            'os' => 'generic',
+            'os_group' => '',
+        );
     }
 
     private function getSnmpRec($community)
@@ -86,22 +109,6 @@ class Mock extends FormattedBase
         return $result;
     }
 
-    public static function genDevice($community = null)
-    {
-        return array(
-            'device_id' => 1,
-            'hostname' => '127.0.0.1',
-            'snmpver' => 'v2c',
-            'port' => 11161,
-            'timeout' => 3,
-            'retries' => 0,
-            'snmp_max_repeaters' => 10,
-            'community' => $community,
-            'os' => 'generic',
-            'os_group' => '',
-        );
-    }
-
     /**
      * @param array $device
      * @param string|array $oids single or array of oids to walk
@@ -119,7 +126,7 @@ class Mock extends FormattedBase
         }, (array)SNMP::translateNumeric($device, $oids, $mib, $mib_dir));
 
         $output = $data->filter(function ($oid) use ($numeric_oids) {
-            return starts_with($oid['oid'], $numeric_oids->all());
+            return starts_with($oid['oid'], $numeric_oids);
         });
 
 

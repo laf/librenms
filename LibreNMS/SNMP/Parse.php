@@ -72,15 +72,19 @@ class Parse
         $tmp_oid = '';
         $tmp_value = '';
         while ($line !== false) {
+            // if line contains =, parse oid and value, otherwise append value
             if (str_contains($line, ' = ')) {
                 list($tmp_oid, $tmp_value) = explode(' = ', $line, 2);
             } else {
                 $tmp_value .= "\n" . $line;
             }
-//            echo "Parsed: $tmp_oid <> $tmp_value\n";
+
+            // get the next line
             $line = strtok($separator);
 
-            if ($line === false || str_contains($line, ' = ')) {
+            // if the next line is parsable or we reached the end, append OIDData to results
+            // skip invalid lines that don't contain : in the value
+            if (($line === false || str_contains($line, ' = ')) && str_contains($tmp_value, ': ')) {
                 $result[] = OIDData::makeRaw($tmp_oid, $tmp_value);
             }
         }
@@ -90,6 +94,10 @@ class Parse
 
     public static function rawValue($raw_value)
     {
+        if (!str_contains($raw_value, ': ')) {
+            throw new \Exception("Invalid raw value format: $raw_value");
+        }
+
         list($type, $value) = explode(': ', $raw_value, 2);
         return Parse::value($type, $value);
     }
@@ -119,6 +127,7 @@ class Parse
         static $types = array(
             2 => 'integer32',
             4 => 'string',
+            '4x' => 'hex-string',
             5 => 'null',
             6 => 'oid',
             64 => 'ipaddress',
