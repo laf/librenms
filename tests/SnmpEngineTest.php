@@ -26,13 +26,19 @@
 namespace LibreNMS\Tests;
 
 use LibreNMS\SNMP;
+use LibreNMS\SNMP\DataSet;
 use LibreNMS\SNMP\Engines\Mock;
+use LibreNMS\SNMP\OIDData;
 
-class SnmpEngineTest extends \PHPUnit_Framework_TestCase
+abstract class SnmpEngineTest extends \PHPUnit_Framework_TestCase
 {
-    /**
-     *
-     */
+    private function checkSnmpsim()
+    {
+        if (!getenv('SNMPSIM') && !SNMP::getInstance() instanceof Mock) {
+            $this->markTestSkipped('SNMPSIM not present');
+        }
+    }
+
     public function testSnmpTranslate()
     {
         $this->assertEquals('', SNMP::translate(Mock::genDevice(), ''));
@@ -78,5 +84,65 @@ class SnmpEngineTest extends \PHPUnit_Framework_TestCase
             'UCD-SNMP-MIB::ssCpuUser.0' => '.1.3.6.1.4.1.2021.11.9.0'
         );
         $this->assertEquals($expected, SNMP::translateNumeric(Mock::genDevice(), $oids));
+    }
+
+    public function testSnmpGet()
+    {
+        $this->checkSnmpsim();
+        $unreachable = Mock::genDevice(null, 1);
+        $unreachable['timeout'] = 0.001;
+        $this->assertEquals(DataSet::make(), SNMP::get($unreachable, 'sysDescr.0'));
+
+        // set up a device
+        $device = Mock::genDevice('unit_tests', getenv('SNMPSIM'));
+
+
+//        var_dump(SNMP::get($device, 'sysDescr.0')->first()->all());
+//        $this->assertEquals(DataSet::make(OIDData::make()), SNMP::get($device, 'sysDescr.0'));
+
+        $expected = DataSet::make(array(
+            OIDData::make(array(
+                'oid' => 'SNMPv2-MIB::sysDescr.0',
+                'base_oid' => 'SNMPv2-MIB::sysDescr',
+                'index' => '0',
+                'extra_oid' => array(),
+                'type' => 'string',
+                'value' => 'Unit Tests sysDescr',
+            ))
+        ));
+        $this->assertEquals($expected, SNMP::get($device, 'SNMPv2-MIB::sysDescr.0'));
+    }
+
+    public function testEmbededString()
+    {
+        $this->checkSnmpsim();
+        $device = Mock::genDevice('unit_tests', getenv('SNMPSIM'));
+        $expected = DataSet::make(array(
+            OIDData::make(array(
+                'oid' => 'IP-MIB::ipNetToPhysicalPhysAddress.1.ipv6."fd:80:00:00:00:00:00:00:86:d6:d0:ff:fe:ed:0f:cc"',
+                'base_oid' => 'IP-MIB::ipNetToPhysicalPhysAddress',
+                'index' => '1',
+                'extra_oid' => array(
+                    0 => 'ipv6',
+                    1 => 'fd:80:00:00:00:00:00:00:86:d6:d0:ff:fe:ed:0f:cc'
+                ),
+                'type' => 'string',
+                'value' => '84:d6:d0:ed:1f:96',
+
+            )),
+            OIDData::make(array(
+                'oid' => 'IP-MIB::ipNetToPhysicalPhysAddress.97.ipv6."fd:80:00:00:00:00:00:00:26:e9:b3:ff:fe:bb:50:c3"',
+                'base_oid' => 'IP-MIB::ipNetToPhysicalPhysAddress',
+                'index' => '97',
+                'extra_oid' => array(
+                    0 => 'ipv6',
+                    1 => 'fd:80:00:00:00:00:00:00:26:e9:b3:ff:fe:bb:50:c3'
+                ),
+                'type' => 'string',
+                'value' => '24:e9:b3:bb:60:ad'
+            ))
+        ));
+
+        $this->assertEquals($expected, SNMP::walk($device, 'ipNetToPhysicalPhysAddress'));
     }
 }

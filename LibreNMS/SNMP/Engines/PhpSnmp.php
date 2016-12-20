@@ -45,7 +45,14 @@ class PhpSnmp extends FormattedBase
             // already initialized to this device
             return;
         }
-        $this->snmp = new SNMP($this->versionTable[$device['snmpver']], $device['hostname'], $device['community']);
+
+        $this->snmp = new SNMP(
+            $this->versionTable[$device['snmpver']],
+            $device['hostname'],
+            $device['community'],
+            prep_snmp_setting($device, 'timeout') ?: 1000000, // SNMP default
+            prep_snmp_setting($device, 'retries') ?: 5
+        );
     }
 
     //TODO: mibs/mib directories
