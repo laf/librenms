@@ -23,6 +23,7 @@
 
 namespace LibreNMS\SNMP\Engines;
 
+use LibreNMS\Proc;
 use LibreNMS\SNMP\Contracts\SnmpTranslator;
 
 class NetSnmp extends RawBase implements SnmpTranslator
@@ -37,8 +38,7 @@ class NetSnmp extends RawBase implements SnmpTranslator
     public function getRaw($device, $oids, $options = null, $mib = null, $mib_dir = null)
     {
         $oids = is_array($oids) ? implode(' ', $oids) : $oids;
-        // TODO: make sure gen_snmpget_cmd uses snmpbulkget
-        return $this->exec(gen_snmpget_cmd($device, $oids, $options, $mib, $mib_dir));
+        return $this->exec($this->genSnmpCmd('get', $device, $oids, $options, $mib, $mib_dir));
     }
 
     /**
@@ -51,7 +51,7 @@ class NetSnmp extends RawBase implements SnmpTranslator
      */
     public function walkRaw($device, $oid, $options = null, $mib = null, $mib_dir = null)
     {
-        return $this->exec(gen_snmpwalk_cmd($device, $oid, $options, $mib, $mib_dir));
+        return $this->exec($this->genSnmpCmd('walk', $device, $oid, $options, $mib, $mib_dir));
     }
 
     /**
@@ -76,7 +76,7 @@ class NetSnmp extends RawBase implements SnmpTranslator
         }
         $cmd .= " $options ";
         $cmd .= $oids->implode(' ');
-        $cmd .= ' 2>/dev/null';
+        $cmd .= ' 2>/dev/null';  // don't allow errors to throw an exception
 
         $output = collect(explode("\n\n", $this->exec($cmd)));
 
@@ -117,7 +117,6 @@ class NetSnmp extends RawBase implements SnmpTranslator
         })->keys();
 
         $translated = $this->translate($device, $oids_to_translate->all(), '-IR -On', $mib, $mib_dir);
-//        $translated = $this->runTranslate($oids_to_translate, $mib, $mib_dir);
 
         $result = $oids->combine($result->merge($translated)->all());
 
@@ -146,8 +145,17 @@ class NetSnmp extends RawBase implements SnmpTranslator
     {
         global $debug;
         c_echo('SNMP[%c'.$cmd."%n]\n", $debug);
-        $output = rtrim(shell_exec($cmd));
+        $process = new Proc($cmd, null, null, true);
+        list($output, $stderr) = $process->getOutput();
+        $process->close();
+
+        $output = rtrim($output);
         d_echo("[$output]\n");
+
+        if (!empty($stderr)) {
+            throw new \Exception($stderr);
+        }
+
         return $output;
     }
 
@@ -209,5 +217,53 @@ class NetSnmp extends RawBase implements SnmpTranslator
 
         // automatically set up includes
         return " -M $extra_dir{$config['mib_dir']}/$mibdir:{$config['mib_dir']}";
+    }
+
+    /**
+     * Generate an snmp command
+     *
+     * @param string $type either 'get' or 'walk'
+     * @param array $device the we will be connecting to
+     * @param string $oids the oids to fetch, separated by spaces
+     * @param string $options extra snmp command options, usually this is output options
+     * @param string $mib an additional mib to add to this command
+     * @param string $mibdir a mib directory to search for mibs, usually prepended with +
+     * @return string the fully assembled command, ready to run
+     */
+    private function genSnmpCmd($type, $device, $oids, $options = null, $mib = null, $mibdir = null)
+    {
+        global $config;
+
+        // populate timeout & retries values from configuration
+        $timeout = prep_snmp_setting($device, 'timeout');
+        $retries = prep_snmp_setting($device, 'retries');
+
+        if (!isset($device['transport'])) {
+            $device['transport'] = 'udp';
+        }
+
+        if ($device['snmpver'] == 'v1' ||
+            (isset($device['os'], $config['os'][$device['os']]['nobulk']) &&
+                $config['os'][$device['os']]['nobulk'])
+        ) {
+            $cmd = $config['snmp'.$type];
+        } else {
+            $cmd = $config['snmpbulk'.$type];
+            $max_repeaters = get_device_max_repeaters($device);
+            if ($max_repeaters > 0) {
+                $cmd .= " -Cr$max_repeaters ";
+            }
+        }
+
+        $cmd .= snmp_gen_auth($device);
+        $cmd .= " $options";
+        $cmd .= $mib ? " -m $mib" : '';
+        $cmd .= mibdir($mibdir, $device);
+        $cmd .= isset($timeout) ? " -t $timeout" : '';
+        $cmd .= isset($retries) ? " -r $retries" : '';
+        $cmd .= ' ' . $device['transport'] . ':' . $device['hostname'] . ':' . $device['port'];
+        $cmd .= " $oids";
+
+        return $cmd;
     }
 }

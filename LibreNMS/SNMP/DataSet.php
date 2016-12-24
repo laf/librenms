@@ -24,9 +24,46 @@
 namespace LibreNMS\SNMP;
 
 use Illuminate\Support\Collection;
+use LibreNMS\SNMP;
 
 class DataSet extends Collection
 {
+    private $error = SNMP::ERROR_NONE;
+
+    /**
+     * Create an empty DataSet with an SNMP error code
+     * likely SNMP::ERROR_UNREACHABLE
+     *
+     * @param int $error
+     * @return DataSet
+     */
+    public static function makeError($error)
+    {
+        $new = self::make();
+        $new->error = $error;
+        return $new;
+    }
+
+    /**
+     * Check if this DataSet has an error
+     *
+     * @return bool
+     */
+    public function hasError()
+    {
+        return $this->error != SNMP::ERROR_NONE;
+    }
+
+    /**
+     * Get the error code, see SNMP
+     *
+     * @return int
+     */
+    public function getError()
+    {
+        return $this->error;
+    }
+
     public function toRawString()
     {
         return $this->reduce(function ($entry, $output) {

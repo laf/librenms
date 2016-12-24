@@ -38,21 +38,14 @@ function rrdtool_initialize($dual_process = true)
     global $config, $rrd_sync_process, $rrd_async_process;
 
     $command = $config['rrdtool'] . ' -';
-
-    $descriptor_spec = array(
-        0 => array('pipe', 'r'), // stdin  is a pipe that the child will read from
-        1 => array('pipe', 'w'), // stdout is a pipe that the child will write to
-        2 => array('pipe', 'w'), // stderr is a pipe that the child will write to
-    );
-
     $cwd = $config['rrd_dir'];
 
     if (!rrdtool_running($rrd_sync_process)) {
-        $rrd_sync_process = new Proc($command, $descriptor_spec, $cwd);
+        $rrd_sync_process = new Proc($command, $cwd);
     }
 
     if ($dual_process && !rrdtool_running($rrd_async_process)) {
-        $rrd_async_process = new Proc($command, $descriptor_spec, $cwd);
+        $rrd_async_process = new Proc($command, $cwd);
         $rrd_async_process->setSynchronous(false);
     }
 

@@ -39,7 +39,11 @@ abstract class RawBase extends Base
      */
     public function get($device, $oids, $mib = null, $mib_dir = null)
     {
-        return Parse::rawOutput($this->getRaw($device, $oids, null, $mib, $mib_dir));
+        try {
+            return Parse::rawOutput($this->getRaw($device, $oids, null, $mib, $mib_dir));
+        } catch (\Exception $e) {
+            return DataSet::makeError(Parse::errorMessage($e->getMessage()));
+        }
     }
 
 
@@ -52,10 +56,14 @@ abstract class RawBase extends Base
      */
     public function walk($device, $oids, $mib = null, $mib_dir = null)
     {
-        $results = DataSet::make();
-        foreach ((array)$oids as $oid) {
-            $results = $results->merge(Parse::rawOutput($this->walkRaw($device, $oid, null, $mib, $mib_dir)));
+        try {
+            $results = DataSet::make();
+            foreach ((array)$oids as $oid) {
+                $results = $results->merge(Parse::rawOutput($this->walkRaw($device, $oid, null, $mib, $mib_dir)));
+            }
+            return $results;
+        } catch (\Exception $e) {
+            return DataSet::makeError(Parse::errorMessage($e->getMessage()));
         }
-        return $results;
     }
 }

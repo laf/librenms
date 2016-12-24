@@ -48,22 +48,22 @@ class Proc
      * Most arguments match proc_open()
      *
      * @param string $cmd the command to execute
-     * @param array $descriptorspec the definition of pipes to initialize
      * @param null $cwd working directory to change to
      * @param array|null $env array of environment variables to set
      * @param bool $blocking set the output pipes to blocking (default: false)
+     * @param array $descriptorspec the definition of pipes to initialize
      * @throws Exception the command was unable to execute
      */
     public function __construct(
         $cmd,
+        $cwd = null,
+        $env = null,
+        $blocking = false,
         $descriptorspec = array(
             0 => array("pipe", "r"),
             1 => array("pipe", "w"),
             2 => array("pipe", "w")
-        ),
-        $cwd = null,
-        $env = null,
-        $blocking = false
+        )
     ) {
         $this->_process = proc_open($cmd, $descriptorspec, $this->_pipes, $cwd, $env);
         if (!is_resource($this->_process)) {

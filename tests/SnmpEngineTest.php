@@ -91,7 +91,7 @@ abstract class SnmpEngineTest extends \PHPUnit_Framework_TestCase
         $this->checkSnmpsim();
         $unreachable = Mock::genDevice(null, 1);
         $unreachable['timeout'] = 0.001;
-        $this->assertEquals(DataSet::make(), SNMP::get($unreachable, 'sysDescr.0'));
+        $this->assertEquals(DataSet::makeError(SNMP::ERROR_UNREACHABLE), SNMP::get($unreachable, 'sysDescr.0'));
 
         // set up a device
         $device = Mock::genDevice('unit_tests', getenv('SNMPSIM'));
@@ -110,6 +110,8 @@ abstract class SnmpEngineTest extends \PHPUnit_Framework_TestCase
                 'value' => 'Unit Tests sysDescr',
             ))
         ));
+        global $debug;
+        $device = true;
         $this->assertEquals($expected, SNMP::get($device, 'SNMPv2-MIB::sysDescr.0'));
     }
 

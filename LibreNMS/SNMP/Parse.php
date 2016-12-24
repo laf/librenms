@@ -25,6 +25,8 @@
 
 namespace LibreNMS\SNMP;
 
+use LibreNMS\SNMP;
+
 class Parse
 {
 
@@ -39,6 +41,7 @@ class Parse
                     'oid' => $oid,
                     'base_oid' => $parts->first(),
                     'index' => $parts[1],
+                    'error' => SNMP::ERROR_NONE,
                     'extra_oid' => $parts->slice(2)->values()->map(function ($item) {
                         return trim($item, '"');
                     })->all()
@@ -47,16 +50,30 @@ class Parse
             // otherwise, assume index is the last item
             return OIDData::make(array(
                 'oid' => $oid,
+                'base_oid' => implode('.', $parts->slice(0, count($parts) - 1)->all()),
                 'index' => $parts->last(),
-                'base_oid' => implode('.', $parts->slice(0, count($parts) - 1)->all())
+                'error' => SNMP::ERROR_NONE
             ));
         } else {
             // there are no segments in this oid
             return OIDData::make(array(
                 'oid' => $oid,
-                'base_oid' => $oid
+                'base_oid' => $oid,
+                'error' => SNMP::ERROR_NONE
             ));
         }
+    }
+
+    /**
+     * @param string $message message to parse to error code
+     * @return int LibreNMS\SNMP error code
+     */
+    public static function errorMessage($message)
+    {
+        if (starts_with($message, 'Timeout: No Response from ')) {
+            return SNMP::ERROR_UNREACHABLE;
+        }
+        return -1;
     }
 
     /**
@@ -69,6 +86,13 @@ class Parse
         $separator = "\r\n";
         $line = strtok($rawData, $separator);
 
+        $unreachable = array(
+            ': Unknown host (',
+            'Timeout: No Response from '
+        );
+        if (str_contains($line, $unreachable)) {
+            return Format::unreachable($line);
+        }
         $tmp_oid = '';
         $tmp_value = '';
         while ($line !== false) {
@@ -84,7 +108,7 @@ class Parse
 
             // if the next line is parsable or we reached the end, append OIDData to results
             // skip invalid lines that don't contain : in the value
-            if (($line === false || str_contains($line, ' = ')) && str_contains($tmp_value, ': ')) {
+            if (($line === false || str_contains($line, ' = '))) {
                 $result[] = OIDData::makeRaw($tmp_oid, $tmp_value);
             }
         }
@@ -95,7 +119,16 @@ class Parse
     public static function rawValue($raw_value)
     {
         if (!str_contains($raw_value, ': ')) {
-            throw new \Exception("Invalid raw value format: $raw_value");
+            if ($raw_value == 'No Such Instance currently exists at this OID') {
+                return OIDData::make(array(
+                    'raw_value' => $raw_value,
+                    'error' => SNMP::ERROR_NO_SUCH_OID
+                ));
+            }
+            return OIDData::make(array(
+                'raw_value' => $raw_value,
+                'error' => SNMP::ERROR_PARSE_ERROR
+            ));
         }
 
         list($type, $value) = explode(': ', $raw_value, 2);

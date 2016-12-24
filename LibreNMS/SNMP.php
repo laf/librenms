@@ -32,6 +32,11 @@ use LibreNMS\SNMP\Engines\NetSnmp;
 
 class SNMP
 {
+    const ERROR_NONE = 0;
+    const ERROR_UNREACHABLE = 1;
+    const ERROR_NO_SUCH_OID = 2;
+    const ERROR_PARSE_ERROR = 4;
+
     /** @var SnmpEngine */
     private static $engine;
     private static $translator;

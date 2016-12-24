@@ -25,8 +25,22 @@
 
 namespace LibreNMS\SNMP;
 
+use LibreNMS\SNMP;
+
 class Format
 {
+
+    /**
+     * @param $message
+     * @return DataSet
+     */
+    public static function unreachable($message)
+    {
+        return DataSet::make(array(OIDData::make(array(
+                'error' => SNMP::ERROR_UNREACHABLE,
+                'raw_value' => $message
+            ))));
+    }
 
     public static function oid($oid, $base_oid, $index, $extra_oid)
     {
