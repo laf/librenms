@@ -8,6 +8,7 @@ class ComposerStaticInit272059f49825f0adab6de160cf59ca72
 {
     public static $files = array (
         '2cffec82183ee1cea088009cef9a6fc3' => __DIR__ . '/..' . '/ezyang/htmlpurifier/library/HTMLPurifier.composer.php',
+        '7ba3c774c30c8399e359b5ff7f3b943e' => __DIR__ . '/..' . '/tightenco/collect/src/Illuminate/Support/helpers.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -19,6 +20,10 @@ class ComposerStaticInit272059f49825f0adab6de160cf59ca72
         array (
             'LibreNMS\\Tests\\' => 15,
             'LibreNMS\\' => 9,
+        ),
+        'I' => 
+        array (
+            'Illuminate\\' => 11,
         ),
         'D' => 
         array (
@@ -48,6 +53,10 @@ class ComposerStaticInit272059f49825f0adab6de160cf59ca72
         'LibreNMS\\' => 
         array (
             0 => __DIR__ . '/../..' . '/LibreNMS',
+        ),
+        'Illuminate\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/tightenco/collect/src/Illuminate',
         ),
         'Dapphp\\Radius\\' => 
         array (
@@ -499,6 +508,11 @@ class ComposerStaticInit272059f49825f0adab6de160cf59ca72
         'HTMLPurifier_VarParser_Flexible' => __DIR__ . '/..' . '/ezyang/htmlpurifier/library/HTMLPurifier/VarParser/Flexible.php',
         'HTMLPurifier_VarParser_Native' => __DIR__ . '/..' . '/ezyang/htmlpurifier/library/HTMLPurifier/VarParser/Native.php',
         'HTMLPurifier_Zipper' => __DIR__ . '/..' . '/ezyang/htmlpurifier/library/HTMLPurifier/Zipper.php',
+        'Illuminate\\Contracts\\Support\\Arrayable' => __DIR__ . '/..' . '/tightenco/collect/src/Illuminate/Contracts/Support/Arrayable.php',
+        'Illuminate\\Contracts\\Support\\JsonSerializable' => __DIR__ . '/..' . '/tightenco/collect/src/Illuminate/Contracts/Support/JsonSerializable.php',
+        'Illuminate\\Contracts\\Support\\Jsonable' => __DIR__ . '/..' . '/tightenco/collect/src/Illuminate/Contracts/Support/Jsonable.php',
+        'Illuminate\\Support\\Arr' => __DIR__ . '/..' . '/tightenco/collect/src/Illuminate/Support/Arr.php',
+        'Illuminate\\Support\\Collection' => __DIR__ . '/..' . '/tightenco/collect/src/Illuminate/Support/Collection.php',
         'LibreNMS\\Component' => __DIR__ . '/../..' . '/LibreNMS/Component.php',
         'LibreNMS\\ComposerHelper' => __DIR__ . '/../..' . '/LibreNMS/ComposerHelper.php',
         'LibreNMS\\Exceptions\\FileExistsException' => __DIR__ . '/../..' . '/LibreNMS/Exceptions/FileExistsException.php',
@@ -514,10 +528,27 @@ class ComposerStaticInit272059f49825f0adab6de160cf59ca72
         'LibreNMS\\Plugins' => __DIR__ . '/../..' . '/LibreNMS/Plugins.php',
         'LibreNMS\\Proc' => __DIR__ . '/../..' . '/LibreNMS/Proc.php',
         'LibreNMS\\RRDRecursiveFilterIterator' => __DIR__ . '/../..' . '/LibreNMS/RRDRecursiveFilterIterator.php',
+        'LibreNMS\\SNMP' => __DIR__ . '/../..' . '/LibreNMS/SNMP.php',
+        'LibreNMS\\SNMP\\Contracts\\SnmpEngine' => __DIR__ . '/../..' . '/LibreNMS/SNMP/Contracts/SnmpEngine.php',
+        'LibreNMS\\SNMP\\Contracts\\SnmpTranslator' => __DIR__ . '/../..' . '/LibreNMS/SNMP/Contracts/SnmpTranslator.php',
+        'LibreNMS\\SNMP\\DataSet' => __DIR__ . '/../..' . '/LibreNMS/SNMP/DataSet.php',
+        'LibreNMS\\SNMP\\Engines\\Base' => __DIR__ . '/../..' . '/LibreNMS/SNMP/Engines/Base.php',
+        'LibreNMS\\SNMP\\Engines\\FormattedBase' => __DIR__ . '/../..' . '/LibreNMS/SNMP/Engines/FormattedBase.php',
+        'LibreNMS\\SNMP\\Engines\\Mock' => __DIR__ . '/../..' . '/LibreNMS/SNMP/Engines/Mock.php',
+        'LibreNMS\\SNMP\\Engines\\NetSnmp' => __DIR__ . '/../..' . '/LibreNMS/SNMP/Engines/NetSnmp.php',
+        'LibreNMS\\SNMP\\Engines\\PhpSnmp' => __DIR__ . '/../..' . '/LibreNMS/SNMP/Engines/PhpSnmp.php',
+        'LibreNMS\\SNMP\\Engines\\RawBase' => __DIR__ . '/../..' . '/LibreNMS/SNMP/Engines/RawBase.php',
+        'LibreNMS\\SNMP\\Format' => __DIR__ . '/../..' . '/LibreNMS/SNMP/Format.php',
+        'LibreNMS\\SNMP\\OIDData' => __DIR__ . '/../..' . '/LibreNMS/SNMP/OIDData.php',
+        'LibreNMS\\SNMP\\Parse' => __DIR__ . '/../..' . '/LibreNMS/SNMP/Parse.php',
         'LibreNMS\\Tests\\AlertTest' => __DIR__ . '/../..' . '/tests/AlertingTest.php',
         'LibreNMS\\Tests\\CommonFunctionsTest' => __DIR__ . '/../..' . '/tests/CommonFunctionsTest.php',
         'LibreNMS\\Tests\\DiscoveryTest' => __DIR__ . '/../..' . '/tests/OSDiscoveryTest.php',
+        'LibreNMS\\Tests\\MockSnmpTest' => __DIR__ . '/../..' . '/tests/MockSnmpTest.php',
+        'LibreNMS\\Tests\\NetSnmpTest' => __DIR__ . '/../..' . '/tests/NetSnmpTest.php',
+        'LibreNMS\\Tests\\PhpSnmpTest' => __DIR__ . '/../..' . '/tests/PhpSnmpTest.php',
         'LibreNMS\\Tests\\RrdtoolTest' => __DIR__ . '/../..' . '/tests/RrdtoolTest.php',
+        'LibreNMS\\Tests\\SnmpEngineTest' => __DIR__ . '/../..' . '/tests/SnmpEngineTest.php',
         'LibreNMS\\Tests\\SyslogTest' => __DIR__ . '/../..' . '/tests/SyslogTest.php',
         'LibreNMS\\Tests\\YamlTest' => __DIR__ . '/../..' . '/tests/YamlTest.php',
         'PDF417' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/barcodes/pdf417.php',

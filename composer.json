@@ -15,6 +15,13 @@
     "config": {
         "platform": {"php": "5.3.9"}
     },
+    "repositories":
+    [
+            {
+                "type": "vcs",
+                "url": "https://github.com/murrant/collect"
+            }
+    ],
     "require": {
         "php": ">=5.3.9",
         "ezyang/htmlpurifier": "^4.8",
@@ -28,7 +35,8 @@
         "pear/console_table": "^1.3",
         "dapphp/radius": "^2.0",
         "php-amqplib/php-amqplib": "^2.0",
-        "symfony/yaml": "^2.8"
+        "symfony/yaml": "^2.8",
+        "tightenco/collect": "dev-master"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "2.6.*",

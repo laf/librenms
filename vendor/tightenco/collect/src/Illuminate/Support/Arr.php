@@ -179,7 +179,7 @@ class Arr
         foreach ($array as $item) {
             $item = $item instanceof Collection ? $item->all() : $item;
 
-            if (!is_array($item)) {
+            if (! is_array($item)) {
                 $result = array_merge($result, array($item));
             } elseif ($depth === 1) {
                 $result = array_merge($result, array_values($item));
@@ -513,6 +513,7 @@ class Arr
      */
     public static function where($array, $callback)
     {
+        // php 5.3 array_filter does not support ARRAY_FILTER_USE_BOTH
         $result = array();
         foreach ($array as $key => $value) {
             if ($callback($value, $key)) {

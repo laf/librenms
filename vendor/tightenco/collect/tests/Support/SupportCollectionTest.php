@@ -14,6 +14,31 @@ class SupportCollectionTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('foo', $c->first());
     }
 
+    public function testFirstWithCallback()
+    {
+        $data = new Collection(array('foo', 'bar', 'baz'));
+        $result = $data->first(function ($value) {
+            return $value === 'bar';
+        });
+        $this->assertEquals('bar', $result);
+    }
+
+    public function testFirstWithCallbackAndDefault()
+    {
+        $data = new Collection(array('foo', 'bar'));
+        $result = $data->first(function ($value) {
+            return $value === 'baz';
+        }, 'default');
+        $this->assertEquals('default', $result);
+    }
+
+    public function testFirstWithDefaultAndWithoutCallback()
+    {
+        $data = new Collection;
+        $result = $data->first(null, 'default');
+        $this->assertEquals('default', $result);
+    }
+
     public function testLastReturnsLastItemInCollection()
     {
         $c = new Collection(array('foo', 'bar'));
@@ -71,6 +96,14 @@ class SupportCollectionTest extends PHPUnit_Framework_TestCase
         $c = new Collection();
 
         $this->assertTrue($c->isEmpty());
+    }
+
+    public function testEmptyCollectionIsNotEmpty()
+    {
+        $c = new Collection(array('foo', 'bar'));
+
+        $this->assertFalse($c->isEmpty());
+        $this->assertTrue($c->isNotEmpty());
     }
 
     public function testCollectionIsConstructed()
@@ -963,31 +996,6 @@ class SupportCollectionTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(array('first' => 'first-rolyat', 'last' => 'last-llewto'), $data->all());
     }
 
-    public function testFirstWithCallback()
-    {
-        $data = new Collection(array('foo', 'bar', 'baz'));
-        $result = $data->first(function ($value) {
-            return $value === 'bar';
-        });
-        $this->assertEquals('bar', $result);
-    }
-
-    public function testFirstWithCallbackAndDefault()
-    {
-        $data = new Collection(array('foo', 'bar'));
-        $result = $data->first(function ($value) {
-            return $value === 'baz';
-        }, 'default');
-        $this->assertEquals('default', $result);
-    }
-
-    public function testFirstWithDefaultAndWithoutCallback()
-    {
-        $data = new Collection;
-        $result = $data->first(null, 'default');
-        $this->assertEquals('default', $result);
-    }
-
     public function testGroupByAttribute()
     {
         $data = new Collection(array(array('rating' => 1, 'url' => '1'), array('rating' => 1, 'url' => '1'), array('rating' => 2, 'url' => '2')));
@@ -1373,6 +1381,12 @@ class SupportCollectionTest extends PHPUnit_Framework_TestCase
         $c = new Collection(array(1, 2, 3, 4, 5));
         $this->assertEquals(1, $c->min());
 
+        $c = new Collection(array(1, null, 3, 4, 5));
+        $this->assertEquals(1, $c->min());
+
+        $c = new Collection(array(0, 1, 2, 3, 4));
+        $this->assertEquals(0, $c->min());
+
         $c = new Collection();
         $this->assertNull($c->min());
     }
@@ -1587,13 +1601,13 @@ class SupportCollectionTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(array(3, 4, 5, 6), $collection->slice(-6, -2)->values()->toArray());
     }
 
-    public function testCollectonFromTraversable()
+    public function testCollectionFromTraversable()
     {
         $collection = new Collection(new \ArrayObject(array(1, 2, 3)));
         $this->assertEquals(array(1, 2, 3), $collection->toArray());
     }
 
-    public function testCollectonFromTraversableWithKeys()
+    public function testCollectionFromTraversableWithKeys()
     {
         $collection = new Collection(new \ArrayObject(array('foo' => 1, 'bar' => 2, 'baz' => 3)));
         $this->assertEquals(array('foo' => 1, 'bar' => 2, 'baz' => 3), $collection->toArray());
@@ -1645,6 +1659,53 @@ class SupportCollectionTest extends PHPUnit_Framework_TestCase
                 return $chunk->values()->toArray();
             })->toArray()
         );
+    }
+
+    public function testPartitionWithClosure()
+    {
+        $collection = new Collection(range(1, 10));
+
+        list($firstPartition, $secondPartition) = $collection->partition(function ($i) {
+            return $i <= 5;
+        });
+
+        $this->assertEquals(array(1, 2, 3, 4, 5), $firstPartition->values()->toArray());
+        $this->assertEquals(array(6, 7, 8, 9, 10), $secondPartition->values()->toArray());
+    }
+
+    public function testPartitionByKey()
+    {
+        $courses = new Collection(array(
+            array('free' => true, 'title' => 'Basic'), array('free' => false, 'title' => 'Premium'),
+        ));
+
+        list($free, $premium) = $courses->partition('free');
+
+        $this->assertSame(array(array('free' => true, 'title' => 'Basic')), $free->values()->toArray());
+
+        $this->assertSame(array(array('free' => false, 'title' => 'Premium')), $premium->values()->toArray());
+    }
+
+    public function testPartitionPreservesKeys()
+    {
+        $courses = new Collection(array(
+            'a' => array('free' => true), 'b' => array('free' => false), 'c' => array('free' => true),
+        ));
+
+        list($free, $premium) = $courses->partition('free');
+
+        $this->assertSame(array('a' => array('free' => true), 'c' => array('free' => true)), $free->toArray());
+
+        $this->assertSame(array('b' => array('free' => false)), $premium->toArray());
+    }
+
+    public function testPartitionEmptyCollection()
+    {
+        $collection = new Collection();
+
+        $this->assertCount(2, $collection->partition(function () {
+            return true;
+        }));
     }
 }
 

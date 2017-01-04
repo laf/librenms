@@ -9,13 +9,15 @@
             "email": "taylorotwell@gmail.com"
         }
     ],
+    "config": {
+        "platform": {"php": "5.3.9"}
+    },
     "require": {
         "php": ">=5.3"
     },
     "require-dev": {
         "mockery/mockery": "~0.9.4",
-        "phpunit/phpunit": "~4.1",
-	"phpdocumentor/reflection-docblock": "^2.0"
+        "phpunit/phpunit": "~4.1"
     },
     "autoload": {
         "files": [
@@ -24,10 +26,5 @@
         "psr-4": {
             "Illuminate\\": "src/Illuminate"
         }
-    },
-    "config": {
-        "preferred-install": "dist",
-        "disable-tls": true,
-        "secure-http": false
     }
 }

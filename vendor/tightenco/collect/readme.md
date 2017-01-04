@@ -10,6 +10,8 @@ Written by Taylor Otwell as a part of Laravel's [Illuminate/Support](https://git
 
 Lovingly split by Matt Stauffer for [Tighten Co.](http://tighten.co/), with a kick in the butt to finally do it from [@assertchris](https://github.com/assertchris).
 
+Ported to PHP 5.3 by Tony Murray for [LibreNMS](http://www.librenms.org/).
+
 ## Installation
 
 With [Composer](https://getcomposer.org):

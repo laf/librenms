@@ -35,7 +35,6 @@ $config['snmpget'] = 'snmpget';
 
 // initialize the class loader
 require $install_dir . '/vendor/autoload.php';
-require $install_dir . '/lib/collect/vendor/autoload.php';
 
 require $install_dir . '/includes/common.php';
 require $install_dir . '/html/includes/functions.inc.php';

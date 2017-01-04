@@ -17,7 +17,7 @@
         "require": {
             "php": ">=5.2"
         },
-        "time": "2016-07-16T12:58:58+00:00",
+        "time": "2016-07-16 12:58:58",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -63,7 +63,7 @@
         "require": {
             "php": ">=5.3.3"
         },
-        "time": "2012-08-31T00:00:00+00:00",
+        "time": "2012-08-31 00:00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {
@@ -109,7 +109,7 @@
         "require": {
             "php": ">=5.0.0"
         },
-        "time": "2012-10-23T11:52:18+00:00",
+        "time": "2012-10-23 11:52:18",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -163,7 +163,7 @@
         "suggest": {
             "pear/Console_Color2": ">=0.1.2"
         },
-        "time": "2016-01-21T16:14:31+00:00",
+        "time": "2016-01-21 16:14:31",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -220,7 +220,7 @@
         "suggest": {
             "ext-mcrypt": "Required for HTTP cookie encryption"
         },
-        "time": "2015-03-08T18:41:17+00:00",
+        "time": "2015-03-08 18:41:17",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -265,7 +265,7 @@
         "require": {
             "php": ">4.3.0"
         },
-        "time": "2016-10-05T07:15:42+00:00",
+        "time": "2016-10-05 07:15:42",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -314,7 +314,7 @@
             "ext-gd": "*",
             "php": ">=5.3.0"
         },
-        "time": "2016-03-11T13:58:40+00:00",
+        "time": "2016-03-11 13:58:40",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -360,7 +360,7 @@
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2015-09-12T10:08:34+00:00",
+        "time": "2015-09-12 10:08:34",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -428,7 +428,7 @@
         "require-dev": {
             "phpunit/phpunit": "dev-master"
         },
-        "time": "2016-08-01T23:26:47+00:00",
+        "time": "2016-08-01 23:26:47",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -477,7 +477,7 @@
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2013-02-13T19:43:51+00:00",
+        "time": "2013-02-13 19:43:51",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -520,7 +520,7 @@
         "require": {
             "php": ">=5.3.9"
         },
-        "time": "2016-11-14T16:15:57+00:00",
+        "time": "2016-11-14 16:15:57",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -578,7 +578,7 @@
         "suggest": {
             "league/oauth2-google": "Needed for Google XOAUTH2 authentication"
         },
-        "time": "2016-12-28T15:35:48+00:00",
+        "time": "2016-12-28 15:35:48",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -614,5 +614,56 @@
             }
         ],
         "description": "PHPMailer is a full-featured email creation and transfer class for PHP"
+    },
+    {
+        "name": "tightenco/collect",
+        "version": "dev-master",
+        "version_normalized": "9999999-dev",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/murrant/collect.git",
+            "reference": "df02dfaecd2ab219669f664482197c0d07e09ef6"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/murrant/collect/zipball/df02dfaecd2ab219669f664482197c0d07e09ef6",
+            "reference": "df02dfaecd2ab219669f664482197c0d07e09ef6",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3"
+        },
+        "require-dev": {
+            "mockery/mockery": "~0.9.4",
+            "phpunit/phpunit": "~4.1"
+        },
+        "time": "2017-01-04 04:54:14",
+        "type": "library",
+        "installation-source": "source",
+        "autoload": {
+            "files": [
+                "src/Illuminate/Support/helpers.php"
+            ],
+            "psr-4": {
+                "Illuminate\\": "src/Illuminate"
+            }
+        },
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Taylor Otwell",
+                "email": "taylorotwell@gmail.com"
+            }
+        ],
+        "description": "Collect - Illuminate Collections as a separate package.",
+        "keywords": [
+            "collection",
+            "laravel"
+        ],
+        "support": {
+            "source": "https://github.com/murrant/collect/tree/master"
+        }
     }
 ]

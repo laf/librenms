@@ -9,6 +9,7 @@ return array(
     'Symfony\\Component\\Yaml\\' => array($vendorDir . '/symfony/yaml'),
     'LibreNMS\\Tests\\' => array($baseDir . '/tests'),
     'LibreNMS\\' => array($baseDir . '/LibreNMS'),
+    'Illuminate\\' => array($vendorDir . '/tightenco/collect/src/Illuminate'),
     'Dapphp\\Radius\\' => array($vendorDir . '/dapphp/radius/src'),
     'Amenadiel\\JpGraph\\Util\\' => array($vendorDir . '/amenadiel/jpgraph/src/util'),
     'Amenadiel\\JpGraph\\Themes\\' => array($vendorDir . '/amenadiel/jpgraph/src/themes'),
