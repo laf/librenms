@@ -46,7 +46,6 @@ if (version_compare(PHP_VERSION, '5.4', '>=')) {
 }
 require $install_dir . '/lib/collect/vendor/autoload.php';
 
-
 // function only files
 require_once $install_dir . '/includes/common.php';
 require $install_dir . '/includes/dbFacile.php';

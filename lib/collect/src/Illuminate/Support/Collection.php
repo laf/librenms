@@ -378,7 +378,7 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
      * @param  mixed  $default
      * @return mixed
      */
-    public function first( $callback = null, $default = null)
+    public function first($callback = null, $default = null)
     {
         return Arr::first($this->items, $callback, $default);
     }
