@@ -93,20 +93,41 @@ class Mock extends FormattedBase
      */
     public function get($device, $oids, $mib = null, $mib_dir = null)
     {
-        $oids = collect(is_string($oids) ? explode(' ', $oids) : $oids);
+        $oids = is_array($oids) ? $oids : explode(' ', $oids);
 
-//        $self = $this;
-//        $numeric_oids = $oids->map(function ($oid) use ($self, $device, $mib, $mib_dir) {
-//            return $self->translateNumeric($device, $oid, $mib, $mib_dir);
-//        });
-        $numeric_oids = SNMP::translateNumeric($device, $oids);
-        var_dump($numeric_oids);
+        // fake unreachable
+        if ($device['community'] == 'unreachable') {
+            return DataSet::makeError(SNMP::ERROR_UNREACHABLE);
+        }
 
+        $data = $this->formatSnmprec($device, $oids);
+        return $data;
+    }
+
+    private function formatSnmprec($device, $oids, $type = 'get')
+    {
+        $numeric_oids = collect(SNMP::translateNumeric($device, $oids))->map(function ($value) {
+            return ltrim($value, '.');
+        });
         $data = $this->getSnmpRec($device['community']);
 
-        $result = $data->only($numeric_oids)->values();
+        $data = $data->filter(function ($entry) use ($numeric_oids, $type) {
+//            echo "found ".$entry['oid'].' ';
+//            var_dump($numeric_oids->values()->all());
+//            echo var_export(in_array($entry['oid'], $numeric_oids->all())) . PHP_EOL;
+            if ($type == 'get') {
+                return in_array($entry['oid'], $numeric_oids->all());
+            } else {
+                return starts_with($entry['oid'], $numeric_oids->all());
+            }
+        });
 
-        return $result;
+        $output = $data->map(function ($item) use ($device) {
+            $oid = SNMP::translate($device, $item['oid']);
+            return $item->merge(Parse::rawOID($oid));
+        });
+
+        return $output->values();
     }
 
     /**
@@ -118,6 +139,8 @@ class Mock extends FormattedBase
      */
     public function walk($device, $oids, $mib = null, $mib_dir = null)
     {
+        return $this->formatSnmprec($device, (array)$oids, 'walk');
+
         $oids = collect((array)$oids);
         $data = $this->getSnmpRec($device['community']);
 

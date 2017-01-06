@@ -26,6 +26,7 @@
 namespace LibreNMS\SNMP\Engines;
 
 use LibreNMS\SNMP\DataSet;
+use LibreNMS\SNMP\Format;
 use LibreNMS\SNMP\OIDData;
 use SNMP;
 
@@ -59,9 +60,18 @@ class PhpSnmp extends FormattedBase
 
     public function get($device, $oids, $mib = null, $mib_dir = null)
     {
+        global $debug;
         $this->initSnmp($device);
         $result = $this->snmp->get($oids);
+        c_echo('SNMP[%c'.implode(' ', (array)$oids)."%n]\n", $debug);
+        d_echo($result);
+
+
         if ($result === false) {
+            $error = $this->snmp->getError();
+            if (starts_with($error, 'No response from')) {
+                return Format::unreachable($error);
+            }
             throw new \Exception($this->snmp->getError());
         }
         return $this->formatDataSet($result);
@@ -69,43 +79,26 @@ class PhpSnmp extends FormattedBase
 
     public function walk($device, $oids, $mib = null, $mib_dir = null)
     {
+        global $debug;
         $this->initSnmp($device);
         $output = DataSet::make();
 
         foreach ((array)$oids as $oid) {
             $data = $this->snmp->walk($oid);
+            c_echo('SNMP[%c'.$oid."%n]\n", $debug);
+            d_echo($data);
 
             if ($data === false) {
-                throw new \Exception($this->snmp->getError());
+                $error = $this->snmp->getError();
+                if (starts_with($error, 'No response from')) {
+                    return Format::unreachable($error);
+                }
+                throw new \Exception($error);
             }
             $output = $output->merge($this->formatDataSet($data));
         }
 
         return $output;
-    }
-
-    /**
-     * @param array $device
-     * @param string $oid
-     * @param string $mib
-     * @param string $mib_dir
-     * @return string
-     */
-    public function translate($device, $oid, $mib = null, $mib_dir = null)
-    {
-        // TODO: Implement walkRaw() method.
-    }
-
-    /**
-     * @param array $device
-     * @param string $oid
-     * @param string $mib
-     * @param string $mib_dir
-     * @return string
-     */
-    public function translateNumeric($device, $oid, $mib = null, $mib_dir = null)
-    {
-        // TODO: Implement translateNumeric() method.
     }
 
     /**

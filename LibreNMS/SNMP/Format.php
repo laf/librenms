@@ -36,10 +36,7 @@ class Format
      */
     public static function unreachable($message)
     {
-        return DataSet::make(array(OIDData::make(array(
-                'error' => SNMP::ERROR_UNREACHABLE,
-                'raw_value' => $message
-            ))));
+        return DataSet::makeError(SNMP::ERROR_UNREACHABLE, $message);
     }
 
     public static function oid($oid, $base_oid, $index, $extra_oid)

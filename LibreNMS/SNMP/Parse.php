@@ -109,7 +109,9 @@ class Parse
             // if the next line is parsable or we reached the end, append OIDData to results
             // skip invalid lines that don't contain : in the value
             if (($line === false || str_contains($line, ' = '))) {
-                $result[] = OIDData::makeRaw($tmp_oid, $tmp_value);
+                if ($tmp_value != 'No more variables left in this MIB View (It is past the end of the MIB tree)') {
+                    $result[] = OIDData::makeRaw($tmp_oid, $tmp_value);
+                }
             }
         }
 

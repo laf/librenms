@@ -56,7 +56,7 @@ class NetSnmp extends RawBase implements SnmpTranslator
 
     /**
      * @param array $device
-     * @param string|array $oids
+     * @param string|array $data
      * @param string $options
      * @param string $mib
      * @param string $mib_dir
@@ -69,20 +69,20 @@ class NetSnmp extends RawBase implements SnmpTranslator
             return $oids;
         }
 
-        $oids = collect((array)$oids);
+        $data = collect($oids);
         $cmd  = 'snmptranslate '.$this->getMibDir($mib_dir, $device);
         if (isset($mib)) {
             $cmd .= " -m $mib";
         }
         $cmd .= " $options ";
-        $cmd .= $oids->implode(' ');
+        $cmd .= $data->implode(' ');
         $cmd .= ' 2>/dev/null';  // don't allow errors to throw an exception
 
         $output = collect(explode("\n\n", $this->exec($cmd)));
 
-        $result = $oids->combine(array_pad($output->all(), $oids->count(), null));
+        $result = $data->combine(array_pad($output->all(), $data->count(), null));
 
-        return $result->count() == 1 ? $result->first() : $result->all();
+        return is_array($oids) ? $result->all() : $result->first();
     }
 
     /**
@@ -96,13 +96,12 @@ class NetSnmp extends RawBase implements SnmpTranslator
     public function translateNumeric($device, $oids, $mib = null, $mib_dir = null)
     {
         $self = $this; // php5.3 bs
-        $oids = collect($oids)->map(function ($oid) use ($self, $mib) {
+        $formmatted_oids = collect($oids)->map(function ($oid) use ($self, $mib) {
             return $self->formatOid($oid, $mib);
         });
 
-
         $result = collect();
-        foreach ($oids as $oid) {
+        foreach ($formmatted_oids as $oid) {
             if (self::isNumericOid($oid)) {
                 $result[$oid] = $oid;
             } elseif ($this->oidIsCached($oid)) {
@@ -118,9 +117,9 @@ class NetSnmp extends RawBase implements SnmpTranslator
 
         $translated = $this->translate($device, $oids_to_translate->all(), '-IR -On', $mib, $mib_dir);
 
-        $result = $oids->combine($result->merge($translated)->all());
+        $result = $formmatted_oids->combine($result->merge($translated)->all());
 
-        return $result->count() == 1 ? $result->first() : $result->all();
+        return is_array($oids) ? $result->all() : $result->first();
     }
 
     private function oidIsCached($oid)
@@ -244,7 +243,8 @@ class NetSnmp extends RawBase implements SnmpTranslator
 
         if ($device['snmpver'] == 'v1' ||
             (isset($device['os'], $config['os'][$device['os']]['nobulk']) &&
-                $config['os'][$device['os']]['nobulk'])
+                $config['os'][$device['os']]['nobulk']) ||
+            ($type == 'get' && !str_contains($oids, ' '))
         ) {
             $cmd = $config['snmp'.$type];
         } else {

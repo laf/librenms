@@ -29,18 +29,21 @@ use LibreNMS\SNMP;
 class DataSet extends Collection
 {
     private $error = SNMP::ERROR_NONE;
+    private $errorMessage = null;
 
     /**
      * Create an empty DataSet with an SNMP error code
      * likely SNMP::ERROR_UNREACHABLE
      *
      * @param int $error
+     * @param null $message
      * @return DataSet
      */
-    public static function makeError($error)
+    public static function makeError($error, $message = null)
     {
         $new = self::make();
         $new->error = $error;
+        $new->errorMessage = $message;
         return $new;
     }
 
@@ -62,6 +65,17 @@ class DataSet extends Collection
     public function getError()
     {
         return $this->error;
+    }
+
+    /**
+     * Returns the error message.
+     * May be null if there is no message or error.
+     *
+     * @return string
+     */
+    public function getErrorMessage()
+    {
+        return $this->errorMessage;
     }
 
     public function toRawString()

@@ -25,7 +25,6 @@
 
 namespace LibreNMS\SNMP\Contracts;
 
-
 interface SnmpTranslator
 {
     /**
