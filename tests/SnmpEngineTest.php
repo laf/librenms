@@ -112,16 +112,14 @@ abstract class SnmpEngineTest extends \PHPUnit_Framework_TestCase
 //        var_dump(SNMP::get($device, 'sysDescr.0')->first()->all());
 //        $this->assertEquals(DataSet::make(OIDData::make()), SNMP::get($device, 'sysDescr.0'));
 
-        $expected = DataSet::make(array(
-            OIDData::make(array(
-                'oid' => 'SNMPv2-MIB::sysDescr.0',
-                'base_oid' => 'SNMPv2-MIB::sysDescr',
-                'index' => '0',
-                'extra_oid' => array(),
-                'type' => 'string',
-                'value' => 'Unit Tests sysDescr',
-                'error' => 0
-            ))
+        $expected = OIDData::make(array(
+            'oid' => 'SNMPv2-MIB::sysDescr.0',
+            'base_oid' => 'SNMPv2-MIB::sysDescr',
+            'index' => 0,
+            'extra_oid' => array(),
+            'type' => 'string',
+            'value' => 'Unit Tests sysDescr',
+            'error' => 0
         ));
         set_debug(true);
 
@@ -137,7 +135,7 @@ abstract class SnmpEngineTest extends \PHPUnit_Framework_TestCase
             OIDData::make(array(
                 'oid' => 'IP-MIB::ipNetToPhysicalPhysAddress.1.ipv6."fd:80:00:00:00:00:00:00:86:d6:d0:ff:fe:ed:0f:cc"',
                 'base_oid' => 'IP-MIB::ipNetToPhysicalPhysAddress',
-                'index' => '1',
+                'index' => 1,
                 'extra_oid' => array(
                     0 => 'ipv6',
                     1 => 'fd:80:00:00:00:00:00:00:86:d6:d0:ff:fe:ed:0f:cc'
@@ -149,7 +147,7 @@ abstract class SnmpEngineTest extends \PHPUnit_Framework_TestCase
             OIDData::make(array(
                 'oid' => 'IP-MIB::ipNetToPhysicalPhysAddress.97.ipv6."fd:80:00:00:00:00:00:00:26:e9:b3:ff:fe:bb:50:c3"',
                 'base_oid' => 'IP-MIB::ipNetToPhysicalPhysAddress',
-                'index' => '97',
+                'index' => 97,
                 'extra_oid' => array(
                     0 => 'ipv6',
                     1 => 'fd:80:00:00:00:00:00:00:26:e9:b3:ff:fe:bb:50:c3'

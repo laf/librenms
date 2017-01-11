@@ -40,7 +40,7 @@ class Parse
                 return OIDData::make(array(
                     'oid' => $oid,
                     'base_oid' => $parts->first(),
-                    'index' => $parts[1],
+                    'index' => intval($parts[1]),
                     'error' => SNMP::ERROR_NONE,
                     'extra_oid' => $parts->slice(2)->values()->map(function ($item) {
                         return trim($item, '"');
@@ -122,15 +122,9 @@ class Parse
     {
         if (!str_contains($raw_value, ': ')) {
             if ($raw_value == 'No Such Instance currently exists at this OID') {
-                return OIDData::make(array(
-                    'raw_value' => $raw_value,
-                    'error' => SNMP::ERROR_NO_SUCH_OID
-                ));
+                return OIDData::makeError(SNMP::ERROR_NO_SUCH_OID, $raw_value);
             }
-            return OIDData::make(array(
-                'raw_value' => $raw_value,
-                'error' => SNMP::ERROR_PARSE_ERROR
-            ));
+            return OIDData::makeError(SNMP::ERROR_PARSE_ERROR, $raw_value);
         }
 
         list($type, $value) = explode(': ', $raw_value, 2);
@@ -202,6 +196,11 @@ class Parse
     public static function stringType($input)
     {
         return Format::stringType(trim($input, "\""));
+    }
+
+    public static function oidType($input)
+    {
+        return Format::oidType(SNMP::translateNumeric(null, $input), $input);
     }
 
     /**

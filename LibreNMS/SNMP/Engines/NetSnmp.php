@@ -31,6 +31,7 @@ class NetSnmp extends RawBase implements SnmpTranslator
     /**
      * @param array $device
      * @param string|array $oids single or array of oids to walk
+     * @param null $options Options to sent to snmpget
      * @param string $mib Additional mibs to search, optionally you can specify full oid names
      * @param string $mib_dir Additional mib directory, should be rarely needed, see definitions to add per os mib dirs
      * @return string exact results from snmpget
@@ -38,7 +39,7 @@ class NetSnmp extends RawBase implements SnmpTranslator
     public function getRaw($device, $oids, $options = null, $mib = null, $mib_dir = null)
     {
         $oids = is_array($oids) ? implode(' ', $oids) : $oids;
-        return $this->exec($this->genSnmpCmd('get', $device, $oids, $options, $mib, $mib_dir));
+        return $this->exec($this->genSnmpgetCmd($device, $oids, $options, $mib, $mib_dir));
     }
 
     /**
@@ -51,12 +52,12 @@ class NetSnmp extends RawBase implements SnmpTranslator
      */
     public function walkRaw($device, $oid, $options = null, $mib = null, $mib_dir = null)
     {
-        return $this->exec($this->genSnmpCmd('walk', $device, $oid, $options, $mib, $mib_dir));
+        return $this->exec($this->genSnmpwalkCmd($device, $oid, $options, $mib, $mib_dir));
     }
 
     /**
      * @param array $device
-     * @param string|array $data
+     * @param string|array $oids
      * @param string $options
      * @param string $mib
      * @param string $mib_dir
@@ -65,7 +66,12 @@ class NetSnmp extends RawBase implements SnmpTranslator
      */
     public function translate($device, $oids, $options = null, $mib = null, $mib_dir = null)
     {
+        if ($oids == '') {
+            throw new \Exception(implode(',', func_get_args()));
+        }
         if (empty($oids)) {
+            throw new \Exception(implode(',', func_get_args()));
+
             return $oids;
         }
 
@@ -219,6 +225,51 @@ class NetSnmp extends RawBase implements SnmpTranslator
     }
 
     /**
+     * Generate an snmpget command
+     *
+     * @param array $device the we will be connecting to
+     * @param string $oids the oids to fetch, separated by spaces
+     * @param string $options extra snmp command options, usually this is output options
+     * @param string $mib an additional mib to add to this command
+     * @param string $mibdir a mib directory to search for mibs, usually prepended with +
+     * @return string the fully assembled command, ready to run
+     */
+    private function genSnmpgetCmd($device, $oids, $options = null, $mib = null, $mibdir = null)
+    {
+        global $config;
+        $snmpcmd  = $config['snmpget'];
+        return self::genSnmpCmd($snmpcmd, $device, $oids, $options, $mib, $mibdir);
+    }
+
+    /**
+     * Generate an snmpwalk command
+     *
+     * @param array $device the we will be connecting to
+     * @param string $oids the oids to fetch, separated by spaces
+     * @param string $options extra snmp command options, usually this is output options
+     * @param string $mib an additional mib to add to this command
+     * @param string $mibdir a mib directory to search for mibs, usually prepended with +
+     * @return string the fully assembled command, ready to run
+     */
+    private function genSnmpwalkCmd($device, $oids, $options = null, $mib = null, $mibdir = null)
+    {
+        global $config;
+        if ($device['snmpver'] == 'v1' ||
+            (isset($device['os'], $config['os'][$device['os']]['nobulk']) &&
+            $config['os'][$device['os']]['nobulk'])
+        ) {
+            $snmpcmd = $config['snmpwalk'];
+        } else {
+            $snmpcmd = $config['snmpbulkwalk'];
+            $max_repeaters = self::getMaxRepeaters($device);
+            if ($max_repeaters > 0) {
+                $snmpcmd .= " -Cr$max_repeaters ";
+            }
+        }
+        return self::genSnmpCmd($snmpcmd, $device, $oids, $options, $mib, $mibdir);
+    }
+
+    /**
      * Generate an snmp command
      *
      * @param string $type either 'get' or 'walk'
@@ -229,40 +280,95 @@ class NetSnmp extends RawBase implements SnmpTranslator
      * @param string $mibdir a mib directory to search for mibs, usually prepended with +
      * @return string the fully assembled command, ready to run
      */
-    private function genSnmpCmd($type, $device, $oids, $options = null, $mib = null, $mibdir = null)
+    private function genSnmpCmd($cmd, $device, $oids, $options = null, $mib = null, $mibdir = null)
     {
-        global $config;
-
         // populate timeout & retries values from configuration
-        $timeout = prep_snmp_setting($device, 'timeout');
-        $retries = prep_snmp_setting($device, 'retries');
+        $timeout = self::prepSetting($device, 'timeout');
+        $retries = self::prepSetting($device, 'retries');
 
         if (!isset($device['transport'])) {
             $device['transport'] = 'udp';
         }
 
-        if ($device['snmpver'] == 'v1' ||
-            (isset($device['os'], $config['os'][$device['os']]['nobulk']) &&
-                $config['os'][$device['os']]['nobulk']) ||
-            ($type == 'get' && !str_contains($oids, ' '))
-        ) {
-            $cmd = $config['snmp'.$type];
-        } else {
-            $cmd = $config['snmpbulk'.$type];
-            $max_repeaters = get_device_max_repeaters($device);
-            if ($max_repeaters > 0) {
-                $cmd .= " -Cr$max_repeaters ";
-            }
-        }
-
-        $cmd .= snmp_gen_auth($device);
+        $cmd .= self::genAuth($device);
         $cmd .= " $options";
         $cmd .= $mib ? " -m $mib" : '';
-        $cmd .= mibdir($mibdir, $device);
+        $cmd .= self::getMibDir($mibdir, $device);
         $cmd .= isset($timeout) ? " -t $timeout" : '';
         $cmd .= isset($retries) ? " -r $retries" : '';
         $cmd .= ' ' . $device['transport'] . ':' . $device['hostname'] . ':' . $device['port'];
         $cmd .= " $oids";
+
+        return $cmd;
+    }
+
+    private function prepSetting($device, $setting)
+    {
+        global $config;
+
+        if (isset($device[$setting]) && is_numeric($device[$setting]) && $device[$setting] > 0) {
+            return $device[$setting];
+        } elseif (isset($config['snmp'][$setting])) {
+            return $config['snmp'][$setting];
+        }
+    }
+
+    private function getMaxRepeaters($device)
+    {
+        global $config;
+
+        $max_repeaters = $device['snmp_max_repeaters'];
+
+        if (isset($max_repeaters) && $max_repeaters > 0) {
+            return $max_repeaters;
+        } elseif (isset($config['snmp']['max_repeaters']) && $config['snmp']['max_repeaters'] > 0) {
+            return $config['snmp']['max_repeaters'];
+        } else {
+            return false;
+        }
+    }
+
+    private function genAuth($device)
+    {
+        global $debug;
+
+        $cmd = '';
+
+        if ($device['snmpver'] === 'v3') {
+            $cmd = " -v3 -n '' -l '".$device['authlevel']."'";
+
+            //add context if exist context
+            if (key_exists('context_name', $device)) {
+                $cmd = " -v3 -n '".$device['context_name']."' -l '".$device['authlevel']."'";
+            }
+
+            if ($device['authlevel'] === 'noAuthNoPriv') {
+                // We have to provide a username anyway (see Net-SNMP doc)
+                $username = !empty($device['authname']) ? $device['authname'] : 'root';
+                $cmd .= " -u '".$username."'";
+            } elseif ($device['authlevel'] === 'authNoPriv') {
+                $cmd .= " -a '".$device['authalgo']."'";
+                $cmd .= " -A '".$device['authpass']."'";
+                $cmd .= " -u '".$device['authname']."'";
+            } elseif ($device['authlevel'] === 'authPriv') {
+                $cmd .= " -a '".$device['authalgo']."'";
+                $cmd .= " -A '".$device['authpass']."'";
+                $cmd .= " -u '".$device['authname']."'";
+                $cmd .= " -x '".$device['cryptoalgo']."'";
+                $cmd .= " -X '".$device['cryptopass']."'";
+            } else {
+                if ($debug) {
+                    print 'DEBUG: '.$device['snmpver']." : Unsupported SNMPv3 AuthLevel (wtf have you done ?)\n";
+                }
+            }
+        } elseif ($device['snmpver'] === 'v2c' or $device['snmpver'] === 'v1') {
+            $cmd  = " -".$device['snmpver'];
+            $cmd .= " -c '".$device['community']."'";
+        } else {
+            if ($debug) {
+                print 'DEBUG: '.$device['snmpver']." : Unsupported SNMP Version (shouldn't be possible to get here)\n";
+            }
+        }//end if
 
         return $cmd;
     }

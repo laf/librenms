@@ -17,6 +17,7 @@ use LibreNMS\Exceptions\HostUnreachableException;
 use LibreNMS\Exceptions\HostUnreachablePingException;
 use LibreNMS\Exceptions\InvalidPortAssocModeException;
 use LibreNMS\Exceptions\SnmpVersionUnsupportedException;
+use LibreNMS\SNMP;
 
 function set_debug($debug)
 {
@@ -93,8 +94,13 @@ function getHostOS($device)
 {
     global $config;
 
-    $sysDescr    = snmp_get($device, "SNMPv2-MIB::sysDescr.0", "-Ovq");
-    $sysObjectId = snmp_get($device, "SNMPv2-MIB::sysObjectID.0", "-Ovqn");
+    // Direct translation
+//    $sysDescr = SNMP::get($device, 'SNMPv2-MIB::sysDescr.0')->value;
+//    $sysObjectId = SNMP::get($device, 'SNMPv2-MIB::sysObjectID.0')->value;
+
+    // Single get
+    $oids = array('SNMPv2-MIB::sysDescr.0', 'SNMPv2-MIB::sysObjectID.0');
+    list($sysDescr, $sysObjectId) = SNMP::get($device, $oids)->pluck('value');
 
     d_echo("| $sysDescr | $sysObjectId | \n");
 

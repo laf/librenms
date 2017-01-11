@@ -23,6 +23,8 @@
  * @author     Tony Murray <murraytony@gmail.com>
  */
 
+use phpFastCache\CacheManager;
+
 $install_dir = realpath(__DIR__ . '/..');
 $config['install_dir'] = $install_dir;
 chdir($install_dir);
@@ -94,6 +96,21 @@ if ($config['memcached']['enable'] === true) {
         $config['memcached']['enable'] = 0;
     }
 }
+
+// Setup File Path on your config files
+$setup = array(
+    'storage' => $config['memcached']['enable'] ? 'memcache' : 'files',
+    'path' => $config['snmp']['cache_dir'],
+    "server" => array(
+        array($config['memcached']['host'], $config['memcached']['port'], 1)
+    ),
+    'fallback' => array(
+        'memcache' => 'files', //if memcached isn't installed use file system instead
+        'apc' => 'files', //if apc isn't installed use file system instead
+    )
+);
+CacheManager::setup($setup);
+//CacheManager::getInstance()->clean();
 
 if (!module_selected('nodb', $init_modules)) {
     // Connect to database

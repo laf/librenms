@@ -36,7 +36,8 @@
         "dapphp/radius": "^2.0",
         "php-amqplib/php-amqplib": "^2.0",
         "symfony/yaml": "^2.8",
-        "tightenco/collect": "dev-master"
+        "tightenco/collect": "dev-master",
+        "phpFastCache/phpFastCache": "^4.3"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "2.6.*",

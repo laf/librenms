@@ -57,6 +57,17 @@ class Format
         ));
     }
 
+    public static function oidType($numeric_oid, $oid = null)
+    {
+        $data = OIDData::make(array(
+            'type' => 'oid',
+            'value' => $numeric_oid,
+            'raw_value' => is_null($oid) ? $numeric_oid : $oid
+        ));
+
+        return $data;
+    }
+
 
     /**
      * @param int $integer

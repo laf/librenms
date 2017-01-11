@@ -37,10 +37,10 @@ if (getenv('SNMPSIM')) {
     $config['snmp']['port'] = getenv('SNMPSIM');
 }
 
-$config['snmp']['cache'] = false;
+\phpFastCache\CacheManager::getInstance()->clean();
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL & ~E_WARNING);
 //error_reporting(E_ALL);
-//$debug=true;
+$debug=true;
 //$vdebug=true;

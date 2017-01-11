@@ -42,16 +42,17 @@ class PhpSnmp extends FormattedBase
 
     private function initSnmp($device)
     {
-        if (isset($this->snmp) && $this->snmp->info['hostname'] == gethostbyname($device['hostname'])) {
+        if (isset($this->snmp) &&
+            ($this->snmp->info['hostname'] == gethostbyname($device['hostname']) . ':' . $device['port'])) {
             // already initialized to this device
             return;
         }
 
         $this->snmp = new SNMP(
             $this->versionTable[$device['snmpver']],
-            $device['hostname'],
+            $device['hostname'] . ':' . $device['port'],
             $device['community'],
-            prep_snmp_setting($device, 'timeout') ?: 1000000, // SNMP default
+            (prep_snmp_setting($device, 'timeout') ?: 1) * 1000000,
             prep_snmp_setting($device, 'retries') ?: 5
         );
     }
@@ -62,13 +63,14 @@ class PhpSnmp extends FormattedBase
     {
         global $debug;
         $this->initSnmp($device);
-        $result = $this->snmp->get($oids);
         c_echo('SNMP[%c'.implode(' ', (array)$oids)."%n]\n", $debug);
+        $result = @$this->snmp->get((array)$oids);
         d_echo($result);
 
 
         if ($result === false) {
             $error = $this->snmp->getError();
+            d_echo("Error: $error\n");
             if (starts_with($error, 'No response from')) {
                 return Format::unreachable($error);
             }
@@ -84,12 +86,13 @@ class PhpSnmp extends FormattedBase
         $output = DataSet::make();
 
         foreach ((array)$oids as $oid) {
-            $data = $this->snmp->walk($oid);
             c_echo('SNMP[%c'.$oid."%n]\n", $debug);
+            $data = @$this->snmp->walk($oid);
             d_echo($data);
 
             if ($data === false) {
                 $error = $this->snmp->getError();
+                d_echo("Error: $error\n");
                 if (starts_with($error, 'No response from')) {
                     return Format::unreachable($error);
                 }

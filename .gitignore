@@ -12,6 +12,7 @@
 # Others #
 ##########
 *.swp
+/cache
 /composer.lock
 Thumbs.db
 config.php

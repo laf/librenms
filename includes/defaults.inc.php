@@ -181,6 +181,10 @@ $config['snmp']['v3'][0]['cryptopass'] = '';
 // Privacy (Encryption) Passphrase
 $config['snmp']['v3'][0]['cryptoalgo'] = 'AES';
 // AES | DES
+$config['snmp']['cache'] = true;
+$config['snmp']['cache_time'] = 300; // seconds
+$config['snmp']['cache_dir'] = $config['install_dir'].'/cache';
+$config['snmp']['engine'] = 'NetSnmp';
 
 // Devices must respond to icmp by default
 $config['icmp_check'] = true;
