@@ -108,4 +108,28 @@ class Format
             'readable' => $readable
         ));
     }
+
+    /**
+     * Try to change from simple oid to Module::oid format
+     *
+     * @param $oid
+     * @param $mib
+     * @return string
+     */
+    public static function compoundOid($oid, $mib)
+    {
+        if (!str_contains($oid, '::') && $mib !== null && !str_contains($mib, ':') && !self::isNumericOid($oid)) {
+            return "$mib::$oid";
+        }
+        return $oid;
+    }
+
+    /**
+     * @param $oid
+     * @return bool
+     */
+    public static function isNumericOid($oid)
+    {
+        return (bool)preg_match('/^[0-9\.]+$/', $oid);
+    }
 }

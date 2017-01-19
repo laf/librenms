@@ -103,7 +103,7 @@ class SNMP
             return SNMP::getInstance()->get($device, $oids, $mib, $mib_dir);
         });
 
-        return count((array)$oids) == 1 ? $result->first() : $result;
+        return (count((array)$oids) == 1 && $result->count() == 1) ? $result->first() : $result;
     }
 
     /**
@@ -165,10 +165,16 @@ class SNMP
      */
     public static function translate($device, $oids, $options = null, $mib = null, $mib_dir = null)
     {
+        if (empty($oids)) {
+            return $oids;
+        }
+
         $key = self::genKey(__FUNCTION__, $oids, '', $options);
-        return self::cacheOrFetch($key, function () use ($device, $oids, $options, $mib, $mib_dir) {
+        $result = (array)self::cacheOrFetch($key, function () use ($device, $oids, $options, $mib, $mib_dir) {
             return SNMP::getTranslator()->translate($device, $oids, $options, $mib, $mib_dir);
         }, 86400);
+
+        return is_array($oids) ? $result : array_shift($result);
     }
 
     /**
@@ -180,10 +186,16 @@ class SNMP
      */
     public static function translateNumeric($device, $oids, $mib = null, $mib_dir = null)
     {
+        if (empty($oids)) {
+            return $oids;
+        }
+
         $key = self::genKey(__FUNCTION__, $oids);
-        return self::cacheOrFetch($key, function () use ($device, $oids, $mib, $mib_dir) {
+        $result = (array)self::cacheOrFetch($key, function () use ($device, $oids, $mib, $mib_dir) {
             return SNMP::getTranslator()->translateNumeric($device, $oids, $mib, $mib_dir);
         }, 86400);
+
+        return is_array($oids) ? $result : array_shift($result);
     }
 
     /**
@@ -227,8 +239,8 @@ class SNMP
             return $result;
         }
 
-        echo "Returning cached $key: ";
-        var_dump($cached_result);
+//        echo "Returning cached $key: ";
+//        var_dump($cached_result);
         return $cached_result;
     }
 }

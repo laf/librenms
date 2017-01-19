@@ -99,8 +99,13 @@ function getHostOS($device)
 //    $sysObjectId = SNMP::get($device, 'SNMPv2-MIB::sysObjectID.0')->value;
 
     // Single get
+    $sysDescr = '';
+    $sysObjectId = '';
     $oids = array('SNMPv2-MIB::sysDescr.0', 'SNMPv2-MIB::sysObjectID.0');
-    list($sysDescr, $sysObjectId) = SNMP::get($device, $oids)->pluck('value');
+    $data = SNMP::get($device, $oids);
+    if (!$data->hasError()) {
+        list($sysDescr, $sysObjectId) = $data->pluck('value');
+    }
 
     d_echo("| $sysDescr | $sysObjectId | \n");
 
@@ -160,6 +165,10 @@ function discover_os($sysObjectId, $sysDescr)
 
 function preg_match_any($subject, $regexes)
 {
+    if (empty($subject)) {
+        return false;
+    }
+
     foreach ((array)$regexes as $regex) {
         if (preg_match($regex, $subject)) {
             return true;

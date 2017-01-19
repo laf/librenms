@@ -102,6 +102,7 @@ abstract class SnmpEngineTest extends \PHPUnit_Framework_TestCase
         $unreachable = Mock::genDevice('unreachable', 1);
         $unreachable['timeout'] = 0.001;
         $result = SNMP::get($unreachable, 'sysDescr.0');
+//        $this->assertNotNull($result);
         $this->assertTrue($result->hasError());
         $this->assertEquals(SNMP::ERROR_UNREACHABLE, $result->getError());
 

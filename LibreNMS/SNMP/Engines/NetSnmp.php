@@ -24,7 +24,9 @@
 namespace LibreNMS\SNMP\Engines;
 
 use LibreNMS\Proc;
+use LibreNMS\SNMP;
 use LibreNMS\SNMP\Contracts\SnmpTranslator;
+use LibreNMS\SNMP\Format;
 
 class NetSnmp extends RawBase implements SnmpTranslator
 {
@@ -66,15 +68,6 @@ class NetSnmp extends RawBase implements SnmpTranslator
      */
     public function translate($device, $oids, $options = null, $mib = null, $mib_dir = null)
     {
-        if ($oids == '') {
-            throw new \Exception(implode(',', func_get_args()));
-        }
-        if (empty($oids)) {
-            throw new \Exception(implode(',', func_get_args()));
-
-            return $oids;
-        }
-
         $data = collect($oids);
         $cmd  = 'snmptranslate '.$this->getMibDir($mib_dir, $device);
         if (isset($mib)) {
@@ -101,14 +94,13 @@ class NetSnmp extends RawBase implements SnmpTranslator
      */
     public function translateNumeric($device, $oids, $mib = null, $mib_dir = null)
     {
-        $self = $this; // php5.3 bs
-        $formmatted_oids = collect($oids)->map(function ($oid) use ($self, $mib) {
-            return $self->formatOid($oid, $mib);
+        $formmatted_oids = collect($oids)->map(function ($oid) use ($mib) {
+            return Format::compoundOid($oid, $mib);
         });
 
         $result = collect();
         foreach ($formmatted_oids as $oid) {
-            if (self::isNumericOid($oid)) {
+            if (Format::isNumericOid($oid)) {
                 $result[$oid] = $oid;
             } elseif ($this->oidIsCached($oid)) {
                 $result[$oid] = $this->getCachedOid($oid);
@@ -121,7 +113,7 @@ class NetSnmp extends RawBase implements SnmpTranslator
             return is_null($item);
         })->keys();
 
-        $translated = $this->translate($device, $oids_to_translate->all(), '-IR -On', $mib, $mib_dir);
+        $translated = SNMP::translate($device, $oids_to_translate->all(), '-IR -On', $mib, $mib_dir);
 
         $result = $formmatted_oids->combine($result->merge($translated)->all());
 
@@ -136,14 +128,6 @@ class NetSnmp extends RawBase implements SnmpTranslator
     private function getCachedOid($oid)
     {
         self::$cached_translations[$oid];
-    }
-
-    private function formatOid($oid, $mib)
-    {
-        if (!str_contains($oid, '::') && $mib !== null && !str_contains($mib, ':') && !self::isNumericOid($oid)) {
-            return "$mib::$oid";
-        }
-        return $oid;
     }
 
     private function exec($cmd)

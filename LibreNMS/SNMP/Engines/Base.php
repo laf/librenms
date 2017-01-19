@@ -41,13 +41,4 @@ abstract class Base implements SnmpEngine
         $reflectionClass = new \ReflectionClass($this);
         return $reflectionClass->getShortName();
     }
-
-    /**
-     * @param $oid
-     * @return bool
-     */
-    public function isNumericOid($oid)
-    {
-        return (bool)preg_match('/^[0-9\.]+$/', $oid);
-    }
 }

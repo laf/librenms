@@ -30,8 +30,8 @@ use LibreNMS\SNMP;
 
 abstract class BaseDataSet extends Collection
 {
-    private $error = SNMP::ERROR_NONE;
-    private $errorMessage = null;
+    protected $error = SNMP::ERROR_NONE;
+    protected $errorMessage = null;
 
     /**
      * Create an empty DataSet with an SNMP error code
