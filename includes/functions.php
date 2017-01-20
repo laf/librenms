@@ -783,7 +783,7 @@ function parse_email($emails)
     return $result;
 }
 
-function send_mail($emails, $subject, $message, $html = false)
+function send_mail($emails, $subject, $message, $html = false, $attachments = array())
 {
     global $config;
     if (is_array($emails) || ($emails = parse_email($emails))) {

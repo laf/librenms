@@ -340,6 +340,7 @@ function ExtTransports($obj)
         if (($opts === true || !empty($opts)) && $opts != false && file_exists($config['install_dir'].'/includes/alerts/transport.'.$transport.'.php')) {
             $obj['transport'] = $transport;
             $msg        = FormatAlertTpl($obj);
+            $obj['attachments'] = GenerateAttachments($obj);
             $obj['msg'] = $msg;
             echo $transport.' => ';
             eval('$tmp = function($obj,$opts) { global $config; '.file_get_contents($config['install_dir'].'/includes/alerts/transport.'.$transport.'.php').' return false; };');
@@ -362,6 +363,16 @@ function ExtTransports($obj)
         echo '; ';
     }
 }//end ExtTransports()
+
+function GenerateAttachments($obj)
+{
+    if ($obj['template']) {
+        if (preg_match('/{graph:([\w\d_]+)}/', $obj['template'], $graphs)) {
+            return $graphs;
+        }
+    }
+    return array();
+}
 
 
 /**

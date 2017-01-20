@@ -21,4 +21,5 @@
  * @subpackage Alerts
  */
 
-return send_mail($obj['contacts'], $obj['title'], $obj['msg'], ($config['email_html'] == 'true') ? true : false );
+print_r($obj);
+return send_mail($obj['contacts'], $obj['title'], $obj['msg'], ($config['email_html'] == 'true') ? true : false, $obj['attachments'] );
