@@ -11,7 +11,7 @@ $i=0;
 $units       = 'b';
 $total_units = 'B';
 $colours_in  = 'greens';
-$multiplier  = '1';
+$multiplier  = '8';
 $colours_out = 'blues';
 
 // $nototal = 1;
