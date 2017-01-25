@@ -127,6 +127,9 @@ function snmp_translate_number($oid, $mib = null, $mibdir = null)
     if ($oid == 'GAMATRONIC-MIB::psUnitManufacture.0') {
         return '1.3.6.1.4.1.6050.1.1.2.0';
     }
+    if ($oid === 'SYNOLOGY-SYSTEM-MIB::systemStatus.0') {
+        return '1.3.6.1.4.1.6574.1.1.0';
+    }
     // end optimizations
 
     if (preg_match('/^[\.\d]*$/', $oid)) {
@@ -134,7 +137,7 @@ function snmp_translate_number($oid, $mib = null, $mibdir = null)
     }
 
     $cmd = "snmptranslate -IR -On $oid";
-    $cmd .= ' -M ' . (isset($mibdir) ? $mibdir : $config['mib_dir']);
+    $cmd .= ' -M ' . (isset($mibdir) ? $config['mib_dir'] . ":".$config['mib_dir']."/$mibdir" : $config['mib_dir']);
     if (isset($mib) && $mib) {
         $cmd .= " -m $mib";
     }
@@ -153,7 +156,7 @@ function snmp_translate_type($oid, $mib = null, $mibdir = null)
     global $config;
 
     $cmd = "snmptranslate -IR -Td $oid";
-    $cmd .= ' -M ' . (isset($mibdir) ? $mibdir : $config['mib_dir']);
+    $cmd .= ' -M ' . (isset($mibdir) ? $config['mib_dir'] . ":".$config['mib_dir']."/$mibdir" : $config['mib_dir']);
     if (isset($mib) && $mib) {
         $cmd .= " -m $mib";
     }

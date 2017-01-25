@@ -278,6 +278,11 @@ $mail_conf = array(
           'type'               => 'select',
           'options'            => $dyn_config['email_smtp_secure'],
     ),
+    array('name'               => 'email_auto_tls',
+        'descr'                => 'SMTP Auto TLS Support',
+        'type'                 => 'select',
+        'options'              => array('true', 'false'),
+    ),
     array('name'               => 'email_smtp_auth',
           'descr'              => 'SMTP Authentication',
           'type'               => 'checkbox',
@@ -288,7 +293,7 @@ $mail_conf = array(
     ),
     array('name'               => 'email_smtp_password',
           'descr'              => 'SMTP Authentication Password',
-          'type'               => 'text',
+          'type'               => 'password',
     ),
 );
 

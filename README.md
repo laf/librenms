@@ -33,7 +33,6 @@ Participating
 You can participate in the project by:
 - Talking to us on IRC ([##librenms on Freenode][4]) or [Twitter][3].
 - Joining the [LibreNMS Community](https://community.librenms.org)
-- Joining the [librenms-project][1] mailing list.
 - Improving the [documentation][5].
 - Cloning the [repo][2] and filing [bug reports][18] and [pull requests][19] on github.
   See [CONTRIBUTING][15] for more details.
@@ -53,7 +52,7 @@ License
 
 Copyright (C) 2006-2012 Adam Armstrong <adama@memetic.org>
 
-Copyright (C) 2013-2016 by individual LibreNMS contributors
+Copyright (C) 2013-2017 by individual LibreNMS contributors
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by

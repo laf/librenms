@@ -89,6 +89,12 @@ function logfile($string)
     fclose($fd);
 }
 
+/**
+ * Detect the os of the given device.
+ *
+ * @param array $device device to check
+ * @return string the name of the os
+ */
 function getHostOS($device)
 {
     global $config;
@@ -98,6 +104,23 @@ function getHostOS($device)
 
     d_echo("| $sysDescr | $sysObjectId | \n");
 
+    // check yaml files
+    $pattern = $config['install_dir'] . '/includes/definitions/*.yaml';
+    foreach (glob($pattern) as $file) {
+        $tmp = Symfony\Component\Yaml\Yaml::parse(
+            file_get_contents($file)
+        );
+        if (isset($tmp['discovery']) && is_array($tmp['discovery'])) {
+            foreach ($tmp['discovery'] as $item) {
+                // check each item individually, if all the conditions in that item are true, we have a match
+                if (checkDiscovery($item, $sysObjectId, $sysDescr)) {
+                    return $tmp['os'];
+                }
+            }
+        }
+    }
+
+    // check include files
     $os = null;
     $pattern = $config['install_dir'] . '/includes/discovery/os/*.inc.php';
     foreach (glob($pattern) as $file) {
@@ -107,7 +130,57 @@ function getHostOS($device)
         }
     }
 
-    return "generic";
+    return 'generic';
+}
+
+/**
+ * Check an array of conditions if all match, return true
+ * sysObjectId if sysObjectId starts with any of the values under this item
+ * sysDescr if sysDescr contains any of the values under this item
+ * sysDescr_regex if sysDescr matches any of the regexes under this item
+ *
+ * @param array $array Array of items, keys should be sysObjectId, sysDescr, or sysDescr_regex
+ * @param string $sysObjectId The sysObjectId to check against
+ * @param string $sysDescr the sysDesr to check against
+ * @return bool the result (all items passed return true)
+ */
+function checkDiscovery($array, $sysObjectId, $sysDescr)
+{
+    // all items must be true
+    foreach ($array as $key => $value) {
+        if ($key == 'sysObjectId') {
+            if (!starts_with($sysObjectId, $value)) {
+                return false;
+            }
+        } elseif ($key == 'sysDescr') {
+            if (!str_contains($sysDescr, $value)) {
+                return false;
+            }
+        } elseif ($key == 'sysDescr_regex') {
+            if (!preg_match_any($sysDescr, $value)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Check an array of regexes against a subject if any match, return true
+ *
+ * @param string $subject the string to match against
+ * @param array|string $regexes an array of regexes or single regex to check
+ * @return bool if any of the regexes matched, return true
+ */
+function preg_match_any($subject, $regexes)
+{
+    foreach ((array)$regexes as $regex) {
+        if (preg_match($regex, $subject)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function percent_colour($perc)
@@ -139,50 +212,87 @@ function interface_errors($rrd_file, $period = '-1d')
     return $errors;
 }
 
-function getImage($device)
+/**
+ * @param $device
+ * @return string the logo image path for this device. Images are often wide, not square.
+ */
+function getLogo($device)
 {
-    return '<img src="' . getImageSrc($device) . '" />';
+    $img = getImageName($device, true, 'images/logos/');
+    if (!starts_with($img, 'generic')) {
+        return 'images/logos/' . $img;
+    }
+
+    return getIcon($device);
 }
 
-function getImageSrc($device)
+/**
+ * @param $device
+ * @return string an image tag with the logo for this device. Images are often wide, not square.
+ */
+function getLogoTag($device)
+{
+    return '<img src="' . getLogo($device) . '" title="' . getImageTitle($device) . '"/>';
+}
+
+/**
+ * @param $device
+ * @return string the path to the icon image for this device.  Close to square.
+ */
+function getIcon($device)
+{
+    return 'images/os/' . getImageName($device);
+}
+
+/**
+ * @param $device
+ * @return string an image tag with the icon for this device.  Close to square.
+ */
+function getIconTag($device)
+{
+    return '<img src="' . getIcon($device) . '" title="' . getImageTitle($device) . '"/>';
+}
+
+function getImageTitle($device)
+{
+    return $device['icon'] ? str_replace(array('.svg', '.png'), '', $device['icon']) : $device['os'];
+}
+
+function getImageName($device, $use_database = true, $dir = 'images/os/')
 {
     global $config;
 
-    return 'images/os/' . getImageName($device) . '.png';
-}
-
-function getImageName($device, $use_database = true)
-{
-    global $config;
-
-    $device['os'] = strtolower($device['os']);
+    $os = strtolower($device['os']);
 
     // fetch from the database
-    if ($use_database && !empty($device['icon']) && file_exists($config['html_dir'] . "/images/os/" . $device['icon'] . ".png")) {
+    if ($use_database && is_file($config['html_dir'] . "/$dir" . $device['icon'])) {
         return $device['icon'];
     }
 
     // linux specific handling, distro icons
-    if ($device['os'] == "linux") {
+    $distro = null;
+    if ($os == "linux") {
         $features = strtolower(trim($device['features']));
         list($distro) = explode(" ", $features);
-        if (file_exists($config['html_dir'] . "/images/os/$distro" . ".png")) {
-            return $distro;
+    }
+
+    $possibilities = array(
+        $distro,
+        $config['os'][$os]['icon'],
+        $os,
+    );
+
+    foreach ($possibilities as $basename) {
+        foreach (array('.svg', '.png') as $ext) {
+            $name = $basename . $ext;
+            if (is_file($config['html_dir'] . "/$dir" . $name)) {
+                return $name;
+            }
         }
     }
 
-    // use the icon from os config
-    if (!empty($config['os'][$device['os']]['icon']) && file_exists($config['html_dir'] . "/images/os/" . $config['os'][$device['os']]['icon'] . ".png")) {
-        return $config['os'][$device['os']]['icon'];
-    }
-
-    // guess the icon has the same name as the os
-    if (file_exists($config['html_dir'] . '/images/os/' . $device['os'] . '.png')) {
-        return $device['os'];
-    }
-
     // fallback to the generic icon
-    return 'generic';
+    return 'generic.png';
 }
 
 function renamehost($id, $new, $source = 'console')
@@ -573,7 +683,12 @@ function createHost($host, $community, $snmpver, $port = 161, $transport = 'udp'
 
 function isDomainResolves($domain)
 {
-    return (gethostbyname($domain) != $domain || count(dns_get_record($domain)) != 0);
+    if (gethostbyname($domain) != $domain) {
+        return true;
+    }
+
+    $records = dns_get_record($domain);  // returns array or false
+    return !empty($records);
 }
 
 function hoststatus($id)
@@ -745,6 +860,7 @@ function send_mail($emails, $subject, $message, $html = false)
                 $mail->Port       = $config['email_smtp_port'];
                 $mail->Username   = $config['email_smtp_username'];
                 $mail->Password   = $config['email_smtp_password'];
+                $mail->SMTPAutoTLS= $config['email_auto_tls'];
                 $mail->SMTPDebug  = false;
                 break;
             default:
@@ -759,18 +875,22 @@ function formatCiscoHardware(&$device, $short = false)
 {
     if ($device['os'] == "ios") {
         if ($device['hardware']) {
-            if (preg_match("/^WS-C([A-Za-z0-9]+).*/", $device['hardware'], $matches)) {
+            if (preg_match("/^WS-C([A-Za-z0-9]+)/", $device['hardware'], $matches)) {
                 if (!$short) {
+                    $device['hardware'] = "Catalyst " . $matches[1] . " (" . $device['hardware'] . ")";
+                } else {
+                    $device['hardware'] = "Catalyst " . $matches[1];
+                }
+            } elseif (preg_match("/^CISCO([0-9]+)(.*)/", $device['hardware'], $matches)) {
+                if (!$short && $matches[2]) {
                     $device['hardware'] = "Cisco " . $matches[1] . " (" . $device['hardware'] . ")";
                 } else {
                     $device['hardware'] = "Cisco " . $matches[1];
                 }
-            } elseif (preg_match("/^CISCO([0-9]+)$/", $device['hardware'], $matches)) {
-                $device['hardware'] = "Cisco " . $matches[1];
             }
         } else {
             if (preg_match("/Cisco IOS Software, C([A-Za-z0-9]+) Software.*/", $device['sysDescr'], $matches)) {
-                $device['hardware'] = "Cisco " . $matches[1];
+                $device['hardware'] = "Catalyst " . $matches[1];
             } elseif (preg_match("/Cisco IOS Software, ([0-9]+) Software.*/", $device['sysDescr'], $matches)) {
                 $device['hardware'] = "Cisco " . $matches[1];
             }
@@ -1240,6 +1360,12 @@ function fping($host, $params, $address_family = AF_INET)
         $rcv = 1;
         $loss = 100;
     }
+    $xmt      = set_numeric($xmt);
+    $rcv      = set_numeric($rcv);
+    $loss     = set_numeric($loss);
+    $min      = set_numeric($min);
+    $max      = set_numeric($max);
+    $avg      = set_numeric($avg);
     $response = array('xmt'=>$xmt,'rcv'=>$rcv,'loss'=>$loss,'min'=>$min,'max'=>$max,'avg'=>$avg);
     return $response;
 }
@@ -1386,7 +1512,7 @@ function oxidized_reload_nodes()
 **/
 function dnslookup($device, $type = false, $return = false)
 {
-    if (filter_var($device['hostname'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) == true || filter_var($device['hostname'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) == truee) {
+    if (filter_var($device['hostname'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) == true || filter_var($device['hostname'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) == true) {
         return '';
     }
     if (empty($type)) {
@@ -1453,7 +1579,7 @@ function rrdtest($path, &$stdOutput, &$stdError)
 
 function create_state_index($state_name)
 {
-    if (dbFetchRow('SELECT * FROM state_indexes WHERE state_name = ?', array($state_name)) !== true) {
+    if (dbFetchRow('SELECT * FROM state_indexes WHERE state_name = ?', array($state_name)) != true) {
         $insert = array('state_name' => $state_name);
         return dbInsert($insert, 'state_indexes');
     }

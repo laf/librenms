@@ -85,28 +85,22 @@ function get_mib_dir($device)
 function mibdir($mibdir = null, $device = array())
 {
     global $config;
-    // FIXME: prepend + to allow system mibs?
 
     $extra_dir = implode(':', get_mib_dir($device));
     if (!empty($extra_dir)) {
-        $extra_dir .= ':';
+        $extra_dir = ":".$extra_dir;
     }
 
     if (is_null($mibdir)) {
-        return " -M $extra_dir${config['mib_dir']}";
+        return " -M ${config['mib_dir']}$extra_dir";
     }
 
     if (empty($mibdir)) {
+        // use system mibs
         return '';
     }
 
-    if (str_contains($mibdir, '/')) {
-        // pass through mib dir (for legace compatability
-        return " -M $extra_dir$mibdir";
-    } else {
-        // automatically set up includes
-        return " -M $extra_dir${config['mib_dir']}/$mibdir:${config['mib_dir']}";
-    }
+    return " -M ${config['mib_dir']}$extra_dir:${config['mib_dir']}/$mibdir";
 }//end mibdir()
 
 /**
@@ -449,6 +443,22 @@ function snmpwalk_cache_double_oid($device, $oid, $array, $mib = null, $mibdir =
     return $array;
 }//end snmpwalk_cache_double_oid()
 
+function snmpwalk_cache_index($device, $oid, $array, $mib = null, $mibdir = null)
+{
+    $data = snmp_walk($device, $oid, '-OQUs', $mib, $mibdir);
+
+    foreach (explode("\n", $data) as $entry) {
+        list($oid,$value) = explode('=', $entry, 2);
+        $oid              = trim($oid);
+        $value            = trim($value);
+        list($oid, $first) = explode('.', $oid);
+        if (!strstr($value, 'at this OID') && isset($oid) && isset($first)) {
+            $array[$oid][$first] = $value;
+        }
+    }
+
+    return $array;
+}//end snmpwalk_cache_double_oid()
 
 function snmpwalk_cache_triple_oid($device, $oid, $array, $mib = null, $mibdir = null)
 {
@@ -566,46 +576,6 @@ function snmp_cache_port_oids($oids, $port, $device, $array, $mib = 0)
 
     return $array;
 }//end snmp_cache_port_oids()
-
-
-function snmp_cache_portIfIndex($device, $array)
-{
-    $cmd = gen_snmpwalk_cmd($device, 'portIfIndex', ' -CI -Oq', 'CISCO-STACK-MIB');
-    $output    = trim(external_exec($cmd));
-
-    foreach (explode("\n", $output) as $entry) {
-        $entry                    = str_replace('CISCO-STACK-MIB::portIfIndex.', '', $entry);
-        list($slotport, $ifIndex) = explode(' ', $entry, 2);
-        if ($slotport && $ifIndex) {
-            $array[$ifIndex]['portIfIndex'] = $slotport;
-            $array[$slotport]['ifIndex']    = $ifIndex;
-        }
-    }
-
-    return $array;
-}//end snmp_cache_portIfIndex()
-
-
-function snmp_cache_portName($device, $array)
-{
-    $cmd = gen_snmpwalk_cmd($device, 'portName', ' -CI -OQs', 'CISCO-STACK-MIB');
-    $output    = trim(external_exec($cmd));
-
-    // echo("Caching: portName\n");
-    foreach (explode("\n", $output) as $entry) {
-        $entry = str_replace('portName.', '', $entry);
-        list($slotport, $portName) = explode('=', $entry, 2);
-        $slotport                  = trim($slotport);
-        $portName                  = trim($portName);
-        if ($array[$slotport]['ifIndex']) {
-            $ifIndex = $array[$slotport]['ifIndex'];
-            $array[$slotport]['portName'] = $portName;
-            $array[$ifIndex]['portName']  = $portName;
-        }
-    }
-
-    return $array;
-}//end snmp_cache_portName()
 
 
 function snmp_gen_auth(&$device)

@@ -8,7 +8,7 @@ source: Installation/Installation-CentOS-7-Apache.md
 #### Install / Configure MySQL
 ```bash
 yum install mariadb-server mariadb
-service mariadb restart
+systemctl restart mariadb
 mysql -uroot -p
 ```
 
@@ -31,7 +31,7 @@ innodb_file_per_table=1
 sql-mode=""
 ```
 
-```service mariadb restart```
+```systemctl restart mariadb```
 
 ### Web Server ###
 
@@ -48,7 +48,7 @@ pear install Net_IPv4-1.3.4
 pear install Net_IPv6-1.2.2b2
 ```
 
-In `/etc/php.ini` ensure date.timezone is set to your preferred time zone.  See http://php.net/manual/en/timezones.php for a list of supported timezones.  Valid examples are: "America/New York", "Australia/Brisbane", "Etc/UTC".
+In `/etc/php.ini` ensure date.timezone is set to your preferred time zone.  See http://php.net/manual/en/timezones.php for a list of supported timezones.  Valid examples are: "America/New_York", "Australia/Brisbane", "Etc/UTC".
 
 #### Add librenms user
 
@@ -107,7 +107,7 @@ Add the following config:
 #### Restart Web server
 
 ```bash
-service httpd restart
+systemctl restart httpd
 ```
 
 #### Web installer
@@ -130,19 +130,24 @@ Edit the text which says `RANDOMSTRINGGOESHERE` and set your own community strin
 ```bash
 curl -o /usr/bin/distro https://raw.githubusercontent.com/librenms/librenms-agent/master/snmp/distro
 chmod +x /usr/bin/distro
-service snmpd restart
+systemctl restart snmpd
 ```
 
 #### Cron job
 
 `cp librenms.nonroot.cron /etc/cron.d/librenms`
 
+#### Copy logrotate config
+
+LibreNMS keeps logs in `/opt/librenms/logs`. Over time these can become large and be rotated out.  To rotate out the old logs you can use the provided logrotate config file:
+
+    cp misc/librenms.logrotate /etc/logrotate.d/librenms
+
 #### Final steps
 
 ```bash
 chown -R librenms:librenms /opt/librenms
-systemctl enable httpd
-systemctl enable mariadb
+systemctl enable httpd mariadb
 ```
 
 Run validate.php as root in the librenms directory:

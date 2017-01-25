@@ -97,6 +97,9 @@ function nicecase($item)
         case 'gpsd':
             return 'GPSD';
 
+        case 'exim-stats':
+            return 'EXIM Stats';
+
         default:
             return ucfirst($item);
     }
@@ -298,13 +301,18 @@ function generate_device_link($device, $text = null, $vars = array(), $start = 0
 }//end generate_device_link()
 
 
-function overlib_link($url, $text, $contents, $class)
+function overlib_link($url, $text, $contents, $class = null)
 {
     global $config;
 
     $contents = "<div style=\'background-color: #FFFFFF;\'>".$contents.'</div>';
     $contents = str_replace('"', "\'", $contents);
-    $output   = '<a class="'.$class.'" href="'.$url.'"';
+    if ($class === null) {
+        $output   = '<a href="'.$url.'"';
+    } else {
+        $output   = '<a class="'.$class.'" href="'.$url.'"';
+    }
+
     if ($config['web_mouseover'] === false) {
         $output .= '>';
     } else {
@@ -605,7 +613,7 @@ function generate_port_link($port, $text = null, $type = null, $overlib = 1, $si
 
     $content = '<div class=list-large>'.$port['hostname'].' - '.fixifName($port['label']).'</div>';
     if ($port['ifAlias']) {
-        $content .= escape_quotes($port['ifAlias']).'<br />';
+        $content .= display($port['ifAlias']).'<br />';
     }
 
     $content              .= "<div style=\'width: 850px\'>";
@@ -788,9 +796,9 @@ function getlocations()
 
     // Fetch regular locations
     if ($_SESSION['userlevel'] >= '5') {
-        $rows = dbFetchRows('SELECT D.device_id,location FROM devices AS D GROUP BY location ORDER BY location');
+        $rows = dbFetchRows('SELECT location FROM devices AS D GROUP BY location ORDER BY location');
     } else {
-        $rows = dbFetchRows('SELECT D.device_id,location FROM devices AS D, devices_perms AS P WHERE D.device_id = P.device_id AND P.user_id = ? GROUP BY location ORDER BY location', array($_SESSION['user_id']));
+        $rows = dbFetchRows('SELECT location FROM devices AS D, devices_perms AS P WHERE D.device_id = P.device_id AND P.user_id = ? GROUP BY location ORDER BY location', array($_SESSION['user_id']));
     }
 
     foreach ($rows as $row) {
@@ -856,7 +864,7 @@ function generate_ap_link($args, $text = null, $type = null)
 
     $content = '<div class=list-large>'.$args['text'].' - '.fixifName($args['label']).'</div>';
     if ($args['ifAlias']) {
-        $content .= $args['ifAlias'].'<br />';
+        $content .= display($args['ifAlias']).'<br />';
     }
 
     $content              .= "<div style=\'width: 850px\'>";
@@ -1212,6 +1220,11 @@ function generate_dynamic_config_panel($title, $config_groups, $items = array(),
                 <input id="'.$item['name'].'" class="form-control" type="text" name="global-config-input" value="'.$config_groups[$item['name']]['config_value'].'" data-config_id="'.$config_groups[$item['name']]['config_id'].'">
                 <span class="form-control-feedback"><i class="fa" aria-hidden="true"></i></span>
                 ';
+            } elseif ($item['type'] == 'password') {
+                $output .= '
+                <input id="'.$item['name'].'" class="form-control" type="password" name="global-config-input" value="'.$config_groups[$item['name']]['config_value'].'" data-config_id="'.$config_groups[$item['name']]['config_id'].'">
+                <span class="form-control-feedback"><i class="fa" aria-hidden="true"></i></span>
+                ';
             } elseif ($item['type'] == 'numeric') {
                 $output .= '
                 <input id="'.$item['name'].'" class="form-control" onkeypress="return (event.charCode == 8 || event.charCode == 0) ? null : event.charCode >= 48 && event.charCode <= 57" type="text" name="global-config-input" value="'.$config_groups[$item['name']]['config_value'].'" data-config_id="'.$config_groups[$item['name']]['config_id'].'">
@@ -1356,4 +1369,24 @@ function get_rules_from_json()
 {
     global $config;
     return json_decode(file_get_contents($config['install_dir'] . '/misc/alert_rules.json'), true);
+}
+
+function search_oxidized_config($search_in_conf_textbox)
+{
+    global $config;
+    $oxidized_search_url = $config['oxidized']['url'] . '/nodes/conf_search?format=json';
+    $postdata = http_build_query(
+        array(
+            'search_in_conf_textbox' => $search_in_conf_textbox,
+        )
+    );
+    $opts = array('http' =>
+        array(
+            'method'  => 'POST',
+            'header'  => 'Content-type: application/x-www-form-urlencoded',
+            'content' => $postdata
+        )
+    );
+    $context  = stream_context_create($opts);
+    return json_decode(file_get_contents($oxidized_search_url, false, $context), true);
 }

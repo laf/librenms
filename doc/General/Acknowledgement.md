@@ -27,6 +27,9 @@ LibreNMS 3rd party acknowledgements
   - Pure PHP radius class (http://developer.sysco.ch/php/): GPLv3
   - GeSHi - Generic Syntax Highlighter (http://qbnz.com/highlighter/): GPLv2+
   - MalaysiaMap.svg - By Exiang [CC BY 3.0 (http://creativecommons.org/licenses/by/3.0)], via Wikimedia Commons
+  - HTML Purifier (http://htmlpurifier.org/): LGPL v2.1
+  - Symfony Yaml (https://github.com/symfony/yaml): MIT
+  - PHPMailer (https://github.com/PHPMailer/PHPMailer): LGPL v2.1
 
 #### 3rd Party GPLv3 Non-compliant
 
