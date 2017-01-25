@@ -111,6 +111,14 @@ if (device_permitted($vars['device']) || $check_device == $vars['device']) {
                 </li>';
         }
 
+        if (@dbFetchCell("SELECT COUNT(*) FROM `wifi_sites` WHERE `device_id` = ?", array($device['device_id'])) > '0') {
+            echo '<li class="'.$select['wifi'].'">
+                <a href="'.generate_device_url($device, array('tab' => 'wifi')).'">
+                <img src="images/16/connect.png" align="absmiddle" border="0" /> Wifi
+                </a>
+                </li>';
+        }
+
         if (@dbFetchCell("SELECT COUNT(sla_id) FROM slas WHERE device_id = '".$device['device_id']."'") > '0') {
             echo '<li class="'.$select['slas'].$select['sla'].'">
                 <a href="'.generate_device_url($device, array('tab' => 'slas')).'">

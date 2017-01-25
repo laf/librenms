@@ -95,4 +95,6 @@ if ($device['type'] == 'network' || $device['type'] == 'firewall' || $device['ty
     }
 }//end if
 
-echo "\n";
+if ($device['os'] == 'linux') {
+    include 'includes/polling/wifi/linux.inc.php';
+}

@@ -1173,8 +1173,8 @@ function dynamic_override_config($type, $name, $device)
     }
     if ($type == 'checkbox') {
         return '<input type="checkbox" id="override_config" name="override_config" data-attrib="'.$name.'" data-device_id="'.$device['device_id'].'" data-size="small" '.$checked.'>';
-    } elseif ($type == 'text') {
-        return '<input type="text" id="override_config_text" name="override_config_text" data-attrib="'.$name.'" data-device_id="'.$device['device_id'].'" value="'.$attrib_val.'">';
+    } elseif ($type == 'text' || $type === 'password') {
+        return '<input type="'.$type.'" id="override_config_text" class="form-control" name="override_config_text" data-attrib="'.$name.'" data-device_id="'.$device['device_id'].'" value="'.$attrib_val.'">';
     }
 }//end dynamic_override_config()
 

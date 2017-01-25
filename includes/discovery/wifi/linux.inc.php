@@ -1,6 +1,7 @@
 <?php
 
 use LibreNMS\Unifi;
+print_r($device);exit;
 $unifi = new Unifi($config['unifi_user'], $config['unifi_pass'], $config['unifi_url']);
 $keep_site = array();
 $keep_ap = array();
@@ -36,7 +37,7 @@ foreach ($unifi->sites() as $site) {
         }
         $keep_ap[] = $ap->id;
     }
-    dbDelete('wifi_aps', '`device_id` = ? AND `wifi_site_id` = ? AND `id` NOT IN ('.implode(',', $keep_ap).')', array($device['device_id'], $site_id));
+    dbDelete('wifi_aps', "`device_id` = ? AND `wifi_site_id` = ? AND `id` NOT IN ('".implode("','", $keep_ap)."')", array($device['device_id'], $site_id));
 }
 
-dbDelete('wifi_clients', '`device_id` = ? AND `site_desc` NOT IN ('.implode(',', $keep_site).')', array($device['device_id']));
+dbDelete('wifi_clients', "`device_id` = ? AND `site_desc` NOT IN ('".implode("','", $keep_site)."')", array($device['device_id']));

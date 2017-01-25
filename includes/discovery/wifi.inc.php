@@ -1,5 +1,6 @@
 <?php
 
-$include_dir = 'includes/discovery/wifi';
-require 'includes/include-dir.inc.php';
+if (is_file($config['install_dir'] . '/includes/discovery/wifi/' . $device['os'] . '.inc.php')) {
+    require_once $config['install_dir'] . '/includes/discovery/wifi/' . $device['os'] . '.inc.php';
+}
 
