@@ -29,7 +29,6 @@ use LibreNMS\SNMP;
 
 class Parse
 {
-
     public static function rawOID($oid)
     {
         // TODO: extract format
@@ -37,11 +36,13 @@ class Parse
         if (count($parts) > 1) {
             // if the oid contains a name, index is the first thing after that
             if (str_contains($parts->first(), '::')) {
+                list($mib, $name) = explode('::', $parts->first());
                 return OIDData::make(array(
                     'oid' => $oid,
+                    'mib' => $mib,
+                    'name' => $name,
                     'base_oid' => $parts->first(),
                     'index' => intval($parts[1]),
-                    'error' => SNMP::ERROR_NONE,
                     'extra_oid' => $parts->slice(2)->values()->map(function ($item) {
                         return trim($item, '"');
                     })->all()
@@ -52,14 +53,12 @@ class Parse
                 'oid' => $oid,
                 'base_oid' => implode('.', $parts->slice(0, count($parts) - 1)->all()),
                 'index' => $parts->last(),
-                'error' => SNMP::ERROR_NONE
             ));
         } else {
             // there are no segments in this oid
             return OIDData::make(array(
                 'oid' => $oid,
                 'base_oid' => $oid,
-                'error' => SNMP::ERROR_NONE
             ));
         }
     }
@@ -121,7 +120,8 @@ class Parse
     public static function rawValue($raw_value)
     {
         if (!str_contains($raw_value, ': ')) {
-            if ($raw_value == 'No Such Instance currently exists at this OID') {
+            if ($raw_value == 'No Such Instance currently exists at this OID' ||
+                $raw_value == 'No Such Object available on this agent at this OID') {
                 return OIDData::makeError(SNMP::ERROR_NO_SUCH_OID, $raw_value);
             }
             return OIDData::makeError(SNMP::ERROR_PARSE_ERROR, $raw_value);
@@ -180,9 +180,14 @@ class Parse
             Format::integerType(intval($input));
         }
 
-        if (preg_match('/(.+)\(([0-9]+)\)/', $input, $matches)) {
+        if (preg_match('/^(.+)\(([0-9]+)\)$/', $input, $matches)) {
             $descr = $matches[1];
             $int = $matches[2];
+            return Format::integerType($int, $descr);
+        }
+        if (preg_match('/^([0-9]+) (.+)$/', $input, $matches)) {
+            $int = $matches[1];
+            $descr = $matches[2];
             return Format::integerType($int, $descr);
         }
 

@@ -99,12 +99,13 @@ function getHostOS($device)
 //    $sysObjectId = SNMP::get($device, 'SNMPv2-MIB::sysObjectID.0')->value;
 
     // Single get
-    $sysDescr = '';
-    $sysObjectId = '';
     $oids = array('SNMPv2-MIB::sysDescr.0', 'SNMPv2-MIB::sysObjectID.0');
     $data = SNMP::get($device, $oids);
     if (!$data->hasError()) {
         list($sysDescr, $sysObjectId) = $data->pluck('value');
+    } else {
+        $sysDescr = '';
+        $sysObjectId = '';
     }
 
     d_echo("| $sysDescr | $sysObjectId | \n");

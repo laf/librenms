@@ -76,11 +76,17 @@ class Format
      */
     public static function integerType($integer, $description = null)
     {
-        return OIDData::make(array(
+        $data = array(
             'type' => 'integer',
-            'value' => intval($integer),
+            'value' => (int)$integer,
             'description' => $description
-        ));
+        );
+
+        if ($description == 'seconds') {
+            $data['seconds'] = (int)$integer;
+        }
+
+        return OIDData::make($data);
     }
 
     /**
@@ -96,15 +102,17 @@ class Format
     }
 
     /**
-     * @param int $seconds
+     * @param int $milliseconds
      * @param string $readable
      * @return OIDData
      */
-    public static function timeticksType($seconds, $readable = null)
+    public static function timeticksType($milliseconds, $readable = null)
     {
         return OIDData::make(array(
             'type' => 'timeticks',
-            'value' => intval($seconds),
+            'value' => (int)$milliseconds,
+            'description' => 'milliseconds',
+            'seconds' => (int)floor($milliseconds / 100),
             'readable' => $readable
         ));
     }

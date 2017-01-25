@@ -39,16 +39,52 @@ class DataSet extends BaseDataSet
         return $this->getByField('index', $index);
     }
 
+    public function getByName($name = null)
+    {
+        return $this->getByField('name', $name);
+    }
+
     public function getByBaseOID($base_oid = null)
     {
         return $this->getByField('base_oid', $base_oid);
     }
 
-    public function getByField($field, $index = null)
+    public function removeErrors() {
+        return $this->reject(function ($oiddata) {
+            return $oiddata->hasError();
+        });
+    }
+
+    /**
+     * Groups all items as a collection of OIDData objects by the specified field
+     * Optionally filter by a specific value for that field
+     *
+     * @param string $field The name of the field to use for keys
+     * @param mixed $field_value Only return OIDData entries that match this field value
+     * @return DataSet The array of OIDData items under key values based on the specified field
+     */
+    public function getByField($field, $field_value = null)
     {
-        return $this->optionalFilter($field, $index)->groupBy(function ($item) use ($field) {
+        return $this->optionalFilter($field, $field_value)->groupBy(function ($item) use ($field) {
             return $item[$field];
         });
+    }
+
+    public function getValuesByName() {
+        return $this->getValuesByField('name');
+    }
+
+    /**
+     * Gets the data in an array of keys and values
+     * where the key is from the field and value is from the field value
+     *
+     * @param string $field The name of the field to use for keys
+     * @return DataSet array of key-value pairs, key is $field, value is 'value'
+     */
+    public function getValuesByField($field)
+    {
+        //TODO worthwhile?
+        return $this->pluck('value', $field);
     }
 
     public function filterBaseOID($base_oid)

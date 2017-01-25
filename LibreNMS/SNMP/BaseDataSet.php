@@ -79,4 +79,20 @@ abstract class BaseDataSet extends Collection
     {
         return $this->errorMessage;
     }
+
+    /**
+     * Merge the collection with the given items.
+     * Carry over error values
+     *
+     * @param  mixed  $items
+     * @return static
+     */
+    public function merge($items)
+    {
+        $ret = parent::merge($items);
+        // copy over error info
+        $ret->error = $this->error;
+        $ret->errorMessage = $this->errorMessage;
+        return $ret;
+    }
 }

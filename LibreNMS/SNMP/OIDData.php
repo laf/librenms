@@ -33,23 +33,27 @@ class OIDData extends BaseDataSet
     /** @property string     type        the type for of the value (string, oid, integer32, etc) */
     /** @property string|int value       the value of this object */
     /** @property string     description if the value is an enum, this is the description of that value. Valid for type integer32 */
+    /** @property int        seconds     the value of this OID in seconds. Valid for type timeticks and some integer32 */
     /** @preoprty string     readable    human readable time value as return by netsnmp.  Valid for type timeticks */
-    /** @property int        error       the error code for this object. See LibreNMS\SNMP Error codes */
 
     public static function makeRaw($oid, $raw_value)
     {
-        return self::make()
-            ->merge(Parse::rawOID($oid))
-            ->merge(Parse::rawValue($raw_value));
+        return Parse::rawValue($raw_value)
+            ->merge(Parse::rawOID($oid));
     }
 
     public static function makeType($oid, $type, $value)
     {
-        return self::make()
-            ->merge(Parse::rawOID($oid))
-            ->merge(Parse::value($type, $value));
+        return Parse::value($type, $value)
+            ->merge(Parse::rawOID($oid));
     }
 
+    public static function makeError($error, $message = null)
+    {
+        $result = parent::makeError($error, $message);
+        $result->put('value', null);
+        return $result;
+    }
 
     /**
      * Magic getter function
