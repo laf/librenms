@@ -1,6 +1,6 @@
 <?php
 
-$ap = dbFetchRow("SELECT * FROM `wifi_aps` WHERE `device_id` = ? AND `id` = ?", array($device['device_id'], $vars['id']));
+$ap = dbFetchRow("SELECT * FROM `wifi_aps` WHERE `device_id` = ? AND `id` = ? AND `essid` = ?", array($device['device_id'], $vars['id'], $vars['essid']));
 $rrd_filename = rrd_name($device['hostname'], "unifi-ap-traffic-". $ap['id']. "-" . $ap['essid']);
 $rrd_list[0] =
         array(

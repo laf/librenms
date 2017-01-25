@@ -745,6 +745,7 @@ $config['discovery_modules']['services']             = 1;
 $config['discovery_modules']['stp']                  = 1;
 $config['discovery_modules']['ntp']                  = 1;
 $config['discovery_modules']['loadbalancers']        = 0;
+$config['discovery_modules']['wifi']                 = 0;
 
 $config['modules_compat']['rfc1628']['liebert']    = 1;
 $config['modules_compat']['rfc1628']['netmanplus'] = 1;

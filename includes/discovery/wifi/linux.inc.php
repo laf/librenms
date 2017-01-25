@@ -1,8 +1,7 @@
 <?php
 
 use LibreNMS\Unifi;
-print_r($device);exit;
-$unifi = new Unifi($config['unifi_user'], $config['unifi_pass'], $config['unifi_url']);
+$unifi = new Unifi($device['attribs']['override_Unifi_user'], $device['attribs']['override_Unifi_pass'], $device['attribs']['override_Unifi_url']);
 $keep_site = array();
 $keep_ap = array();
 $ap_stats = array(
