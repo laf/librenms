@@ -101,24 +101,24 @@ function getHostOS($device)
     // Single get
     $oids = array('SNMPv2-MIB::sysDescr.0', 'SNMPv2-MIB::sysObjectID.0');
     $data = SNMP::get($device, $oids);
-    if (!$data->hasError()) {
-        list($sysDescr, $sysObjectId) = $data->pluck('value');
+    if ($data->hasError()) {
+        // FIXME: is it correct to return generic if there is an snmp error?
+        return 'generic';
     } else {
-        $sysDescr = '';
-        $sysObjectId = '';
-    }
+        list($sysDescr, $sysObjectId) = $data->pluck('value');
 
-    d_echo("| $sysDescr | $sysObjectId | \n");
+        d_echo("| $sysDescr | $sysObjectId | \n");
 
-    $os = null;
-    $pattern = $config['install_dir'] . '/includes/discovery/os/*.inc.php';
-    foreach (glob($pattern) as $file) {
-        include $file;
-        if (isset($os)) {
-            return $os;
+        $os = null;
+        $pattern = $config['install_dir'] . '/includes/discovery/os/*.inc.php';
+        foreach (glob($pattern) as $file) {
+            include $file;
+            if (isset($os)) {
+                return $os;
+            }
         }
+        return discover_os($sysObjectId, $sysDescr);
     }
-    return discover_os($sysObjectId, $sysDescr);
 }
 
 /**

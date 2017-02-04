@@ -24,7 +24,7 @@ $oids = array(
     'sysDescr.0',
     'sysObjectID.0',
 );
-$sys_data = SNMP::get($device, $oids, 'SNMPv2-MIB')->map(function($item) {
+$sys_data = SNMP::get($device, $oids, 'SNMPv2-MIB')->map(function ($item) {
     // Remove leading & trailing backslashes added by VyOS/Vyatta/EdgeOS (still valid?)
     $item['value'] = trim($item['value'], '\\');
     return $item;
