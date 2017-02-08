@@ -1,5 +1,7 @@
 <?php
 
+use LibreNMS\SNMP;
+
 // Build SNMP Cache Array
 $data_oids = array(
     'ifName',
@@ -128,26 +130,32 @@ if ($device['os'] === 'f5' && (version_compare($device['version'], '11.2.0', '>=
     require_once 'ports/f5.inc.php';
 } else {
     if (!in_array(strtolower($device['hardware']), array_map('strtolower', $config['os'][$device['os']]['bad_ifXEntry']))) {
-        $port_stats = snmpwalk_cache_oid($device, 'ifXEntry', $port_stats, 'IF-MIB');
+        $port_stats = SNMP::walk($device, 'ifXEntry', 'IF-MIB');
     }
-    $hc_test = array_slice($port_stats, 0, 1);
-    if (!isset($hc_test[0]['ifHCInOctets']) && !is_numeric($hc_test[0]['ifHCInOctets'])) {
-        $port_stats = snmpwalk_cache_oid($device, 'ifEntry', $port_stats, 'IF-MIB', null, '-OQUst');
+    $ifHCIn = $port_stats->getByIndex()->first()->where('name', 'ifHCInOctets')->first();
+    if (!isset($ifHCIn{'value'}) && !is_numeric($ifHCIn{'value'})) {
+        $port_stats = SNMP::walk($device, 'ifEntry', 'IF-MIB');
     } else {
-        foreach ($ifmib_oids as $oid) {
-            echo "$oid ";
-            $port_stats = snmpwalk_cache_oid($device, $oid, $port_stats, 'IF-MIB', null, '-OQUst');
-        }
+            $tmp_port_stats = SNMP::walk($device, $ifmib_oids, 'IF-MIB');
+            $port_stats = $port_stats->merge($tmp_port_stats);
     }
+    unset(
+        $ifHCIn,
+        $tmp_port_stats
+    );
 }
 
 if ($config['enable_ports_etherlike']) {
     echo 'dot3Stats ';
-    $port_stats = snmpwalk_cache_oid($device, 'dot3StatsEntry', $port_stats, 'EtherLike-MIB');
+    $tmp_port_stats = SNMP::walk($device, 'dot3StatsEntry', 'EtherLike-MIB');
 } else {
     echo 'dot3StatsDuplexStatus';
-    $port_stats = snmpwalk_cache_oid($device, 'dot3StatsDuplexStatus', $port_stats, 'EtherLike-MIB');
+    $tmp_port_stats = SNMP::walk($device, 'dot3StatsDuplexStatus', 'EtherLike-MIB');
 }
+$port_stats = $port_stats->merge($tmp_port_stats);
+unset(
+    $tmp_port_stats
+);
 
 if ($config['enable_ports_adsl']) {
     $device['adsl_count'] = dbFetchCell("SELECT COUNT(*) FROM `ports` WHERE `device_id` = ? AND `ifType` = 'adsl'", array($device['device_id']));
@@ -155,54 +163,61 @@ if ($config['enable_ports_adsl']) {
 
 if ($device['adsl_count'] > '0') {
     echo 'ADSL ';
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.1.1', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.2.1', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.3.1', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.4.1', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.5.1', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.6.1.1', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.6.1.2', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.6.1.3', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.6.1.4', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.6.1.5', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.6.1.6', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.6.1.7', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.6.1.8', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.7.1.1', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.7.1.2', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.7.1.3', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.7.1.4', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.7.1.5', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.7.1.6', $port_stats, 'ADSL-LINE-MIB');
-    $port_stats = snmpwalk_cache_oid($device, '.1.3.6.1.2.1.10.94.1.1.7.1.7', $port_stats, 'ADSL-LINE-MIB');
+    $adsl_oids = array(
+        '.1.3.6.1.2.1.10.94.1.1.1.1',
+        '.1.3.6.1.2.1.10.94.1.1.2.1',
+        '.1.3.6.1.2.1.10.94.1.1.3.1',
+        '.1.3.6.1.2.1.10.94.1.1.4.1',
+        '.1.3.6.1.2.1.10.94.1.1.5.1',
+        '.1.3.6.1.2.1.10.94.1.1.6.1.1',
+        '.1.3.6.1.2.1.10.94.1.1.6.1.2',
+        '.1.3.6.1.2.1.10.94.1.1.6.1.3',
+        '.1.3.6.1.2.1.10.94.1.1.6.1.4',
+        '.1.3.6.1.2.1.10.94.1.1.6.1.5',
+        '.1.3.6.1.2.1.10.94.1.1.6.1.6',
+        '.1.3.6.1.2.1.10.94.1.1.6.1.7',
+        '.1.3.6.1.2.1.10.94.1.1.6.1.8',
+        '.1.3.6.1.2.1.10.94.1.1.7.1.1',
+        '.1.3.6.1.2.1.10.94.1.1.7.1.2',
+        '.1.3.6.1.2.1.10.94.1.1.7.1.3',
+        '.1.3.6.1.2.1.10.94.1.1.7.1.4',
+        '.1.3.6.1.2.1.10.94.1.1.7.1.5',
+        '.1.3.6.1.2.1.10.94.1.1.7.1.6',
+        '.1.3.6.1.2.1.10.94.1.1.7.1.7',
+    );
+    $tmp_port_stats = SNMP::walk($device, $adsl_oids, 'ADSL-LINE-MIB');
+    $port_stats = $port_stats->merge($tmp_port_stats);
+    unset($tmp_port_stats);
 }//end if
 
 if ($config['enable_ports_poe']) {
-    $port_stats = snmpwalk_cache_oid($device, 'pethPsePortEntry', $port_stats, 'POWER-ETHERNET-MIB');
-    $port_stats = snmpwalk_cache_oid($device, 'cpeExtPsePortEntry', $port_stats, 'CISCO-POWER-ETHERNET-EXT-MIB');
+    $poe_mibs = array(
+        'pethPsePortEntry',
+        'cpeExtPsePortEntry',
+    );
+    $tmp_port_stats = SNMP::walk($device, $poe_mibs, 'POWER-ETHERNET-MIB:CISCO-POWER-ETHERNET-EXT-MIB');
+    $port_stats = $port_stats->merge($tmp_port_stats);
+    unset($tmp_port_stats);
 }
 
-// FIXME This probably needs re-enabled. We need to clear these things when they get unset, too.
-// foreach ($etherlike_oids as $oid) { $port_stats = snmpwalk_cache_oid($device, $oid, $port_stats, "EtherLike-MIB"); }
-// foreach ($cisco_oids as $oid)     { $port_stats = snmpwalk_cache_oid($device, $oid, $port_stats, "OLD-CISCO-INTERFACES-MIB"); }
-// foreach ($pagp_oids as $oid)      { $port_stats = snmpwalk_cache_oid($device, $oid, $port_stats, "CISCO-PAGP-MIB"); }
 if ($device['os_group'] == 'cisco' && $device['os'] != 'asa') {
-    foreach ($pagp_oids as $oid) {
-        $port_stats = snmpwalk_cache_oid($device, $oid, $port_stats, 'CISCO-PAGP-MIB');
-    }
+    $tmp_port_stats = SNMP::walk($device, $pagp_oids, 'CISCO-PAGP-MIB');
+    $port_stats = $port_stats->merge($tmp_port_stats);
 
-    // Grab data to put ports into vlans or make them trunks
-    // FIXME we probably shouldn't be doing this from the VTP MIB, right?
-    $port_stats = snmpwalk_cache_oid($device, 'vmVlan', $port_stats, 'CISCO-VLAN-MEMBERSHIP-MIB');
-    $port_stats = snmpwalk_cache_oid($device, 'vlanTrunkPortEncapsulationOperType', $port_stats, 'CISCO-VTP-MIB');
-    $port_stats = snmpwalk_cache_oid($device, 'vlanTrunkPortNativeVlan', $port_stats, 'CISCO-VTP-MIB');
+    $tmp_port_stats = SNMP::walk($device, 'vmVlan', 'CISCO-VLAN-MEMBERSHIP-MIB');
+    $port_stats = $port_stats->merge($tmp_port_stats);
+
+    $tmp_port_stats = SNMP::walk($device, array('vlanTrunkPortEncapsulationOperType', 'vlanTrunkPortNativeVlan'), 'CISCO-VTP-MIB');
+    $port_stats = $port_stats->merge($tmp_port_stats);
 } else {
-    $port_stats = snmpwalk_cache_oid($device, 'dot1qPortVlanTable', $port_stats, 'Q-BRIDGE-MIB');
+    $tmp_port_stats = SNMP::walk($device, 'dot1qPortVlanTable', 'Q-BRIDGE-MIB');
+    $port_stats = $port_stats->merge($tmp_port_stats);
 }//end if
 
 $polled = time();
 
 // End Building SNMP Cache Array
+$port_stats = $port_stats->getByIndex();
 d_echo($port_stats);
 
 // By default libreNMS uses the ifIndex to associate ports on devices with ports discoverd/polled
@@ -232,10 +247,10 @@ foreach ($ports_mapped['maps']['ifIndex'] as $ifIndex => $port_id) {
     }
 }
 
-
 $ports_found = array ();
 // New interface detection
 foreach ($port_stats as $ifIndex => $port) {
+    $port = $port->pluck('value', 'name');
     // Store ifIndex in port entry and prefetch ifName as we'll need it multiple times
     $port['ifIndex'] = $ifIndex;
     $ifName = $port['ifName'];
@@ -245,9 +260,8 @@ foreach ($port_stats as $ifIndex => $port) {
 
     if (is_port_valid($port, $device)) {
         echo 'valid';
-
         // Port newly discovered?
-        if (! $ports[$port_id]) {
+        if (!$ports[$port_id]) {
             /**
               * When using the ifName or ifDescr as means to map discovered ports to
               * known ports in the DB (think of port association mode) it's possible
@@ -269,17 +283,16 @@ foreach ($port_stats as $ifIndex => $port) {
               * can be legally set to 0, which would yield True when checking if the
               * value is empty().
               */
-            if ($config['ignore_unmapable_port'] === true and in_array($port[$port_association_mode], array ('', null))) {
+            if ($config['ignore_unmapable_port'] === true && in_array($port[$port_association_mode], array ('', null))) {
                 continue;
             }
 
-            $port_id         = dbInsert(array('device_id' => $device['device_id'], 'ifIndex' => $ifIndex, 'ifName' => $ifName), 'ports');
+            $port_id = dbInsert(array('device_id' => $device['device_id'], 'ifIndex' => $ifIndex, 'ifName' => $ifName), 'ports');
             dbInsert(array('port_id' => $port_id), 'ports_statistics');
             $ports[$port_id] = dbFetchRow('SELECT * FROM `ports` WHERE `port_id` = ?', array($port_id));
             echo 'Adding: '.$ifName.'('.$ifIndex.')('.$port_id.')';
             // print_r($ports);
-        } // Port re-discovered after previous deletion?
-        elseif ($ports[$port_id]['deleted'] == 1) {
+        } elseif ($ports[$port_id]['deleted'] == 1) { // Port re-discovered after previous deletion?
             dbUpdate(array('deleted' => '0'), 'ports', '`port_id` = ?', array($port_id));
             $ports[$port_id]['deleted'] = '0';
         }
@@ -298,17 +311,15 @@ foreach ($port_stats as $ifIndex => $port) {
         $ports[$port_id]['ifIndex'] = $ifIndex;
         $port_stats[$ifIndex]['port_id'] = $port_id;
 
-    /* Build a list of all ports, identified by their port_id, found within this poller run. */
+        /* Build a list of all ports, identified by their port_id, found within this poller run. */
         $ports_found[] = $port_id;
-    } // Port vanished (mark as deleted)
-    else {
-        if ($ports[$port_id]['deleted'] != '1') {
-            dbUpdate(array('deleted' => '1'), 'ports', '`port_id` = ?', array($port_id));
-            $ports[$port_id]['deleted'] = '1';
+    } else { // Port vanished (mark as deleted)
+        if ($ports[$port_id]['deleted'] != 1) {
+            dbUpdate(array('deleted' => 1), 'ports', '`port_id` = ?', array($port_id));
+            $ports[$port_id]['deleted'] = 1;
         }
     }
 } // End new interface detection
-
 
 echo "\n";
 // Loop ports in the DB and update where necessary
@@ -328,9 +339,9 @@ foreach ($ports as $port) {
      * If this port did not show up in $port_stats before it has been deleted
      * since the last poller run. Mark it deleted in the database and go on.
      */
-    if (! in_array($port_id, $ports_found)) {
-        if ($port['deleted'] != '1') {
-            dbUpdate(array('deleted' => '1'), 'ports', '`device_id` = ? AND `port_id` = ?', array($device['device_id'], $port_id));
+    if (!in_array($port_id, $ports_found)) {
+        if ($port['deleted'] != 1) {
+            dbUpdate(array('deleted' => 1), 'ports', '`device_id` = ? AND `port_id` = ?', array($device['device_id'], $port_id));
             echo "$port_info_string deleted.\n";
         }
         continue;
@@ -340,6 +351,7 @@ foreach ($ports as $port) {
     if ($port_stats[$ifIndex]) {
         // Check to make sure Port data is cached.
         $this_port = &$port_stats[$ifIndex];
+        $this_port = $this_port->pluck('value', 'name');
 
         if ($device['os'] == 'vmware' && preg_match('/Device ([a-z0-9]+) at .*/', $this_port['ifDescr'], $matches)) {
             $this_port['ifDescr'] = $matches[1];
@@ -347,9 +359,9 @@ foreach ($ports as $port) {
 
         $polled_period = ($polled - $port['poll_time']);
 
-        $port['update'] = array();
+        $port['update']          = array();
         $port['update_extended'] = array();
-        $port['state']  = array();
+        $port['state']           = array();
 
         if ($config['slow_statistics'] == true) {
             $port['update']['poll_time']   = $polled;
@@ -369,27 +381,29 @@ foreach ($ports as $port) {
         }
 
         if ($device['os'] === 'airos-af' && $port['ifAlias'] === 'eth0') {
-            $airos_stats = snmpwalk_cache_oid($device, '.1.3.6.1.4.1.41112.1.3.3.1', $airos_stats, 'UBNT-AirFIBER-MIB');
-            $this_port['ifInOctets'] = $airos_stats[1]['rxOctetsOK'];
-            $this_port['ifOutOctets'] = $airos_stats[1]['txOctetsOK'];
-            $this_port['ifInErrors'] = $airos_stats[1]['rxErroredFrames'];
-            $this_port['ifOutErrors'] = $airos_stats[1]['txErroredFrames'];
-            $this_port['ifInBroadcastPkts'] = $airos_stats[1]['rxValidBroadcastFrames'];
-            $this_port['ifOutBroadcastPkts'] = $airos_stats[1]['txValidBroadcastFrames'];
-            $this_port['ifInMulticastPkts'] = $airos_stats[1]['rxValidMulticastFrames'];
-            $this_port['ifOutMulticastPkts'] = $airos_stats[1]['txValidMulticastFrames'];
-            $this_port['ifInUcastPkts'] = $airos_stats[1]['rxValidUnicastFrames'];
-            $this_port['ifOutUcastPkts'] = $airos_stats[1]['txValidUnicastFrames'];
-            $ports['update']['ifInOctets'] = $airos_stats[1]['rxOctetsOK'];
-            $ports['update']['ifOutOctets'] = $airos_stats[1]['txOctetsOK'];
-            $ports['update']['ifInErrors'] = $airos_stats[1]['rxErroredFrames'];
-            $ports['update']['ifOutErrors'] = $airos_stats[1]['txErroredFrames'];
-            $ports['update']['ifInBroadcastPkts'] = $airos_stats[1]['rxValidBroadcastFrames'];
-            $ports['update']['ifOutBroadcastPkts'] = $airos_stats[1]['txValidBroadcastFrames'];
-            $ports['update']['ifInMulticastPkts'] = $airos_stats[1]['rxValidMulticastFrames'];
-            $ports['update']['ifOutMulticastPkts'] = $airos_stats[1]['txValidMulticastFrames'];
-            $ports['update']['ifInUcastPkts'] = $airos_stats[1]['rxValidUnicastFrames'];
-            $ports['update']['ifOutUcastPkts'] = $airos_stats[1]['txValidUnicastFrames'];
+            $airos_stats = SNMP::walk($device, '.1.3.6.1.4.1.41112.1.3.3.1', 'UBNT-AirFIBER-MIB');
+            $airos_stats = $airos_stats->getByIndex();
+            $airos_stats = $airos_stats[1]->pluck('value', 'name');
+            $this_port['ifInOctets'] = $airos_stats['rxOctetsOK'];
+            $this_port['ifOutOctets'] = $airos_stats['txOctetsOK'];
+            $this_port['ifInErrors'] = $airos_stats['rxErroredFrames'];
+            $this_port['ifOutErrors'] = $airos_stats['txErroredFrames'];
+            $this_port['ifInBroadcastPkts'] = $airos_stats['rxValidBroadcastFrames'];
+            $this_port['ifOutBroadcastPkts'] = $airos_stats['txValidBroadcastFrames'];
+            $this_port['ifInMulticastPkts'] = $airos_stats['rxValidMulticastFrames'];
+            $this_port['ifOutMulticastPkts'] = $airos_stats['txValidMulticastFrames'];
+            $this_port['ifInUcastPkts'] = $airos_stats['rxValidUnicastFrames'];
+            $this_port['ifOutUcastPkts'] = $airos_stats['txValidUnicastFrames'];
+            $ports['update']['ifInOctets'] = $airos_stats['rxOctetsOK'];
+            $ports['update']['ifOutOctets'] = $airos_stats['txOctetsOK'];
+            $ports['update']['ifInErrors'] = $airos_stats['rxErroredFrames'];
+            $ports['update']['ifOutErrors'] = $airos_stats['txErroredFrames'];
+            $ports['update']['ifInBroadcastPkts'] = $airos_stats['rxValidBroadcastFrames'];
+            $ports['update']['ifOutBroadcastPkts'] = $airos_stats['txValidBroadcastFrames'];
+            $ports['update']['ifInMulticastPkts'] = $airos_stats['rxValidMulticastFrames'];
+            $ports['update']['ifOutMulticastPkts'] = $airos_stats['txValidMulticastFrames'];
+            $ports['update']['ifInUcastPkts'] = $airos_stats['rxValidUnicastFrames'];
+            $ports['update']['ifOutUcastPkts'] = $airos_stats['txValidUnicastFrames'];
         }
 
         // rewrite the ifPhysAddress
