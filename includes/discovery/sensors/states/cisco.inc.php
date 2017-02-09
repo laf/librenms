@@ -133,7 +133,12 @@ foreach ($tables as $tablevalue) {
                 $stack_port_descr = get_port_by_index_cache($device, $index);
                 $descr = $tablevalue[3] . $stack_port_descr['ifDescr'];
             }
-            discover_sensor($valid['sensor'], 'state', $device, $cur_oid.$index, $index, $state_name, $descr, '1', '1', null, null, null, null, $temp[$index][$tablevalue[2]], 'snmp', $index);
+            foreach ($states as $value) {
+                if ($value[1] === $temp[$index][$tablevalue[2]]) {
+                    $current = $value[3];
+                }
+            }
+            discover_sensor($valid['sensor'], 'state', $device, $cur_oid.$index, $index, $state_name, $descr, '1', '1', null, null, null, null, $current, 'snmp', $index);
 
             //Create Sensor To State Index
             create_sensor_to_state_index($device, $state_name, $index);
