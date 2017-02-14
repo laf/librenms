@@ -34,7 +34,7 @@ function mergedb()
     global $config;
 
     $clone = $config;
-    foreach (dbFetchRows('select config_name,config_value from config') as $obj) {
+    foreach (dbFetchRows('SELECT `config_name`,`config_value` FROM `config` WHERE `config_id` > 0') as $obj) {
         $clone = array_replace_recursive($clone, mergecnf($obj));
     }
     $config = array_replace_recursive($clone, $config);

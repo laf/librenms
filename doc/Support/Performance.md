@@ -15,7 +15,7 @@ We absolutely recommend running this, it will save on IO load. [RRDCached](http:
 It's advisable after 24 hours of running MySQL that you run [MySQL Tuner](https://raw.githubusercontent.com/major/MySQLTuner-perl/master/mysqltuner.pl)
 which will make suggestions on things you can change specific to your setup.
 
-One recommendation we can make is that you set the following in my.cnf under a [mysqld] group: 
+Some recommendations we can make is that you set the following in my.cnf under a [mysqld] group: 
 
 ```bash
 innodb_flush_log_at_trx_commit = 0
@@ -24,6 +24,11 @@ innodb_flush_log_at_trx_commit = 0
 You can also set this to 2. This will have the possibility that you could lose up to 1 second on mysql data in the event
 MySQL crashes or your server does but it provides an amazing difference in IO use.
 
+You should also disable name resolution for connections, again under the [mysqld] group in my.cnf:
+
+```
+skip-name-resolve
+```
 
 #### Polling modules
 

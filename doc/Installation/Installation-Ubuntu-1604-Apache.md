@@ -29,6 +29,7 @@ Within the [mysqld] section please add:
 ```bash
 innodb_file_per_table=1
 sql-mode=""
+skip-name-resolve
 ```
 
 ```systemctl restart mysql```

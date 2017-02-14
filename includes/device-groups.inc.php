@@ -206,7 +206,7 @@ function GetDevicesFromGroup($group_id, $nested = false)
  */
 function GetDeviceGroups()
 {
-    return dbFetchRows('SELECT * FROM device_groups ORDER BY name');
+    return dbFetchRows('SELECT * FROM `device_groups` WHERE `id` > 0 ORDER BY `name`');
 }//end GetDeviceGroups()
 
 /**
