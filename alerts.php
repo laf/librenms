@@ -85,7 +85,7 @@ function IsRuleValid($device, $rule)
 {
     global $rulescache;
     if (empty($rulescache[$device]) || !isset($rulescache[$device])) {
-        foreach (GetRules($device) as $chk) {
+        foreach (GetRulesID($device) as $chk) {
             $rulescache[$device][$chk['id']] = true;
         }
     }

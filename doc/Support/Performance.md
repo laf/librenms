@@ -27,7 +27,7 @@ MySQL crashes or your server does but it provides an amazing difference in IO us
 You should also disable name resolution for connections, again under the [mysqld] group in my.cnf:
 
 ```
-skip-name-resolve
+skip-name-resolve=1
 ```
 
 #### Polling modules
