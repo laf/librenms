@@ -187,7 +187,7 @@ function discover_device($device, $options = null)
 // Discover sensors
 
 
-function discover_sensor(&$valid, $class, $device, $oid, $index, $type, $descr, $divisor = '1', $multiplier = '1', $low_limit = null, $low_warn_limit = null, $warn_limit = null, $high_limit = null, $current = null, $poller_type = 'snmp', $entPhysicalIndex = null, $entPhysicalIndex_measured = null)
+function discover_sensor(&$valid, $class, $device, $oid, $index, $type, $descr, $divisor = 1, $multiplier = 1, $low_limit = null, $low_warn_limit = null, $warn_limit = null, $high_limit = null, $current = null, $poller_type = 'snmp', $entPhysicalIndex = null, $entPhysicalIndex_measured = null)
 {
 
     $low_limit      = set_null($low_limit);
@@ -199,27 +199,27 @@ function discover_sensor(&$valid, $class, $device, $oid, $index, $type, $descr, 
         $divisor  = 1;
     }
 
-    d_echo("Discover sensor: $oid, $index, $type, $descr, $poller_type, $precision, $entPhysicalIndex\n");
+    d_echo("Discover sensor: $oid, $index, $type, $descr, $poller_type, $divisor, $multiplier, $entPhysicalIndex, $current\n");
 
     if (is_null($low_warn_limit) && !is_null($warn_limit)) {
         // Warn limits only make sense when we have both a high and a low limit
         $low_warn_limit = null;
         $warn_limit = null;
-    } elseif ($low_warn_limit > $warn_limit) {
+    } elseif (!is_null($warn_limit) && $low_warn_limit > $warn_limit) {
         // Fix high/low thresholds (i.e. on negative numbers)
         list($warn_limit, $low_warn_limit) = array($low_warn_limit, $warn_limit);
     }
 
     if (dbFetchCell('SELECT COUNT(sensor_id) FROM `sensors` WHERE `poller_type`= ? AND `sensor_class` = ? AND `device_id` = ? AND sensor_type = ? AND `sensor_index` = ?', array($poller_type, $class, $device['device_id'], $type, $index)) == '0') {
-        if (!$high_limit) {
+        if (is_null($high_limit)) {
             $high_limit = sensor_limit($class, $current);
         }
 
-        if (!$low_limit) {
+        if (is_null($low_limit)) {
             $low_limit = sensor_low_limit($class, $current);
         }
 
-        if ($low_limit > $high_limit) {
+        if (!is_null($high_limit) && $low_limit > $high_limit) {
             // Fix high/low thresholds (i.e. on negative numbers)
             list($high_limit, $low_limit) = array($low_limit, $high_limit);
         }
@@ -891,40 +891,50 @@ function avtech_add_sensor($device, $sensor)
     return true;
 }
 
+
 /**
- * @param $device
- * @param $serial
- * @param $sensor
+ * Get the device divisor, account for device specific quirks
+ * The default divisor is 10
+ *
+ * @param array $device device array
+ * @param string $os_version firmware version poweralert quirks
+ * @param string $sensor_type the type of this sensor
+ * @param string $oid the OID of this sensor
  * @return int
  */
-function get_device_divisor($device, $serial, $sensor)
+function get_device_divisor($device, $os_version, $sensor_type, $oid)
 {
     if ($device['os'] == 'poweralert') {
-        if ($sensor == 'current' || $sensor == 'frequencies') {
-            if (version_compare($serial, '12.06.0068', '>=')) {
-                $divisor = 10;
-            } elseif (version_compare($serial, '12.04.0055', '=')) {
-                $divisor = 10;
-            } elseif (version_compare($serial, '12.04.0056', '>=')) {
-                $divisor = 1;
+        if ($sensor_type == 'current' || $sensor_type == 'frequency') {
+            if (version_compare($os_version, '12.06.0068', '>=')) {
+                return 10;
+            } elseif (version_compare($os_version, '12.04.0055', '=')) {
+                return 10;
+            } elseif (version_compare($os_version, '12.04.0056', '>=')) {
+                return 1;
             }
-        } elseif ($sensor == 'load') {
-            if (version_compare($serial, '12.06.0064', '=')) {
-                $divisor = 10;
+        } elseif ($sensor_type == 'load') {
+            if (version_compare($os_version, '12.06.0064', '=')) {
+                return 10;
             } else {
-                $divisor = 1;
+                return 1;
             }
-        } elseif ($sensor == 'voltages') {
-            $divisor = 1;
+        } elseif ($sensor_type == 'voltage') {
+            return 1;
         }
-    } elseif (($device['os'] == 'huaweiups') && ($sensor == 'frequencies')) {
-        $divisor = 100;
-    } elseif (($device['os'] == 'netmanplus') && ($sensor == 'voltages')) {
-        $divisor = 1;
-    } else {
-        $divisor = 10;
+    } elseif (($device['os'] == 'huaweiups') && ($sensor_type == 'frequency')) {
+        return 100;
+    } elseif (($device['os'] == 'netmanplus') && ($sensor_type == 'voltage')) {
+        return 1;
+    } elseif ($device['os'] == 'generex-ups') {
+        if ($sensor_type == 'load') {
+            return 1;
+        } elseif ($sensor_type == 'voltage' && !starts_with($oid, '.1.3.6.1.2.1.33.1.2.5.')) {
+            return 1;
+        }
     }
-    return $divisor;
+
+    return 10; //default
 }
 
 /**
@@ -980,24 +990,23 @@ function ignore_storage($descr)
 function sensors($types, $device, $valid, $pre_cache = array())
 {
     global $config;
-    foreach ((array)$types as $type) {
-        echo ucfirst($type) . ': ';
-
-        $dir = $config['install_dir'] . '/includes/discovery/sensors/' . $type .'/';
+    foreach ((array)$types as $sensor_type) {
+        echo ucfirst($sensor_type) . ': ';
+        $dir = $config['install_dir'] . '/includes/discovery/sensors/' . $sensor_type .'/';
 
         if (is_file($dir . $device['os_group'] . '.inc.php')) {
-            include_once $dir . $device['os_group'] . '.inc.php';
+            include $dir . $device['os_group'] . '.inc.php';
         }
         if (is_file($dir . $device['os'] . '.inc.php')) {
-            include_once $dir . $device['os'] . '.inc.php';
+            include $dir . $device['os'] . '.inc.php';
         }
         if (isset($config['modules_compat']['rfc1628'][$device['os']]) && $config['modules_compat']['rfc1628'][$device['os']]) {
             if (is_file($dir  . '/rfc1628.inc.php')) {
-                include_once $dir . '/rfc1628.inc.php';
+                include $dir . '/rfc1628.inc.php';
             }
         }
-        d_echo($valid['sensor'][$type]);
-        check_valid_sensors($device, $type, $valid['sensor']);
+        d_echo($valid['sensor'][$sensor_type]);
+        check_valid_sensors($device, $sensor_type, $valid['sensor']);
         echo "\n";
     }
 }

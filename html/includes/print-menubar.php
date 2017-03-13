@@ -511,6 +511,12 @@ if ($bgp_alerts) {
             <li><a href="routing/protocol=bgp/adminstatus=start/state=down/"><i class="fa fa-exclamation-circle fa-fw fa-lg" aria-hidden="true"></i> Alerted BGP (' . $bgp_alerts . ')</a></li>');
 }
 
+if (is_admin() === true && $routing_count['bgp'] && $config['peeringdb']['enabled'] === true) {
+    echo '
+            <li role="presentation" class="divider"></li>
+            <li><a href="peering/"><i class="fa fa-exclamation-circle fa-fw fa-lg" aria-hidden="true"></i> Peering</a></li>';
+}
+
     echo('          </ul>');
 ?>
 
@@ -775,7 +781,7 @@ $('#gsearch').typeahead({
   valueKey: 'name',
     templates: {
         header: '<h5><strong>&nbsp;BGP Sessions</strong></h5>',
-        suggestion: Handlebars.compile('<p><a href="{{url}}"><small>{{{bgp_image}}}{{name}} - {{hostname}}<br />AS{{localas}} -> AS{{remoteas}}</small></a></p>')
+        suggestion: Handlebars.compile('<p><a href="{{url}}"><small>{{{bgp_image}}} {{name}} - {{hostname}}<br />AS{{localas}} -> AS{{remoteas}}</small></a></p>')
     }
 });
 $('#gsearch').bind('typeahead:open', function(ev, suggestion) {

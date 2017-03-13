@@ -823,20 +823,30 @@ function get_astext($asn)
     }
 }
 
-# Use this function to write to the eventlog table
+/**
+ * Log events to the event table
+ *
+ * @param string $text message describing the event
+ * @param array|int $device device array or device_id
+ * @param string $type brief category for this event. Examples: sensor, state, stp, system, temperature, interface
+ * @param int $severity 1: ok, 2: info, 3: notice, 4: warning, 5: critical, 0: unknown
+ * @param int $reference the id of the referenced entity.  Supported types: interface
+ */
 function log_event($text, $device = null, $type = null, $severity = 2, $reference = null)
 {
     if (!is_array($device)) {
         $device = device_by_id_cache($device);
     }
 
-    $insert = array('host' => ($device['device_id'] ? $device['device_id'] : 0),
-        'device_id' => ($device['device_id'] ? $device['device_id'] : 0),
-        'reference' => ($reference ? $reference : "NULL"),
-        'type' => ($type ? $type : "NULL"),
+    $insert = array('host' => ($device['device_id'] ?: 0),
+        'device_id' => ($device['device_id'] ?: 0),
+        'reference' => ($reference ?: "NULL"),
+        'type' => ($type ?: "NULL"),
         'datetime' => array("NOW()"),
         'severity' => $severity,
-        'message' => $text);
+        'message' => $text,
+        'username'  => $_SESSION['username'] ?: '',
+     );
 
     dbInsert($insert, 'eventlog');
 }
@@ -870,9 +880,7 @@ function send_mail($emails, $subject, $message, $html = false)
     if (is_array($emails) || ($emails = parse_email($emails))) {
         $mail = new PHPMailer();
         $mail->Hostname = php_uname('n');
-        if (empty($config['email_from'])) {
-            $config['email_from'] = '"' . $config['project_name'] . '" <' . $config['email_user'] . '@'.$mail->Hostname.'>';
-        }
+
         foreach (parse_email($config['email_from']) as $from => $from_name) {
             $mail->setFrom($from, $from_name);
         }
@@ -1131,9 +1139,6 @@ if (!defined('JSON_UNESCAPED_UNICODE')) {
 
 function _json_encode($data, $options = 448)
 {
-    array_walk_recursive($data, function (&$val) {
-        $val = utf8_encode($val);
-    });
     if (version_compare(PHP_VERSION, '5.4', '>=')) {
         return json_encode($data, $options);
     } else {
@@ -1277,22 +1282,32 @@ function set_curl_proxy($curl)
 {
     global $config;
 
-    $proxy = '';
-    if (getenv('http_proxy')) {
-        $proxy = getenv('http_proxy');
-    } elseif (getenv('https_proxy')) {
-        $proxy = getenv('https_proxy');
-    } elseif (isset($config['callback_proxy'])) {
-        $proxy = $config['callback_proxy'];
-    } elseif (isset($config['http_proxy'])) {
-        $proxy = $config['http_proxy'];
-    }
+    $proxy = get_proxy();
 
     $tmp = rtrim($proxy, "/");
     $proxy = str_replace(array("http://", "https://"), "", $tmp);
     if (!empty($proxy)) {
         curl_setopt($curl, CURLOPT_PROXY, $proxy);
     }
+}
+
+/**
+ * Return the proxy url
+ *
+ * @return array|bool|false|string
+ */
+function get_proxy()
+{
+    if (getenv('http_proxy')) {
+        return getenv('http_proxy');
+    } elseif (getenv('https_proxy')) {
+        return getenv('https_proxy');
+    } elseif (isset($config['callback_proxy'])) {
+        return $config['callback_proxy'];
+    } elseif (isset($config['http_proxy'])) {
+        return $config['http_proxy'];
+    }
+    return false;
 }
 
 function target_to_id($target)
@@ -1488,7 +1503,12 @@ function host_exists($hostname, $snmphost = '')
         return true;
     } else {
         if ($config['allow_duplicate_sysName'] === false && !empty($snmphost)) {
-            $count = dbFetchCell("SELECT COUNT(*) FROM `devices` WHERE `sysName` = ?", array($snmphost));
+            if (!empty($config['mydomain'])) {
+                $full_host = rtrim($snmphost, '.') . '.' . $config['mydomain'];
+                $count = dbFetchCell("SELECT COUNT(*) FROM `devices` WHERE `sysName` = ? or `sysName` = ?", array($snmphost,$full_host));
+            } else {
+                $count = dbFetchCell("SELECT COUNT(*) FROM `devices` WHERE `sysName` = ?", array($snmphost));
+            }
             if ($count > 0) {
                 return true;
             } else {
@@ -2080,5 +2100,79 @@ function update_device_logo(&$device)
         $device['icon'] = $icon;
         dbUpdate(array('icon' => $icon), 'devices', 'device_id=?', array($device['device_id']));
         echo "Changed Icon! : $icon\n";
+    }
+}
+
+/**
+ * Function to generate PeeringDB Cache
+ */
+function cache_peeringdb()
+{
+    global $config;
+    if ($config['peeringdb']['enabled'] === true) {
+        $peeringdb_url = 'https://peeringdb.com/api';
+        $cached = dbFetchCell("SELECT count(*) FROM `pdb_ix` WHERE (UNIX_TIMESTAMP() - timestamp) < 82800");
+        if ($cached == 0) {
+            $rand = rand(60, 300);
+            echo "No cached PeeringDB data found, sleeping for $rand seconds" . PHP_EOL;
+            sleep($rand);
+            foreach (dbFetchRows("SELECT `bgpLocalAs` FROM `devices` WHERE `disabled` = 0 AND `ignore` = 0 AND `bgpLocalAs` > 0 AND (`bgpLocalAs` < 64512 OR `bgpLocalAs` > 65535) AND `bgpLocalAs` < 4200000000 GROUP BY `bgpLocalAs`") as $as) {
+                $asn = $as['bgpLocalAs'];
+                $get = Requests::get($peeringdb_url . '/net?depth=2&asn=' . $asn, array(), array('proxy' => get_proxy()));
+                $json_data = $get->body;
+                $data = json_decode($json_data);
+                $ixs = $data->{'data'}{0}->{'netixlan_set'};
+                foreach ($ixs as $ix) {
+                    $ixid = $ix->{'ix_id'};
+                    $tmp_ix = dbFetchRow("SELECT * FROM `pdb_ix` WHERE `ix_id` = ? AND asn = ?", array($ixid, $asn));
+                    if ($tmp_ix) {
+                        $pdb_ix_id = $tmp_ix['pdb_ix_id'];
+                        $update = array('name' => $ix->{'name'}, 'timestamp' => time());
+                        dbUpdate($update, 'pdb_ix', 'ix_id` = ? AND asn = ?', array($ixid, $asn));
+                    } else {
+                        $insert = array(
+                            'ix_id' => $ixid,
+                            'name' => $ix->{'name'},
+                            'asn' => $asn,
+                            'timestamp' => time()
+                        );
+                        $pdb_ix_id = dbInsert($insert, 'pdb_ix');
+                    }
+                    $keep = $pdb_ix_id;
+                    $get_ix = Requests::get("$peeringdb_url/ixlan/$ixid?depth=2", array(), array('proxy' => get_proxy()));
+                    $ix_json = $get_ix->body;
+                    $ix_data = json_decode($ix_json);
+                    $peers = $ix_data->{'data'}{0}->{'net_set'};
+                    foreach ($peers as $peer) {
+                        $tmp_peer = dbFetchRow("SELECT * FROM `pdb_ix_peers` WHERE `peer_id` = ? AND `ix_id` = ?", array($peer->{'id'}, $ixid));
+                        if ($tmp_peer) {
+                            $peer_keep[] = $tmp_peer['pdb_ix_peers_id'];
+                            $update = array(
+                                'remote_asn' => $peer->{'asn'},
+                                'name' => $peer->{'name'},
+                            );
+                            dbUpdate($update, 'pdb_ix_peers', '`pdb_ix_peers_id` = ?', array($tmp_peer['pdb_ix_peers_id']));
+                        } else {
+                            $peer_insert = array(
+                                'ix_id' => $ixid,
+                                'peer_id' => $peer->{'id'},
+                                'remote_asn' => $peer->{'asn'},
+                                'name' => $peer->{'name'},
+                                'timestamp' => time()
+                            );
+                            $peer_keep[] = dbInsert($peer_insert, 'pdb_ix_peers');
+                        }
+                    }
+                    $pdb_ix_peers_ids = implode(',', $peer_keep);
+                    dbDelete('pdb_ix_peers', "`pdb_ix_peers_id` NOT IN ($pdb_ix_peers_ids)");
+                }
+                $pdb_ix_ids = implode(',', $keep);
+                dbDelete('pdb_ix', "`pdb_ix_id` NOT IN ($pdb_ix_ids)");
+            }
+        } else {
+            echo "Cached PeeringDB data found....." . PHP_EOL;
+        }
+    } else {
+        echo 'Peering DB integration disabled' . PHP_EOL;
     }
 }
