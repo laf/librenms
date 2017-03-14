@@ -1,4 +1,26 @@
 <?php
+/**
+ *
+ * LibreNMS PeeringDB Integration
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @package    LibreNMS
+ * @link       http://librenms.org
+ * @copyright  2017 Neil Lathwood
+ * @author     Neil Lathwood <neil@lathwood.co.uk>
+ */
 
 $asn    = $vars['asn'];
 $ixid   = $vars['ixid'];
@@ -11,7 +33,9 @@ $status = $vars['status'];
             <table id="ixpeers" class="table table-bordered table-striped">
                 <thead>
                 <tr>
-                    <th data-column-id="peer" data-sortable="false">Peer</th>
+                    <th data-column-id="asn">ASN</th>
+                    <th data-column-id="ipaddr4">IP</th>
+                    <th data-column-id="peer">Peer</th>
                     <th data-column-id="connected" data-sortable="false">Connected</th>
                     <th data-column-id="links" data-sortable="false"></th>
                 </tr>

@@ -1,14 +1,36 @@
 <?php
+/**
+ *
+ * LibreNMS PeeringDB Integration
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @package    LibreNMS
+ * @link       http://librenms.org
+ * @copyright  2017 Neil Lathwood
+ * @author     Neil Lathwood <neil@lathwood.co.uk>
+ */
 
 $asn    = clean($_POST['asn']);
 $ixid   = clean($_POST['ixid']);
 $status = clean($_POST['status']);
 
-$sql    = " FROM `pdb_ix_peers` AS `P` LEFT JOIN `pdb_ix` ON `P`.`ix_id` = `pdb_ix`.`ix_id` LEFT JOIN `bgpPeers` ON `P`.`remote_asn` = `bgpPeers`.`bgpPeerRemoteAs` LEFT JOIN `devices` ON `bgpPeers`.`device_id` = `devices`.`device_id` WHERE `P`.`ix_id` = ?";
+$sql    = " FROM `pdb_ix_peers` AS `P` LEFT JOIN `pdb_ix` ON `P`.`ix_id` = `pdb_ix`.`ix_id` LEFT JOIN `bgpPeers` ON `P`.`remote_ipaddr4` = `bgpPeers`.`bgpPeerIdentifier` WHERE `P`.`ix_id` = ? AND `remote_ipaddr4` IS NOT NULL";
 $params = array($ixid);
 
 if ($status === 'connected') {
-    $sql .= " AND `remote_asn` = `bgpPeerRemoteAs` ";
+    $sql .= " AND `remote_ipaddr4` = `bgpPeerIdentifier` ";
 }
 
 if ($status === 'unconnected') {
@@ -16,17 +38,16 @@ if ($status === 'unconnected') {
 }
 
 if (isset($searchPhrase) && !empty($searchPhrase)) {
-    $sql .= " AND (`remote_asn` LIKE '%$searchPhrase%' OR `P`.`name` LIKE '%$searchPhrase%')";
+    $sql .= " AND (`remote_ipaddr4` LIKE '%$searchPhrase%' OR `remote_asn` LIKE '%$searchPhrase%' OR `P`.`name` LIKE '%$searchPhrase%')";
 }
 
+$sql .= ' GROUP BY `bgpPeerIdentifier`, `P`.`name`, `P`.`remote_ipaddr4`, `P`.`peer_id`, `P`.`remote_asn` ';
 $count_sql = "SELECT COUNT(*) $sql";
 
-$total     = dbFetchCell($count_sql, $params);
+$total     = count(dbFetchRows($count_sql, $params));
 if (empty($total)) {
     $total = 0;
 }
-
-$sql .= ' GROUP BY `bgpPeerRemoteAs`, `P`.`name`, `P`.`remote_asn`, `P`.`peer_id` ';
 
 if (!isset($sort) || empty($sort)) {
     $sort = 'remote_asn ASC';
@@ -43,19 +64,21 @@ if ($rowCount != -1) {
     $sql .= " LIMIT $limit_low,$limit_high";
 }
 
-$sql = "SELECT `P`.`name`, `P`.`remote_asn`, `P`.`peer_id`, `bgpPeers`.`bgpPeerRemoteAs` $sql";
+$sql = "SELECT `P`.`remote_asn`, `P`.`name`, `P`.`remote_ipaddr4`, `P`.`peer_id`, `bgpPeers`.`bgpPeerIdentifier` $sql";
 
 foreach (dbFetchRows($sql, $params) as $peer) {
-    if ($peer['remote_asn'] === $peer['bgpPeerRemoteAs']) {
-        $connected = 'Connected';
+    if ($peer['remote_ipaddr4'] === $peer['bgpPeerIdentifier']) {
+        $connected = '<i class="fa fa-check fa-2x text text-success"></i>';
     } else {
-        $connected = 'Not Connected';
+        $connected = '<i class="fa fa-times fa-2x text text-default"></i>';
     }
     $peer_id = $peer['peer_id'];
     $response[] = array(
+        'asn'       => $peer['remote_asn'],
+        'ipaddr4'   => $peer['remote_ipaddr4'],
         'peer'      => $peer['name'],
         'connected' => "$connected",
-        'links'     => "<a href='https://peeringdb.com/net/$peer_id'><i class='fa fa-database'></i></a>",
+        'links'     => "<a href='https://peeringdb.com/net/$peer_id' target='_blank'><i class='fa fa-database'></i></a>",
     );
 }
 
