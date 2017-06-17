@@ -28,7 +28,7 @@ cache:
     - $HOME/.composer/cache
 
 before_install:
-  - sudo php -i|grep mysql
+  - php -i|grep mysql
   - sudo apt-get -qq update
   - sudo apt-get install -y snmp
   - mysql -e 'CREATE DATABASE librenms_phpunit_78hunjuybybh;'
