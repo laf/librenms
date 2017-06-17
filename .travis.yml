@@ -5,6 +5,7 @@ services:
 matrix:
   fast_finish: true
   include:
+  - php: 7.1
   - php: 7.0
   - php: 5.3
     env: SKIP_STYLE_CHECK=1
@@ -27,6 +28,7 @@ cache:
     - $HOME/.composer/cache
 
 before_install:
+  - sudo php -i|grep mysql
   - sudo apt-get -qq update
   - sudo apt-get install -y snmp
   - mysql -e 'CREATE DATABASE librenms_phpunit_78hunjuybybh;'
