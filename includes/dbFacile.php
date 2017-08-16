@@ -18,15 +18,17 @@
  */
 
 use LibreNMS\Exceptions\DatabaseConnectException;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Driver\PDOException;
 
 function dbIsConnected()
 {
-    global $database_link;
-    if (empty($database_link)) {
+    global $db_conn;
+    if (!$db_conn) {
         return false;
     }
 
-    return mysqli_ping($database_link);
+    return $db_conn->ping();
 }
 
 /**
@@ -44,10 +46,10 @@ function dbIsConnected()
  */
 function dbConnect($host = null, $user = '', $password = '', $database = '', $port = null, $socket = null)
 {
-    global $config, $database_link;
+    global $config, $db_conn, $debug, $vdebug;
 
     if (dbIsConnected()) {
-        return $database_link;
+        return $db_conn;
     }
 
     $host = empty($host) ? $config['db_host'] : $host;
@@ -57,31 +59,47 @@ function dbConnect($host = null, $user = '', $password = '', $database = '', $po
     $port = empty($port) ? $config['db_port'] : $port;
     $socket = empty($socket) ? $config['db_socket'] : $socket;
 
-    $database_link = mysqli_connect('p:' . $host, $user, $password, null, $port, $socket);
-    if ($database_link === false) {
-        $error = mysqli_connect_error();
-        if ($error == 'No such file or directory') {
-            $error = 'Could not connect to ' . $host;
+    $db_config = new Doctrine\DBAL\Configuration();
+
+    if ($debug || $vdebug) {
+        $logger = new \Doctrine\DBAL\Logging\EchoSQLLogger();
+    } else {
+        $logger = null;
+    }
+    $db_config->setSQLLogger($logger);
+
+    $connectionParams = array(
+        'user' => $user,
+        'password' => $password,
+        'host' => $host,
+        'port' => $port,
+        'charset' => 'utf8',
+        'driver' => 'pdo_mysql',
+        'unix_socket' => $socket,
+    );
+
+    $db_conn = \Doctrine\DBAL\DriverManager::getConnection($connectionParams, $db_config);
+
+    try {
+        $db_conn->executeQuery("USE {$config['db_name']}");
+    } catch (Exception $e) {
+        if (preg_match('/ Unknown database/', $e->getMessage())) {
+            try {
+                $db_conn->executeQuery("CREATE DATABASE {$config['db_name']} CHARACTER SET utf8 COLLATE utf8_unicode_ci");
+                $db_conn->executeQuery("USE {$config['db_name']}");
+            } catch (Exception $e) {
+                throw new DatabaseConnectException("Could not create database: $database. " . $e->getMessage());
+            }
+        } else {
+            throw new DatabaseConnectException($e->getMessage());
         }
-        throw new DatabaseConnectException($error);
-    }
-
-    $database_db = mysqli_select_db($database_link, $config['db_name']);
-    if (!$database_db) {
-        $db_create_sql = "CREATE DATABASE " . $config['db_name'] . " CHARACTER SET utf8 COLLATE utf8_unicode_ci";
-        mysqli_query($database_link, $db_create_sql);
-        $database_db = mysqli_select_db($database_link, $database);
-    }
-
-    if (!$database_db) {
-        throw new DatabaseConnectException("Could not select database: $database. " . mysqli_error($database_link));
     }
 
     dbQuery("SET NAMES 'utf8'");
     dbQuery("SET CHARACTER SET 'utf8'");
     dbQuery("SET COLLATION_CONNECTION = 'utf8_unicode_ci'");
 
-    return $database_link;
+    return $db_conn;
 }
 
 /*
@@ -92,7 +110,7 @@ function dbConnect($host = null, $user = '', $password = '', $database = '', $po
 
 function dbQuery($sql, $parameters = array())
 {
-    global $fullSql, $debug, $sql_debug, $database_link, $config;
+    global $fullSql, $debug, $sql_debug, $db_conn, $config;
     $fullSql = dbMakeQuery($sql, $parameters);
     if ($debug) {
         if (php_sapi_name() == 'cli' && empty($_SERVER['REMOTE_ADDR'])) {
@@ -106,19 +124,25 @@ function dbQuery($sql, $parameters = array())
         }
     }
 
-    $result = mysqli_query($database_link, $fullSql);
-    if (!$result) {
-        $mysql_error = mysqli_error($database_link);
-        if (isset($config['mysql_log_level']) && ((in_array($config['mysql_log_level'], array('INFO', 'ERROR')) && !preg_match('/Duplicate entry/', $mysql_error)) || in_array($config['mysql_log_level'], array('DEBUG')))) {
-            if (!empty($mysql_error)) {
-                logfile(date($config['dateformat']['compact']) . " MySQL Error: $mysql_error ($fullSql)");
-            }
-        }
+    try {
+        $result = $db_conn->executeQuery($fullSql);
+    } catch (\Doctrine\DBAL\DBALException $e) {
+        $result = false;
+        mysql_log_error($e->getMessage());
     }
 
     return $result;
 }//end dbQuery()
 
+function mysql_log_error($mysql_error)
+{
+    global $config;
+    if (isset($config['mysql_log_level']) && ((in_array($config['mysql_log_level'], array('INFO', 'ERROR')) && !preg_match('/Duplicate entry/', $mysql_error)) || in_array($config['mysql_log_level'], array('DEBUG')))) {
+        if (!empty($mysql_error)) {
+            logfile(date($config['dateformat']['compact']) . " MySQL Error: $mysql_error");
+        }
+    }
+}
 
 /*
  * Passed an array and a table name, it attempts to insert the data into the table.
@@ -128,7 +152,7 @@ function dbQuery($sql, $parameters = array())
 
 function dbInsert($data, $table)
 {
-    global $database_link;
+    global $db_conn;
     $time_start = microtime(true);
 
     // the following block swaps the parameters if they were given in the wrong order.
@@ -142,21 +166,11 @@ function dbInsert($data, $table)
         // trigger_error('QDB - Parameters passed to insert() were in reverse order, but it has been allowed', E_USER_NOTICE);
     }
 
-    $sql = 'INSERT INTO `'.$table.'` (`'.implode('`,`', array_keys($data)).'`)  VALUES ('.implode(',', dbPlaceHolders($data)).')';
-
-    dbBeginTransaction();
-    $result = dbQuery($sql, $data);
-    if ($result) {
-        $id = mysqli_insert_id($database_link);
-        dbCommitTransaction();
-        // return $id;
-    } else {
-        if ($table != 'Contact') {
-            trigger_error('QDB - Insert failed.', E_USER_WARNING);
-        }
-
-        dbRollbackTransaction();
+    try {
+        $id = $db_conn->insert($table, $data);
+    } catch (\Doctrine\DBAL\DBALException $e) {
         $id = null;
+        mysql_log_error($e->getMessage());
     }
 
     recordDbStatistic('insert', $time_start);
@@ -220,9 +234,9 @@ function dbBulkInsert($data, $table)
  * */
 
 
-function dbUpdate($data, $table, $where = null, $parameters = array())
+function dbUpdate($data, $table, $where)
 {
-    global $fullSql, $database_link;
+    global $fullSql, $db_conn;
     $time_start = microtime(true);
 
     // the following block swaps the parameters if they were given in the wrong order.
@@ -236,30 +250,15 @@ function dbUpdate($data, $table, $where = null, $parameters = array())
         // trigger_error('QDB - The first two parameters passed to update() were in reverse order, but it has been allowed', E_USER_NOTICE);
     }
 
-    // need field name and placeholder value
-    // but how merge these field placeholders with actual $parameters array for the WHERE clause
-    $sql = 'UPDATE `'.$table.'` set ';
-    foreach ($data as $key => $value) {
-        $sql .= '`'.$key.'` '.'=:'.$key.',';
-    }
-
-    $sql = substr($sql, 0, -1);
-    // strip off last comma
-    if ($where) {
-        $sql .= ' WHERE '.$where;
-        $data = array_merge($data, $parameters);
-    }
-
-    if (dbQuery($sql, $data)) {
-        $return = mysqli_affected_rows($database_link);
-    } else {
-        // echo("$fullSql");
-        trigger_error('QDB - Update failed.', E_USER_WARNING);
-        $return = false;
+    try {
+        $count = $db_conn->update($table, $data, $where);
+    } catch (\Doctrine\DBAL\DBALException $e) {
+        $count = null;
+        mysql_log_error($e->getMessage());
     }
 
     recordDbStatistic('update', $time_start);
-    return $return;
+    return $count;
 }//end dbUpdate()
 
 
@@ -292,7 +291,7 @@ function dbDelete($table, $where = null, $parameters = array())
 
 function dbFetchRows($sql, $parameters = array(), $nocache = false)
 {
-    global $config;
+    global $config, $db_conn;
 
     if ($config['memcached']['enable'] && $nocache === false) {
         $result = $config['memcached']['resource']->get(hash('sha512', $sql.'|'.serialize($parameters)));
@@ -302,28 +301,19 @@ function dbFetchRows($sql, $parameters = array(), $nocache = false)
     }
 
     $time_start = microtime(true);
-    $result         = dbQuery($sql, $parameters);
 
-    if (mysqli_num_rows($result) > 0) {
-        $rows = array();
-        while ($row = mysqli_fetch_assoc($result)) {
-            $rows[] = $row;
-        }
-
-        mysqli_free_result($result);
-        if ($config['memcached']['enable'] && $nocache === false) {
-            $config['memcached']['resource']->set(hash('sha512', $sql.'|'.serialize($parameters)), $rows, $config['memcached']['ttl']);
-        }
-        recordDbStatistic('fetchrows', $time_start);
-        return $rows;
+    try {
+        $rows = $db_conn->fetchAll($sql, $parameters);
+    } catch (\Doctrine\DBAL\DBALException $e) {
+        $rows = false;
+        mysql_log_error($e->getMessage(), $sql);
     }
 
-    mysqli_free_result($result);
-
-    // no records, thus return empty array
-    // which should evaluate to false, and will prevent foreach notices/warnings
+    if ($config['memcached']['enable'] && $nocache === false) {
+        $config['memcached']['resource']->set(hash('sha512', $sql.'|'.serialize($parameters)), $rows, $config['memcached']['ttl']);
+    }
     recordDbStatistic('fetchrows', $time_start);
-    return array();
+    return $rows;
 }//end dbFetchRows()
 
 
@@ -357,7 +347,7 @@ function dbFetch($sql, $parameters = array(), $nocache = false)
 
 function dbFetchRow($sql = null, $parameters = array(), $nocache = false)
 {
-    global $config;
+    global $config, $db_conn;
 
     if (isset($config['memcached']['enable']) && $config['memcached']['enable'] && $nocache === false) {
         $result = $config['memcached']['resource']->get(hash('sha512', $sql.'|'.serialize($parameters)));
@@ -367,20 +357,13 @@ function dbFetchRow($sql = null, $parameters = array(), $nocache = false)
     }
 
     $time_start = microtime(true);
-    $result         = dbQuery($sql, $parameters);
-    if ($result) {
-        $row = mysqli_fetch_assoc($result);
-        mysqli_free_result($result);
+    $row = $db_conn->fetchAssoc($sql, $parameters);
+    recordDbStatistic('fetchrow', $time_start);
 
-        recordDbStatistic('fetchrow', $time_start);
-
-        if (isset($config['memcached']['enable']) && $config['memcached']['enable'] && $nocache === false) {
-            $config['memcached']['resource']->set(hash('sha512', $sql.'|'.serialize($parameters)), $row, $config['memcached']['ttl']);
-        }
-        return $row;
-    } else {
-        return null;
+    if (isset($config['memcached']['enable']) && $config['memcached']['enable'] && $nocache === false) {
+        $config['memcached']['resource']->set(hash('sha512', $sql.'|'.serialize($parameters)), $row, $config['memcached']['ttl']);
     }
+    return $row;
 }//end dbFetchRow()
 
 
@@ -391,15 +374,11 @@ function dbFetchRow($sql = null, $parameters = array(), $nocache = false)
 
 function dbFetchCell($sql, $parameters = array(), $nocache = false)
 {
+    global $db_conn;
     $time_start = microtime(true);
-    $row = dbFetchRow($sql, $parameters, $nocache);
-
+    $row = $db_conn->fetchColumn($sql, $parameters);
     recordDbStatistic('fetchcell', $time_start);
-    if ($row) {
-        return array_shift($row);
-        // shift first field off first row
-    }
-    return null;
+    return $row;
 }//end dbFetchCell()
 
 

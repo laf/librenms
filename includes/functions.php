@@ -463,7 +463,6 @@ function addHost($host, $snmp_version = '', $port = '161', $transport = 'udp', $
             // try each community from config
             foreach ($config['snmp']['community'] as $community) {
                 $device = deviceArray($host, $community, $snmpver, $port, $transport, null, $port_assoc_mode);
-
                 if ($force_add === true || isSNMPable($device)) {
                     return createHost($host, $community, $snmpver, $port, $transport, array(), $poller_group, $port_assoc_mode, $force_add);
                 } else {

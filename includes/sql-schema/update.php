@@ -85,9 +85,8 @@ if ($schemaLock === false) {
                             d_echo("$line \n");
 
                             if ($line[0] != '#') {
-                                if (!mysqli_query($database_link, $line)) {
+                                if (!dbQuery($line)) {
                                     $err++;
-                                    d_echo(mysqli_error($database_link) . PHP_EOL);
                                 }
                             }
                         }
@@ -105,7 +104,7 @@ if ($schemaLock === false) {
                     dbInsert(array('version' => $db_rev), 'dbSchema');
                     $insert = false;
                 } else {
-                    dbUpdate(array('version' => $db_rev), 'dbSchema');
+                    dbUpdate(array('version' => $db_rev), 'dbSchema', array('version' => $db_rev-1));
                 }
             }//end if
         }//end foreach
