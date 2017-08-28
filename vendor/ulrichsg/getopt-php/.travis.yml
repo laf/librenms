@@ -1,0 +1,29 @@
+language: php
+
+sudo: false
+
+matrix:
+  include:
+    - php: 7.1
+    - php: 7.0
+    - php: 5.6
+    - php: 5.5
+    - php: 5.4
+    - php: hhvm
+      dist: trusty
+    - php: 5.3
+      dist: precise
+
+cache:
+  directories:
+    - $HOME/.composer/cache
+
+before_script:
+  - composer install --no-interaction
+  - composer require satooshi/php-coveralls:~0.6@stable
+  - mkdir -p build/logs
+
+script:
+  - composer code-style
+  - vendor/bin/phpunit -c phpunit.xml --coverage-clover=build/logs/clover.xml --coverage-text
+  - sh -c 'if [ "$TRAVIS_PHP_VERSION" = "7.0" ]; then php vendor/bin/coveralls -v; fi;'

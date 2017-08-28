@@ -140,11 +140,11 @@ function set_remember_me()
         $db_entry['session_token'] = $token;
         $db_entry['session_auth'] = $auth;
         dbInsert($db_entry, 'session');
-    }\
+    }
 
-    setcookie('sess_id', $sess_id, $expiration, '/', null, $config['secure_cookies'], true);
-    setcookie('token', $token_id, $expiration, '/', null, $config['secure_cookies'], true);
-    setcookie('auth', $auth, $expiration, '/', null, $config['secure_cookies'], true);
+    \Delight\Cookie\Cookie::setcookie('sess_id', $sess_id, $time, '/', null, $config['secure_cookies'], true, 'Strict');
+    \Delight\Cookie\Cookie::setcookie('token', $token_id, $time, '/', null, $config['secure_cookies'], true, 'Strict');
+    \Delight\Cookie\Cookie::setcookie('auth', $auth, $time, '/', null, $config['secure_cookies'], true, 'Strict');
 }
 
 /**
@@ -194,7 +194,7 @@ function clear_remember_me($username)
 
     $time = time() - 60 * 60 * 24 * $config['auth_remember']; // time in the past to make sure
 
-    setcookie('sess_id', '', $time, '/', null, $config['secure_cookies']);
-    setcookie('token', '', $time, '/', null, $config['secure_cookies']);
-    setcookie('auth', '', $time, '/', null, $config['secure_cookies']);
+    \Delight\Cookie\Cookie::setcookie('sess_id', '', $time, '/', null, $config['secure_cookies'], false, 'Strict');
+    \Delight\Cookie\Cookie::setcookie('token', '', $time, '/', null, $config['secure_cookies'], false, 'Strict');
+    \Delight\Cookie\Cookie::setcookie('auth', '', $time, '/', null, $config['secure_cookies'], false, 'Strict');
 }
