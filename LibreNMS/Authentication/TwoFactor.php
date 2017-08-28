@@ -185,7 +185,7 @@ class TwoFactor
 
         // no need to show the form, user doesn't have a token
         if (empty($twofactor)) {
-            $_SESSION['twofactor'] = true;
+            \Delight\Cookie\Session::set('twofactor', true);
             return false;
         }
 

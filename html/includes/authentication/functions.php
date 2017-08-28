@@ -36,12 +36,11 @@ function log_out_user($message = 'Logged Out')
 {
     global $auth_message;
 
-    dbInsert(array('user' => $_SESSION['username'], 'address' => get_client_ip(), 'result' => 'Logged Out'), 'authlog');
+    dbInsert(array('user' => \Delight\Cookie\Session::get('username'), 'address' => get_client_ip(), 'result' => 'Logged Out'), 'authlog');
 
-    clear_remember_me($_SESSION['username']);
+    clear_remember_me(\Delight\Cookie\Session::get('username'));
 
-    unset($_SESSION['authenticated']);
-    session_destroy();
+    \Delight\Cookie\Session::delete('username');
 
     $auth_message = $message; // global variable used to display a message to the user
 }
@@ -59,32 +58,38 @@ function log_in_user()
 {
     global $config;
 
+    $tmp_userlevel = \Delight\Cookie\Session::get('userlevel');
+    $tmp_username  = \Delight\Cookie\Session::get('username');
+    $tmp_userid    = \Delight\Cookie\Session::get('user_id');
+    $tmp_twofactor = \Delight\Cookie\Session::get('twofactor', false);
     // set up variables, but don't override existing ones (ad anonymous bind can only get user_id at login)
-    if (!isset($_SESSION['userlevel'])) {
-        $_SESSION['userlevel'] = get_userlevel($_SESSION['username']);
+    if (!isset($tmp_userlevel)) {
+        \Delight\Cookie\Session::set('userlevel', get_userlevel($tmp_username));
     }
 
-    if (!isset($_SESSION['user_id'])) {
-        $_SESSION['user_id'] = get_userid($_SESSION['username']);
+    if (!isset($tmp_userid)) {
+        \Delight\Cookie\Session::set('user_id', get_userid($tmp_username));
     }
 
     // check for valid user_id
-    if ($_SESSION['user_id'] === false || $_SESSION['user_id'] < 0) {
+    if ($tmp_userid === false || $tmp_userid < 0) {
         throw new AuthenticationException('Invalid Credentials');
     }
 
     if (!session_authenticated()) {
         // check twofactor
-        if ($config['twofactor'] === true && !isset($_SESSION['twofactor'])) {
+        if ($config['twofactor'] === true && $tmp_twofactor === false) {
             if (TwoFactor::showForm()) {
                 return false; // not done yet, one more cycle to show the 2fa form
             }
         }
 
+        $tmp_twofactor = \Delight\Cookie\Session::get('twofactor', false);
+
         // if two factor isn't enabled or it has passed already ware are logged in
-        if (!$config['twofactor'] || $_SESSION['twofactor']) {
-            $_SESSION['authenticated'] = true;
-            dbInsert(array('user' => $_SESSION['username'], 'address' => get_client_ip(), 'result' => 'Logged In'), 'authlog');
+        if (!$config['twofactor'] || $tmp_twofactor) {
+            \Delight\Cookie\Session::set('authenticated', true);
+            dbInsert(array('user' => $tmp_username, 'address' => get_client_ip(), 'result' => 'Logged In'), 'authlog');
         }
     }
 
@@ -102,7 +107,8 @@ function log_in_user()
  */
 function session_authenticated()
 {
-    return isset($_SESSION['authenticated']) && $_SESSION['authenticated'];
+    $tmp_authenticated = \Delight\Cookie\Session::get('authenticated', false);
+    return isset($tmp_authenticated) && $tmp_authenticated;
 }
 
 /**
@@ -113,10 +119,11 @@ function set_remember_me()
 {
     global $config;
 
-    if (!isset($_SESSION['remember'])) {
+    $tmp_remember = \Delight\Cookie\Session::get('remember', false);
+    if (!isset($tmp_remember)) {
         return;
     }
-    unset($_SESSION['remember']);
+    \Delight\Cookie\Session::delete('remember');
 
     $sess_id = session_id();
     $expiration = time() + 60 * 60 * 24 * $config['auth_remember'];
@@ -134,17 +141,17 @@ function set_remember_me()
         $token = strgen();
         $auth = strgen();
         $hasher = new PasswordHash(8, false);
-        $token_id = $_SESSION['username'] . '|' . $hasher->HashPassword($_SESSION['username'] . $token);
+        $token_id = \Delight\Cookie\Session::get('username') . '|' . $hasher->HashPassword(\Delight\Cookie\Session::get('username') . $token);
 
-        $db_entry['session_username'] = $_SESSION['username'];
+        $db_entry['session_username'] = \Delight\Cookie\Session::get('username');
         $db_entry['session_token'] = $token;
         $db_entry['session_auth'] = $auth;
         dbInsert($db_entry, 'session');
     }
 
-    \Delight\Cookie\Cookie::setcookie('sess_id', $sess_id, $time, '/', null, $config['secure_cookies'], true, 'Strict');
-    \Delight\Cookie\Cookie::setcookie('token', $token_id, $time, '/', null, $config['secure_cookies'], true, 'Strict');
-    \Delight\Cookie\Cookie::setcookie('auth', $auth, $time, '/', null, $config['secure_cookies'], true, 'Strict');
+    \Delight\Cookie\Cookie::setcookie('sess_id', $sess_id, $expiration, '/', null, $config['secure_cookies'], true, 'Strict');
+    \Delight\Cookie\Cookie::setcookie('token', $token_id, $expiration, '/', null, $config['secure_cookies'], true, 'Strict');
+    \Delight\Cookie\Cookie::setcookie('auth', $auth, $expiration, '/', null, $config['secure_cookies'], true, 'Strict');
 }
 
 /**
@@ -167,7 +174,7 @@ function check_remember_me($sess_id, $token)
 
     $hasher = new PasswordHash(8, false);
     if ($hasher->CheckPassword($uname . $session['session_token'], $hash)) {
-        $_SESSION['username'] = $uname;
+        \Delight\Cookie\Session::set('username', $uname);
         return true;
     }
 

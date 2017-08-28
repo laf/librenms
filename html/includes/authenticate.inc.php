@@ -3,11 +3,6 @@
 use LibreNMS\Authentication\TwoFactor;
 use LibreNMS\Exceptions\AuthenticationException;
 
-ini_set('session.use_only_cookies', 1);
-ini_set('session.cookie_httponly', 1);
-ini_set('session.use_strict_mode', 1); // php >= 5.5.2
-ini_set('session.use_trans_sid', 0);   // insecure feature, be sure it is disabled
-
 // Pre-flight checks
 if (!is_dir($config['rrd_dir'])) {
     echo "<div class='errorbox'>RRD Log Directory is missing ({$config['rrd_dir']}).  Graphing may fail.</div>";
@@ -24,7 +19,7 @@ if (!is_writable($config['temp_dir'])) {
 // Clear up any old sessions
 dbDelete('session', '`session_expiry` <  ?', array(time()));
 
-session_start();
+\Delight\Cookie\Session::start('Strict');
 
 if ($vars['page'] == 'logout' && session_authenticated()) {
     log_out_user();
@@ -45,8 +40,8 @@ try {
         } elseif (isset($_COOKIE['sess_id'], $_COOKIE['token']) &&
             reauthenticate(clean($_COOKIE['sess_id']), clean($_COOKIE['token']))
         ) {
-            $_SESSION['remember'] = true;
-            $_SESSION['twofactor'] = true; // trust cookie
+            \Delight\Cookie\Session::set('remember', true);
+            \Delight\Cookie\Session::set('twofactor', true);
             // cookie authentication
             log_in_user();
         } else {
@@ -63,10 +58,10 @@ try {
 
             // form authentication
             if (isset($username) && authenticate($username, $password)) {
-                $_SESSION['username'] = $username;
+                \Delight\Cookie\Session::set('username', $username);
 
                 if (isset($_POST['remember'])) {
-                    $_SESSION['remember'] = $_POST['remember'];
+                    \Delight\Cookie\Session::set('remember', $_POST['remember']);
                 }
 
                 if (log_in_user()) {
@@ -83,7 +78,7 @@ try {
     }
 
     dbInsert(
-        array('user' => $_SESSION['username'], 'address' => get_client_ip(), 'result' => $auth_message),
+        array('user' => \Delight\Cookie\Session::get('username'), 'address' => get_client_ip(), 'result' => $auth_message),
         'authlog'
     );
     log_out_user($auth_message);
@@ -92,8 +87,9 @@ try {
 session_write_close();
 
 // populate the permissions cache
-if (isset($_SESSION['user_id'])) {
-    $permissions = permissions_cache($_SESSION['user_id']);
+$tmp_user_id = \Delight\Cookie\Session::get('user_id');
+if (isset($tmp_user_id)) {
+    $permissions = permissions_cache(\Delight\Cookie\Session::get('user_id'));
 }
 
 unset($username, $password);
