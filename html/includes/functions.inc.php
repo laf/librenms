@@ -970,7 +970,7 @@ function generate_pagination($count, $limit, $page, $links = 2)
 
 function is_admin()
 {
-    if ($_SESSION['userlevel'] >= '10') {
+    if (get_session('userlevel') >= '10') {
         $allowed = true;
     } else {
         $allowed = false;
@@ -982,7 +982,7 @@ function is_admin()
 
 function is_read()
 {
-    if ($_SESSION['userlevel'] == '5') {
+    if (get_session('userlevel') == '5') {
         $allowed = true;
     } else {
         $allowed = false;
@@ -994,7 +994,7 @@ function is_read()
 function is_demo_user()
 {
 
-    if ($_SESSION['userlevel'] == 11) {
+    if (get_session('userlevel') == 11) {
         return true;
     } else {
         return false;
@@ -1617,4 +1617,19 @@ function generate_fill_select_js($list_type, $selector, $selected = null)
         });
     });
 });';
+}
+
+function get_session($name, $default = false)
+{
+    return \Delight\Cookie\Session::get($name, $default);
+}
+
+function has_session($name)
+{
+    return \Delight\Cookie\Session::has($name);
+}
+
+function set_session($name, $value)
+{
+    \Delight\Cookie\Session::set($name, $value);
 }

@@ -16,7 +16,7 @@
 $init_modules = array('web', 'auth');
 require realpath(__DIR__ . '/..') . '/includes/init.php';
 
-if (!$_SESSION['authenticated']) {
+if (!get_session('authenticated')) {
     echo "Unauthenticated\n";
     exit;
 }

@@ -185,7 +185,7 @@ class TwoFactor
 
         // no need to show the form, user doesn't have a token
         if (empty($twofactor)) {
-            \Delight\Cookie\Session::set('twofactor', true);
+            set_session('twofactor', true);
             return false;
         }
 
@@ -240,8 +240,7 @@ class TwoFactor
         }
         $twofactor['fails'] = 0;
         set_user_pref('twofactor', $twofactor);
-
-        $_SESSION['twofactor'] = true;
+        set_session('twofactor', true);
         return true;
     }
 

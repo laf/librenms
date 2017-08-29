@@ -23,13 +23,12 @@
  * @package LibreNMS/Alerts
  */
 
-session_start();
-if (!isset($_SESSION['authenticated'])) {
-    die('Unauthorized.');
-}
-
 $init_modules = array('web');
 require realpath(__DIR__ . '/..') . '/includes/init.php';
+
+if (!has_session('authenticated')) {
+    die('Unauthorized.');
+}
 
 set_debug($_REQUEST['debug']);
 

@@ -21,6 +21,12 @@ dbDelete('session', '`session_expiry` <  ?', array(time()));
 
 \Delight\Cookie\Session::start('Strict');
 
+$time = time() - 60 * 60 * 24 * $config['auth_remember'];
+setcookie('sess_id', '', $time, '/', null, $config['secure_cookies']);
+setcookie('PHPSESSID', '', $time, '/', null, $config['secure_cookies']);
+setcookie('token', '', $time, '/', null, $config['secure_cookies']);
+setcookie('auth', '', $time, '/', null, $config['secure_cookies']);
+
 if ($vars['page'] == 'logout' && session_authenticated()) {
     log_out_user();
     header('Location: ' . $config['base_url']);
@@ -40,8 +46,8 @@ try {
         } elseif (isset($_COOKIE['sess_id'], $_COOKIE['token']) &&
             reauthenticate(clean($_COOKIE['sess_id']), clean($_COOKIE['token']))
         ) {
-            \Delight\Cookie\Session::set('remember', true);
-            \Delight\Cookie\Session::set('twofactor', true);
+            set_session('remember', true);
+            set_session('twofactor', true);
             // cookie authentication
             log_in_user();
         } else {
@@ -58,10 +64,10 @@ try {
 
             // form authentication
             if (isset($username) && authenticate($username, $password)) {
-                \Delight\Cookie\Session::set('username', $username);
+                set_session('username', $username);
 
                 if (isset($_POST['remember'])) {
-                    \Delight\Cookie\Session::set('remember', $_POST['remember']);
+                    set_session('remember', $_POST['remember']);
                 }
 
                 if (log_in_user()) {
@@ -87,8 +93,7 @@ try {
 session_write_close();
 
 // populate the permissions cache
-$tmp_user_id = \Delight\Cookie\Session::get('user_id');
-if (isset($tmp_user_id)) {
+if (\Delight\Cookie\Session::has('user_id')) {
     $permissions = permissions_cache(\Delight\Cookie\Session::get('user_id'));
 }
 
