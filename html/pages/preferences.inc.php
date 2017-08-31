@@ -9,7 +9,7 @@ $pagetitle[] = 'Preferences';
 echo '<h2>User Preferences</h2>';
 echo '<hr>';
 
-if ($_SESSION['userlevel'] == 11) {
+if (is_demo_user()) {
     demo_account();
 } else {
     if ($_POST['action'] == 'changepass') {
@@ -207,15 +207,11 @@ echo "
 echo "<h3>Device Permissions</h3>";
 echo "<hr>";
 echo "<div style='background-color: #e5e5e5; border: solid #e5e5e5 10px;  margin-bottom:10px;'>";
-if ($_SESSION['userlevel'] == '10') {
+if (is_admin() && !is_demo_user()) {
     echo "<strong class='blue'>Global Administrative Access</strong>";
-}
-
-if ($_SESSION['userlevel'] == '5') {
+} elseif (is_read()) {
     echo "<strong class='green'>Global Viewing Access</strong>";
-}
-
-if ($_SESSION['userlevel'] == '1') {
+} elseif (is_normal_user()) {
     foreach (dbFetchRows('SELECT * FROM `devices_perms` AS P, `devices` AS D WHERE `user_id` = ? AND P.device_id = D.device_id', array($_SESSION['user_id'])) as $perm) {
     // FIXME generatedevicelink?
         echo "<a href='device/device=".$perm['device_id']."'>".$perm['hostname'].'</a><br />';

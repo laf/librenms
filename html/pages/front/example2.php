@@ -102,7 +102,7 @@ echo '</div>
     <td bgcolor=#e5e5e5 width=275 valign=top>';
 
 // this stuff can be customised to show whatever you want....
-if ($_SESSION['userlevel'] >= '5') {
+if (is_read() || is_admin()) {
     $sql  = "SELECT * FROM ports AS I, devices AS D WHERE `ifAlias` like 'L2TP: %' AND I.device_id = D.device_id AND D.hostname LIKE '%";
     $sql .= $config['mydomain']."' ORDER BY I.ifAlias";
     unset($seperator);

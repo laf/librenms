@@ -46,7 +46,7 @@ if ($_GET['query'] && $_GET['cmd']) {
                 break;
 
             case 'nmap':
-                if ($_SESSION['userlevel'] != '10') {
+                if (!is_admin() || is_demo_user()) {
                     echo 'insufficient privileges';
                 } else {
                     $cmd = $config['nmap']." $host";

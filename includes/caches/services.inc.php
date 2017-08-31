@@ -1,6 +1,6 @@
 <?php
 
-if ($_SESSION['userlevel'] >= 5) {
+if (is_read() || is_admin()) {
     $data['count']    = array( 'query' => 'SELECT COUNT(*) FROM services');
     $data['up']       = array( 'query' => "SELECT COUNT(*) FROM services WHERE `service_ignore` = '0' AND `service_disabled` = '0' AND `service_status` = '0'");
     $data['down']     = array( 'query' => "SELECT COUNT(*) FROM services WHERE `service_ignore` = '0' AND `service_disabled` = '0' AND `service_status` = '2'");

@@ -94,7 +94,7 @@ if (isset($state)) {
 ?>
 <div class="row col-sm-12"><span id="message"></span></div>
 <?php
-if ($_SESSION['userlevel'] >= '5') {
+if (is_read() || is_admin()) {
     $host_sql = 'SELECT `D`.`device_id`,`D`.`hostname`,`D`.`sysName` FROM devices AS D, services AS S WHERE D.device_id = S.device_id GROUP BY `D`.`hostname`, `D`.`device_id` ORDER BY D.hostname';
     $host_par = array();
 } else {

@@ -1,6 +1,6 @@
 <?php
 if ($_POST['editing']) {
-    if ($_SESSION['userlevel'] > "7") {
+    if (is_admin()) {
         $updated = 0;
 
         $override_sysLocation_bool = mres($_POST['override_sysLocation']);

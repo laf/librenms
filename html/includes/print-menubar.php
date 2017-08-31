@@ -8,7 +8,7 @@ $service_status   = get_service_status();
 $typeahead_limit  = $config['webui']['global_search_result_limit'];
 $if_alerts        = dbFetchCell("SELECT COUNT(port_id) FROM `ports` WHERE `ifOperStatus` = 'down' AND `ifAdminStatus` = 'up' AND `ignore` = '0'");
 
-if ($_SESSION['userlevel'] >= 5) {
+if (is_read() || is_admin()) {
     $links['count']        = dbFetchCell("SELECT COUNT(*) FROM `links`");
 } else {
     $links['count']       = dbFetchCell("SELECT COUNT(*) FROM `links` AS `L`, `devices` AS `D`, `devices_perms` AS `P` WHERE `P`.`user_id` = ? AND `P`.`device_id` = `D`.`device_id` AND `L`.`local_device_id` = `D`.`device_id`", array($_SESSION['user_id']));
@@ -77,7 +77,7 @@ if ($config['title_image']) {
                 <?php
                 \LibreNMS\Plugins::call('menu');
 
-                if ($_SESSION['userlevel'] >= '10') {
+                if (is_admin()) {
                     if (dbFetchCell("SELECT COUNT(*) from `plugins` WHERE plugin_active = '1'") > 0) {
                         echo('<li role="presentation" class="divider"></li>');
                     }
@@ -177,7 +177,7 @@ if (count($devices_groups) > 0) {
     unset($group);
     echo '</ul></li>';
 }
-if ($_SESSION['userlevel'] >= '10') {
+if (is_admin()) {
     if ($config['show_locations']) {
         if ($config['show_locations_dropdown']) {
             $locations = getlocations();
@@ -242,7 +242,7 @@ if (($service_status[1] > 0) || ($service_status[2] > 0)) {
     }
 }
 
-if ($_SESSION['userlevel'] >= '10') {
+if (is_admin()) {
     echo('
             <li role="presentation" class="divider"></li>
             <li><a href="addsrv/"><i class="fa fa-plus fa-fw fa-lg" aria-hidden="true"></i> Add Service</a></li>');
@@ -285,7 +285,7 @@ if ($config['enable_pseudowires']) {
 ?>
 <?php
 
-if ($_SESSION['userlevel'] >= '5') {
+if (is_read() || is_admin()) {
     echo('            <li role="presentation" class="divider"></li>');
     if ($config['int_customers']) {
         echo('            <li><a href="customers/"><i class="fa fa-users fa-fw fa-lg" aria-hidden="true"></i> Customers</a></li>');
@@ -433,7 +433,7 @@ if (!empty($valid_wireless_types)) {
 
 $app_list = dbFetchRows("SELECT DISTINCT(`app_type`) AS `app_type` FROM `applications` ORDER BY `app_type`");
 
-if ($_SESSION['userlevel'] >= '5' && count($app_list) > "0") {
+if ((is_read() || is_admin()) && count($app_list) > "0") {
 ?>
         <li class="dropdown">
           <a href="apps/" class="dropdown-toggle" data-hover="dropdown" data-toggle="dropdown"><i class="fa fa-tasks fa-fw fa-lg fa-nav-icons hidden-md" aria-hidden="true"></i> <span class="hidden-sm">Apps</span></a>
@@ -472,7 +472,7 @@ $options['type'] = 'Cisco-OTV';
 $otv = $component->getComponents(null, $options);
 $routing_count['cisco-otv'] = count($otv);
 
-if ($_SESSION['userlevel'] >= '5' && ($routing_count['bgp']+$routing_count['ospf']+$routing_count['cef']+$routing_count['vrf']+$routing_count['cisco-otv']) > "0") {
+if ((is_read() || is_admin()) && ($routing_count['bgp']+$routing_count['ospf']+$routing_count['cef']+$routing_count['vrf']+$routing_count['cisco-otv']) > "0") {
 ?>
         <li class="dropdown">
           <a href="routing/" class="dropdown-toggle" data-hover="dropdown" data-toggle="dropdown"><i class="fa fa-random fa-fw fa-lg fa-nav-icons hidden-md" aria-hidden="true"></i> <span class="hidden-sm">Routing</span></a>
@@ -480,12 +480,12 @@ if ($_SESSION['userlevel'] >= '5' && ($routing_count['bgp']+$routing_count['ospf
 <?php
     $separator = 0;
 
-if ($_SESSION['userlevel'] >= '5' && $routing_count['vrf']) {
+if ((is_read() || is_admin()) && $routing_count['vrf']) {
     echo('            <li><a href="routing/protocol=vrf/"><i class="fa fa-arrows fa-fw fa-lg" aria-hidden="true"></i> VRFs</a></li>');
     $separator++;
 }
 
-if ($_SESSION['userlevel'] >= '5' && $routing_count['ospf']) {
+if ((is_read() || is_admin()) && $routing_count['ospf']) {
     if ($separator) {
         echo('            <li role="presentation" class="divider"></li>');
         $separator = 0;
@@ -495,7 +495,7 @@ if ($_SESSION['userlevel'] >= '5' && $routing_count['ospf']) {
 }
 
     // Cisco OTV Links
-if ($_SESSION['userlevel'] >= '5' && $routing_count['cisco-otv']) {
+if ((is_read() || is_admin()) && $routing_count['cisco-otv']) {
     if ($separator) {
         echo('            <li role="presentation" class="divider"></li>');
         $separator = 0;
@@ -505,7 +505,7 @@ if ($_SESSION['userlevel'] >= '5' && $routing_count['cisco-otv']) {
 }
 
     // BGP Sessions
-if ($_SESSION['userlevel'] >= '5' && $routing_count['bgp']) {
+if ((is_read() || is_admin()) && $routing_count['bgp']) {
     if ($separator) {
         echo('            <li role="presentation" class="divider"></li>');
         $separator = 0;
@@ -516,7 +516,7 @@ if ($_SESSION['userlevel'] >= '5' && $routing_count['bgp']) {
 }
 
     // CEF info
-if ($_SESSION['userlevel'] >= '5' && $routing_count['cef']) {
+if ((is_read() || is_admin()) && $routing_count['cef']) {
     if ($separator) {
         echo('            <li role="presentation" class="divider"></li>');
         $separator = 0;
@@ -563,7 +563,7 @@ if ($alerts['active_count'] > 0) {
               <li><a href="<?php echo(generate_url(array('page'=>'alert-log'))); ?>"><i class="fa fa-file-text fa-fw fa-lg" aria-hidden="true"></i> Alert History</a></li>
               <li><a href="<?php echo(generate_url(array('page'=>'alert-stats'))); ?>"><i class="fa fa-bar-chart fa-fw fa-lg" aria-hidden="true"></i> Statistics</a></li>
                 <?php
-                if ($_SESSION['userlevel'] >= '10') {
+                if (is_admin()) {
                     ?>
                   <li><a href="<?php echo(generate_url(array('page'=>'alert-rules'))); ?>"><i class="fa fa-list fa-fw fa-lg" aria-hidden="true"></i> Alert Rules</a></li>
                   <li><a href="<?php echo(generate_url(array('page'=>'alert-schedule'))); ?>"><i class="fa fa-calendar fa-fw fa-lg" aria-hidden="true"></i> Scheduled Maintenance</a></li>
@@ -621,14 +621,14 @@ if ($_SESSION['authenticated']) {
         <a href="#" class="dropdown-toggle" data-hover="dropdown" data-toggle="dropdown" style="margin-left:5px"><i class="fa fa-cog fa-fw fa-lg fa-nav-icons" aria-hidden="true"></i> <span class="visible-xs-inline-block">Settings</span></a>
         <ul class="dropdown-menu">
 <?php
-if ($_SESSION['userlevel'] >= '10') {
+if (is_admin()) {
     echo('<li><a href="settings/"><i class="fa fa-cogs fa-fw fa-lg" aria-hidden="true"></i> Global Settings</a></li>');
 }
 
 ?>
           <li role="presentation" class="divider"></li>
 
-<?php if ($_SESSION['userlevel'] >= '10') {
+<?php if (is_admin()) {
     if (auth_usermanagement()) {
         echo('
            <li><a href="adduser/"><i class="fa fa-user-plus fa-fw fa-lg" aria-hidden="true"></i> Add User</a></li>

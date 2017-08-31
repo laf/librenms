@@ -1,9 +1,10 @@
 <?php
 
+use Delight\Cookie\Session;
 use LibreNMS\Exceptions\InvalidIpException;
 use LibreNMS\Util\IPv6;
 
-if ($_SESSION['userlevel'] < '5') {
+if (Session::get('userlevel') < '5') {
     include 'includes/error-no-perm.inc.php';
 } else {
     $link_array = array(

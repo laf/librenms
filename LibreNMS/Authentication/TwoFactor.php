@@ -28,6 +28,7 @@
 
 namespace LibreNMS\Authentication;
 
+use Delight\Cookie\Session;
 use LibreNMS\Exceptions\AuthenticationException;
 
 class TwoFactor
@@ -185,7 +186,7 @@ class TwoFactor
 
         // no need to show the form, user doesn't have a token
         if (empty($twofactor)) {
-            set_session('twofactor', true);
+            Session::set('twofactor', true);
             return false;
         }
 
@@ -240,7 +241,7 @@ class TwoFactor
         }
         $twofactor['fails'] = 0;
         set_user_pref('twofactor', $twofactor);
-        set_session('twofactor', true);
+        Session::set('twofactor', true);
         return true;
     }
 

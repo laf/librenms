@@ -2,7 +2,7 @@
 
 echo '<div style="margin: 10px;">';
 
-if ($_SESSION['userlevel'] < 10 || $_SESSION['userlevel'] > 10) {
+if (!is_admin() || is_demo_user()) {
     include 'includes/error-no-perm.inc.php';
 } else {
     echo '<h3>Delete User</h3>';

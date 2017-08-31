@@ -12,12 +12,12 @@
  * the source code distribution for details.
  */
 
+use Delight\Cookie\Session;
+
 if (isset($widget_settings['mode_select']) && $widget_settings['mode_select'] !== '') {
     $mode = $widget_settings['mode_select'];
-} elseif (isset($_SESSION["map_view"]) && is_numeric($_SESSION["map_view"])) {
-    $mode = $_SESSION["map_view"];
 } else {
-    $mode = 0;
+    $mode = Session::get('map_view', 0) ;
 }
 
 $select_modes = array(

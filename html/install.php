@@ -1,4 +1,8 @@
 <?php
+
+use Delight\Cookie\Cookie;
+use Delight\Cookie\Session;
+
 session_start();
 if (empty($_POST) && !empty($_SESSION) && !isset($_REQUEST['stage'])) {
     $_POST = $_SESSION;
@@ -81,11 +85,8 @@ if ($stage == 4) {
         $msg = "config.php still doesn't exist";
         $stage = 5;
     } else {
-        // all done, remove all traces of the install session
-        session_unset();
-        session_destroy();
-        setcookie(session_name(), '', 0, '/');
-        session_regenerate_id(true);
+        Cookie::setcookie(session_name(), '', 0, '/', null, $config['secure_cookies'], true, 'Strict');
+        Session::regenerate(true);
     }
 }
 

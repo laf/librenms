@@ -30,7 +30,7 @@ $notifications = new ObjectCache('notifications');
   <div class="row">
     <div class="col-md-12">
       <h1><a href="/notifications">Notifications</a></h1>
-      <h4><strong class="count-notif"><?php echo $notifications['count']; ?></strong> Unread Notifications <?php echo ($_SESSION['userlevel'] == 10 ? '<button class="btn btn-success pull-right new-notif" style="margin-top:-10px;">New</button>' : ''); ?></h4>
+      <h4><strong class="count-notif"><?php echo $notifications['count']; ?></strong> Unread Notifications <?php echo (is_admin() ? '<button class="btn btn-success pull-right new-notif" style="margin-top:-10px;">New</button>' : ''); ?></h4>
       <hr/>
     </div>
   </div>
@@ -157,7 +157,7 @@ foreach (array_reverse($notifications['read']) as $notif) {
     }
     echo  " id='${notif['notifications_id']}'>${notif['title']}";
 
-    if ($_SESSION['userlevel'] == 10) {
+    if (is_admin()) {
         echo '<span class="pull-right"><button class="btn btn-primary fa fa-bell-o stick-notif" data-toggle="tooltip" data-placement="bottom" title="Mark as Sticky" style="margin-top:-10px;"></button></span>';
     }
 ?>

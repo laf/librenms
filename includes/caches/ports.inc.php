@@ -1,6 +1,6 @@
 <?php
 
-if ($_SESSION['userlevel'] >= 5) {
+if (is_read() || is_admin()) {
     $data['count'] = array('query' => "SELECT COUNT(*) FROM ports WHERE `deleted` = '0'");
 
     $data['up'] = array('query' => "SELECT COUNT(*) FROM ports AS I, devices AS D WHERE I.`deleted` = '0' AND D.`device_id` = I.`device_id` AND I.`ignore` = '0' AND D.`ignore` = '0' AND I.`ifOperStatus` = 'up'",);

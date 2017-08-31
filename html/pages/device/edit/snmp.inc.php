@@ -1,7 +1,7 @@
 <?php
 
 if ($_POST['editing']) {
-    if ($_SESSION['userlevel'] > '7') {
+    if (is_admin()) {
         $no_checks    = ($_POST['no_checks'] == 'on');
         $community    = mres($_POST['community']);
         $snmpver      = mres($_POST['snmpver']);
@@ -49,7 +49,7 @@ if ($_POST['editing']) {
         $device_tmp = deviceArray($device['hostname'], $community, $snmpver, $port, $transport, $v3, $port_assoc_mode);
         if ($no_checks === true || isSNMPable($device_tmp)) {
             $rows_updated = dbUpdate($update, 'devices', '`device_id` = ?', array($device['device_id']));
-            
+
             $max_repeaters_set = false;
             $max_oid_set = false;
 

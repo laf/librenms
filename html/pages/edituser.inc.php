@@ -8,7 +8,7 @@ echo "<div style='margin: 10px;'>";
 
 $pagetitle[] = 'Edit user';
 
-if ($_SESSION['userlevel'] != '10') {
+if (!is_admin() || is_demo_user()) {
     include 'includes/error-no-perm.inc.php';
 } else {
     if ($vars['user_id'] && !$vars['edit']) {
@@ -241,7 +241,7 @@ if ($_SESSION['userlevel'] != '10') {
         </form>
         </div>";
     } elseif ($vars['user_id'] && $vars['edit']) {
-        if ($_SESSION['userlevel'] == 11) {
+        if (is_demo_user()) {
             demo_account();
         } else {
             if (!empty($vars['new_level'])) {
