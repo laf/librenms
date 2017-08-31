@@ -38,6 +38,8 @@
  */
 
 
+use Delight\Cookie\Session;
+use LibreNMS\Config;
 use LibreNMS\Exceptions\AuthenticationException;
 
 function init_auth()
@@ -298,38 +300,26 @@ function get_membername($username)
 
 function auth_ldap_session_cache_get($attr)
 {
-    global $config;
-
-    $ttl = 300;
-    if ($config['auth_ldap_cache_ttl']) {
-        $ttl = $config['auth_ldap_cache_ttl'];
-    }
-
-    // auth_ldap cache present in this session?
-    if (! isset($_SESSION['auth_ldap'])) {
-        return null;
-    }
-
-    $cache = $_SESSION['auth_ldap'];
-
     // $attr present in cache?
-    if (! isset($cache[$attr])) {
+    if (!Session::has("auth_ldap.$attr.value")) {
         return null;
     }
+
+    $ttl = Config::get('auth_ldap_cach_ttl', 300);
 
     // Value still valid?
-    if (time() - $cache[$attr]['last_updated'] >= $ttl) {
+    if (time() - Session::get("auth_ldap.$attr.updated") >= $ttl) {
         return null;
     }
 
-    $cache[$attr]['value'];
+    return Session::get("auth_ldap.$attr.value");
 }
 
 
 function auth_ldap_session_cache_set($attr, $value)
 {
-    $_SESSION['auth_ldap'][$attr]['value'] = $value;
-    $_SESSION['auth_ldap'][$attr]['last_updated'] = time();
+    Session::set("auth_ldap.$attr.value", $value);
+    Session::set("auth_ldap.$attr.updated", time());
 }
 
 

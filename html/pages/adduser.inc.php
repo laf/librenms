@@ -2,9 +2,9 @@
 
 $no_refresh = true;
 
-if ($_SESSION['userlevel'] < '10') {
+if (!is_admin()) {
     include 'includes/error-no-perm.inc.php';
-} elseif ($_SESSION['userlevel'] == 11) {
+} elseif (is_demo_user()) {
     demo_account();
 } else {
     echo '<h3>Add User</h3>';
@@ -102,7 +102,7 @@ if ($_SESSION['userlevel'] < '10') {
     <div class='col-sm-6'>
     </div>
   </div>";
-    
+
     echo '</form>';
     } else {
         echo '<span class="red">Auth module does not allow user management!</span><br />';

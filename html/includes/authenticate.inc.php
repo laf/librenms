@@ -1,5 +1,7 @@
 <?php
 
+use Delight\Cookie\Cookie;
+use Delight\Cookie\Session;
 use LibreNMS\Authentication\TwoFactor;
 use LibreNMS\Exceptions\AuthenticationException;
 
@@ -19,13 +21,13 @@ if (!is_writable($config['temp_dir'])) {
 // Clear up any old sessions
 dbDelete('session', '`session_expiry` <  ?', array(time()));
 
-\Delight\Cookie\Session::start('Strict');
+Session::start('Strict');
 
 $time = time() - 60 * 60 * 24 * $config['auth_remember'];
-setcookie('sess_id', '', $time, '/', null, $config['secure_cookies']);
-setcookie('PHPSESSID', '', $time, '/', null, $config['secure_cookies']);
-setcookie('token', '', $time, '/', null, $config['secure_cookies']);
-setcookie('auth', '', $time, '/', null, $config['secure_cookies']);
+Cookie::setcookie('sess_id', '', $time, '/', null, $config['secure_cookies'], true, 'Strict');
+Cookie::setcookie('PHPSESSID', '', $time, '/', null, $config['secure_cookies'], true, 'Strict');
+Cookie::setcookie('token', '', $time, '/', null, $config['secure_cookies'], true, 'Strict');
+Cookie::setcookie('auth', '', $time, '/', null, $config['secure_cookies'], true, 'Strict');
 
 if ($vars['page'] == 'logout' && session_authenticated()) {
     log_out_user();
@@ -46,8 +48,8 @@ try {
         } elseif (isset($_COOKIE['sess_id'], $_COOKIE['token']) &&
             reauthenticate(clean($_COOKIE['sess_id']), clean($_COOKIE['token']))
         ) {
-            set_session('remember', true);
-            set_session('twofactor', true);
+            Session::set('remember', true);
+            Session::set('twofactor', true);
             // cookie authentication
             log_in_user();
         } else {
@@ -64,10 +66,10 @@ try {
 
             // form authentication
             if (isset($username) && authenticate($username, $password)) {
-                set_session('username', $username);
+                Session::set('username', $username);
 
                 if (isset($_POST['remember'])) {
-                    set_session('remember', $_POST['remember']);
+                    Session::set('remember', $_POST['remember']);
                 }
 
                 if (log_in_user()) {
@@ -84,7 +86,7 @@ try {
     }
 
     dbInsert(
-        array('user' => \Delight\Cookie\Session::get('username'), 'address' => get_client_ip(), 'result' => $auth_message),
+        array('user' => Session::get('username'), 'address' => get_client_ip(), 'result' => $auth_message),
         'authlog'
     );
     log_out_user($auth_message);
@@ -93,8 +95,8 @@ try {
 session_write_close();
 
 // populate the permissions cache
-if (\Delight\Cookie\Session::has('user_id')) {
-    $permissions = permissions_cache(\Delight\Cookie\Session::get('user_id'));
+if (Session::has('user_id')) {
+    $permissions = permissions_cache(Session::get('user_id'));
 }
 
 unset($username, $password);

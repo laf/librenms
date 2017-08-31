@@ -14,12 +14,14 @@
 
 // FUA
 
+use Delight\Cookie\Session;
+
 $init_modules = array('web', 'auth', 'alerts');
 require realpath(__DIR__ . '/..') . '/includes/init.php';
 
 set_debug($_REQUEST['debug']);
 
-if (!get_session('authenticated')) {
+if (!Session::get('authenticated')) {
     echo 'unauthenticated';
     exit;
 }

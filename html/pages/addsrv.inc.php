@@ -1,10 +1,10 @@
 <?php
 
-if ($_SESSION['userlevel'] < '10') {
+if (!is_admin()) {
     include 'includes/error-no-perm.inc.php';
 } else {
     if ($vars['addsrv']) {
-        if ($_SESSION['userlevel'] >= '10') {
+        if (is_admin()) {
             $updated = '1';
 
             $service_id = add_service($vars['device'], $vars['type'], $vars['descr'], $vars['ip'], $vars['params'], 0);

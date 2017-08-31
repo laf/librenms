@@ -4,7 +4,7 @@ use LibreNMS\Exceptions\HostUnreachableException;
 
 $no_refresh = true;
 
-if ($_SESSION['userlevel'] < 10) {
+if (!is_admin()) {
     include 'includes/error-no-perm.inc.php';
 
     exit;
@@ -15,7 +15,7 @@ if ($_POST['hostname']) {
             <div class="col-sm-3">
             </div>
             <div class="col-sm-6">';
-    if ($_SESSION['userlevel'] > '5') {
+    if (is_admin()) {
         // Settings common to SNMPv2 & v3
         $hostname = mres($_POST['hostname']);
         if ($_POST['port']) {

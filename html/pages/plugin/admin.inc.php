@@ -1,6 +1,6 @@
 <?php
 
-if ($_SESSION['userlevel'] >= '10') {
+if (is_admin()) {
     // Scan for new plugins and add to the database
     $new_plugins = scan_new_plugins();
 

@@ -1,6 +1,6 @@
 <?php
 
-if ($_SESSION['userlevel'] >= '5') {
+if (is_read() || is_admin()) {
     if (!isset($_GET['optb'])) {
         $_GET['optb'] = 'all';
     }

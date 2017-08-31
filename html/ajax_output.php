@@ -20,7 +20,7 @@ if (isset($_SESSION['stage']) && $_SESSION['stage'] == 2) {
     $init_modules = array('web', 'auth', 'alerts');
     require realpath(__DIR__ . '/..') . '/includes/init.php';
 
-    if (!get_session('authenticated')) {
+    if (!Session::get('authenticated')) {
         echo "Unauthenticated\n";
         exit;
     }

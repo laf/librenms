@@ -32,7 +32,7 @@ if (!empty($_POST['to'])) {
     $param[] = $_POST['to'];
 }
 
-if ($_SESSION['userlevel'] >= '5') {
+if (is_read() || is_admin()) {
     $sql  = 'FROM syslog AS S';
     $sql .= ' WHERE '.$where;
 } else {

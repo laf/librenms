@@ -4,7 +4,7 @@ $no_refresh = true;
 
 $param = array();
 
-if ($vars['action'] == 'expunge' && $_SESSION['userlevel'] >= '10') {
+if ($vars['action'] == 'expunge' && is_admin()) {
     dbQuery('TRUNCATE TABLE `syslog`');
     print_message('syslog truncated');
 }

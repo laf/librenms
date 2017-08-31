@@ -21,7 +21,7 @@ if (device_permitted($device['device_id'])) {
         <div class="col-xs-1">';
     echo '<a href="'.generate_device_url($device, array('tab' => 'alerts')).'"> <i class="fa fa-exclamation-circle fa-lg icon-theme"  title="View alerts" aria-hidden="true"></i></a> ';
     echo '</div>';
-    if ($_SESSION['userlevel'] >= '7') {
+    if (is_admin()) {
         echo '<div class="col-xs-1">
             <a href="'.generate_device_url($device, array('tab' => 'edit')).'"> <i class="fa fa-pencil fa-lg icon-theme"  title="Edit ports" aria-hidden="true"></i></a>
             </div>';

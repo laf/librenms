@@ -1,7 +1,7 @@
 <?php
 
 if ($_POST['editing']) {
-    if ($_SESSION['userlevel'] > '7') {
+    if (is_admin()) {
         $ipmi_hostname = mres($_POST['ipmi_hostname']);
         $ipmi_username = mres($_POST['ipmi_username']);
         $ipmi_password = mres($_POST['ipmi_password']);

@@ -15,7 +15,7 @@
 $where = 1;
 
 $sql = " FROM `alert_schedule` AS S WHERE $where";
-if ($_SESSION['userlevel'] < '5') {
+if (is_normal_user()) {
     $param[] = $_SESSION['user_id'];
 }
 
@@ -55,7 +55,7 @@ foreach (dbFetchRows($sql, $param) as $schedule) {
         if ($end < $now) {
             $status = 1;
         }
-    
+
         if ($now >= $start && $now < $end) {
             $status = 2;
         }

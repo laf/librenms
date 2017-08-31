@@ -1,5 +1,5 @@
 <?php
 
-if ($_SESSION['userlevel'] >= '5') {
+if (is_read() || is_admin()) {
     $auth = 1;
 }

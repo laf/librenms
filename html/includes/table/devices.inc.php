@@ -171,7 +171,7 @@ foreach (dbFetchRows($sql, $param) as $device) {
                 <div class="col-xs-1"><a href="' . generate_device_url($device, array('tab' => 'alerts')) . '"> <i class="fa fa-exclamation-circle fa-lg icon-theme" title="View alerts"></i></a></div>
     ';
 
-    if ($_SESSION['userlevel'] >= '7') {
+    if (is_admin()) {
         $actions .= '<div class="col-xs-1"><a href="' . generate_device_url($device, array('tab' => 'edit')) . '"> <i class="fa fa-pencil fa-lg icon-theme" title="Edit device"></i></a></div>';
     }
 

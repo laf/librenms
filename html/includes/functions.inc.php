@@ -12,6 +12,8 @@
  * @copyright  (C) 2013 LibreNMS Group
  */
 
+use Delight\Cookie\Session;
+
 /**
  * Compare $t with the value of $vars[$v], if that exists
  * @param string $v Name of the var to test
@@ -72,7 +74,7 @@ function nicecase($item)
 
         case 'nfs-v3-stats':
             return 'NFS v3 Stats';
-            
+
         case 'nfs-server':
             return 'NFS Server';
 
@@ -111,7 +113,7 @@ function nicecase($item)
 
         case 'fbsd-nfs-server':
             return 'FreeBSD NFS Server';
-        
+
         case 'php-fpm':
             return 'PHP-FPM';
 
@@ -416,7 +418,7 @@ function bill_permitted($bill_id)
 {
     global $permissions;
 
-    if ($_SESSION['userlevel'] >= '5') {
+    if (is_read() || is_admin()) {
         $allowed = true;
     } elseif ($permissions['bill'][$bill_id]) {
         $allowed = true;
@@ -436,7 +438,7 @@ function port_permitted($port_id, $device_id = null)
         $device_id = get_device_id_by_port_id($port_id);
     }
 
-    if ($_SESSION['userlevel'] >= '5') {
+    if (is_read() || is_admin()) {
         $allowed = true;
     } elseif (device_permitted($device_id)) {
         $allowed = true;
@@ -459,7 +461,7 @@ function application_permitted($app_id, $device_id = null)
             $device_id = get_device_id_by_app_id($app_id);
         }
 
-        if ($_SESSION['userlevel'] >= '5') {
+        if (is_read() || is_admin()) {
             $allowed = true;
         } elseif (device_permitted($device_id)) {
             $allowed = true;
@@ -480,7 +482,7 @@ function device_permitted($device_id)
 {
     global $permissions;
 
-    if ($_SESSION['userlevel'] >= '5') {
+    if (is_read() || is_admin()) {
         $allowed = true;
     } elseif ($permissions['device'][$device_id]) {
         $allowed = true;
@@ -791,7 +793,7 @@ function getlocations()
     $locations           = array();
 
     // Fetch regular locations
-    if ($_SESSION['userlevel'] >= '5') {
+    if (is_read() || is_admin()) {
         $rows = dbFetchRows('SELECT location FROM devices AS D GROUP BY location ORDER BY location');
     } else {
         $rows = dbFetchRows('SELECT location FROM devices AS D, devices_perms AS P WHERE D.device_id = P.device_id AND P.user_id = ? GROUP BY location ORDER BY location', array($_SESSION['user_id']));
@@ -967,49 +969,36 @@ function generate_pagination($count, $limit, $page, $links = 2)
     return ($return);
 }//end generate_pagination()
 
+/**
+ * Check if the session is authenticated
+ *
+ * @return bool
+ */
+function session_authenticated()
+{
+    return Session::get('authenticated', false);
+}
 
 function is_admin()
 {
-    if (get_session('userlevel') >= '10') {
-        $allowed = true;
-    } else {
-        $allowed = false;
-    }
-
-    return $allowed;
-}//end is_admin()
+    return Session::get('userlevel') >= 10;
+}
 
 
 function is_read()
 {
-    if (get_session('userlevel') == '5') {
-        $allowed = true;
-    } else {
-        $allowed = false;
-    }
-
-    return $allowed;
-}//end is_read()
+    return Session::get('userlevel') == 5;
+}
 
 function is_demo_user()
 {
-
-    if (get_session('userlevel') == 11) {
-        return true;
-    } else {
-        return false;
-    }
-}// end is_demo_user();
+    return Session::get('userlevel') == 11;
+}
 
 function is_normal_user()
 {
-
-    if (is_admin() === false && is_read() === false && is_demo_user() === false) {
-        return true;
-    } else {
-        return false;
-    }
-}// end is_normal_user()
+    return !is_admin() && !is_read() && !is_demo_user();
+}
 
 function demo_account()
 {
@@ -1617,19 +1606,4 @@ function generate_fill_select_js($list_type, $selector, $selected = null)
         });
     });
 });';
-}
-
-function get_session($name, $default = false)
-{
-    return \Delight\Cookie\Session::get($name, $default);
-}
-
-function has_session($name)
-{
-    return \Delight\Cookie\Session::has($name);
-}
-
-function set_session($name, $value)
-{
-    \Delight\Cookie\Session::set($name, $value);
 }

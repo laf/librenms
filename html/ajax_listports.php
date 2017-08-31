@@ -15,7 +15,7 @@ require realpath(__DIR__ . '/..') . '/includes/init.php';
 
 set_debug($_REQUEST['debug']);
 
-if (!get_session('authenticated')) {
+if (!session_authenticated()) {
     echo 'unauthenticated';
     exit;
 }

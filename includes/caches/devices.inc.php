@@ -1,6 +1,6 @@
 <?php
 
-if ($_SESSION['userlevel'] >= 5) {
+if (is_read() || is_admin()) {
     $data['count'] = array('query' => 'SELECT COUNT(*) FROM devices');
 
     $data['up'] = array('query' => "SELECT COUNT(*) FROM devices WHERE `status` = '1' AND `ignore` = '0'  AND `disabled` = '0'",);
