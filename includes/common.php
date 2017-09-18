@@ -16,6 +16,7 @@
  * the source code distribution for details.
  */
 
+use Delight\Cookie\Session;
 use LibreNMS\Config;
 use LibreNMS\Exceptions\InvalidIpException;
 use LibreNMS\Util\IP;

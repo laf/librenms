@@ -11,6 +11,7 @@
  *
  */
 
+use Delight\Cookie\Session;
 use LibreNMS\Exceptions\HostExistsException;
 use LibreNMS\Exceptions\HostIpExistsException;
 use LibreNMS\Exceptions\HostUnreachableException;
