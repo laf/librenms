@@ -51,7 +51,7 @@ if (!empty($filter_device)) {
     if (is_admin() === true || is_read() === true) {
         $results = dbFetchRows("SELECT `hostname` FROM `devices` GROUP BY `hostname` ORDER BY `hostname`");
     } else {
-        $results = dbFetchRows("SELECT `D`.`hostname` FROM `devices` AS `D`, `devices_perms` AS `P` WHERE `P`.`user_id` = ? AND `P`.`device_id` = `D`.`device_id` GROUP BY `hostname` ORDER BY `hostname`", array($_SESSION['user_id']));
+        $results = dbFetchRows("SELECT `D`.`hostname` FROM `devices` AS `D`, `devices_perms` AS `P` WHERE `P`.`user_id` = ? AND `P`.`device_id` = `D`.`device_id` GROUP BY `hostname` ORDER BY `hostname`", array(Session::get('user_id')));
     }
 
     foreach ($results as $data) {

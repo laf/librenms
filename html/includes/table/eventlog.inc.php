@@ -21,7 +21,7 @@ if (is_read() || is_admin()) {
     $sql = " FROM `eventlog` AS E LEFT JOIN `devices` AS `D` ON `E`.`host`=`D`.`device_id` WHERE $where";
 } else {
     $sql     = " FROM `eventlog` AS E, devices_perms AS P WHERE $where AND E.host = P.device_id AND P.user_id = ?";
-    $param[] = $_SESSION['user_id'];
+    $param[] = Session::get('user_id');
 }
 
 if (isset($searchPhrase) && !empty($searchPhrase)) {

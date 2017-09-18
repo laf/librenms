@@ -11,6 +11,8 @@
  *
  */
 
+use Delight\Cookie\Session;
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 ini_set('log_errors', 1);
@@ -49,7 +51,7 @@ if (isset($_GET['format']) && preg_match("/^[a-z]*$/", $_GET['format'])) {
             graph [bgcolor=transparent];
 ';
 
-    if (!$_SESSION['authenticated']) {
+    if (!Session::get('authenticated')) {
         $map .= "\"Not authenticated\" [fontsize=20 fillcolor=\"lightblue\", URL=\"/\" shape=box3d]\n";
     } else {
         $loc_count = 1;
@@ -219,7 +221,7 @@ if (isset($_GET['format']) && preg_match("/^[a-z]*$/", $_GET['format'])) {
     }
     echo $img;
 } else {
-    if ($_SESSION['authenticated']) {
+    if (Session::get('authenticated')) {
         // FIXME level 10 only?
         echo '<center>
                   <object width=1200 height=1000 data="'. $config['base_url'] . '/map.php?format=svg" type="image/svg+xml"></object>

@@ -35,7 +35,7 @@ $count_boxes = 0;
 if (is_admin() === true || is_read() === true) {
     $sql = "SELECT * FROM `devices` WHERE `status` = '0' AND `ignore` = '0' LIMIT " . $config['front_page_down_box_limit'];
 } else {
-    $sql = "SELECT * FROM `devices` AS D, devices_perms AS P WHERE D.device_id = P.device_id AND P.user_id = '" . $_SESSION['user_id'] . "' AND D.status = '0' AND D.ignore = '0' LIMIT" . $config['front_page_down_box_limit'];
+    $sql = "SELECT * FROM `devices` AS D, devices_perms AS P WHERE D.device_id = P.device_id AND P.user_id = '" . Session::get('user_id') . "' AND D.status = '0' AND D.ignore = '0' LIMIT" . $config['front_page_down_box_limit'];
 }
 
 foreach (dbFetchRows($sql) as $device) {
@@ -51,7 +51,7 @@ foreach (dbFetchRows($sql) as $device) {
 if (is_admin() === true || is_read() === true) {
     $sql = "SELECT * FROM `ports` AS I, `devices` AS D WHERE I.device_id = D.device_id AND ifOperStatus = 'down' AND ifAdminStatus = 'up' AND D.ignore = '0' AND I.ignore = '0' AND `D`.`status` = '1' LIMIT " . $config['front_page_down_box_limit'];
 } else {
-    $sql = "SELECT * FROM `ports` AS I, `devices` AS D, devices_perms AS P WHERE D.device_id = P.device_id AND P.user_id = '" . $_SESSION['user_id'] . "' AND  I.device_id = D.device_id AND ifOperStatus = 'down' AND ifAdminStatus = 'up' AND D.ignore = '0' AND I.ignore = '0' AND `D`.`status` = '1'  LIMIT " . $config['front_page_down_box_limit'];
+    $sql = "SELECT * FROM `ports` AS I, `devices` AS D, devices_perms AS P WHERE D.device_id = P.device_id AND P.user_id = '" . Session::get('user_id') . "' AND  I.device_id = D.device_id AND ifOperStatus = 'down' AND ifAdminStatus = 'up' AND D.ignore = '0' AND I.ignore = '0' AND `D`.`status` = '1'  LIMIT " . $config['front_page_down_box_limit'];
 }
 
 // These things need to become more generic, and more manageable across different frontpages... rewrite inc :>
@@ -81,7 +81,7 @@ if (is_admin() === true || is_read() === true) {
     $param[] = '';
 } else {
     $sql = "SELECT * FROM services AS S, devices AS D, devices_perms AS P WHERE P.`user_id` = ? AND P.`device_id` = D.`device_id` AND S.`device_id` = D.`device_id` AND S.`service_ignore` = '0' AND S.`service_disabled` = '0' AND S.`service_status` = '2' LIMIT " . $config['front_page_down_box_limit'];
-    $param[] = $_SESSION['user_id'];
+    $param[] = Session::get('user_id');
 }
 
 foreach (dbFetchRows($sql, $param) as $service) {
@@ -100,7 +100,7 @@ if (isset($config['enable_bgp']) && $config['enable_bgp']) {
     if (is_admin() === true || is_read() === true) {
         $sql = "SELECT * FROM `devices` AS D, bgpPeers AS B WHERE bgpPeerAdminStatus != 'start' AND bgpPeerState != 'established' AND bgpPeerState != '' AND B.device_id = D.device_id AND D.ignore = 0 AND `D`.`status` = '1' LIMIT " . $config['front_page_down_box_limit'];
     } else {
-        $sql = "SELECT * FROM `devices` AS D, bgpPeers AS B, devices_perms AS P WHERE D.device_id = P.device_id AND P.user_id = '" . $_SESSION['user_id'] . "' AND  bgpPeerAdminStatus != 'start' AND bgpPeerState != 'established' AND bgpPeerState != '' AND B.device_id = D.device_id AND D.ignore = 0 AND `D`.`status` = '1' LIMIT " . $config['front_page_down_box_limit'];
+        $sql = "SELECT * FROM `devices` AS D, bgpPeers AS B, devices_perms AS P WHERE D.device_id = P.device_id AND P.user_id = '" . Session::get('user_id') . "' AND  bgpPeerAdminStatus != 'start' AND bgpPeerState != 'established' AND bgpPeerState != '' AND B.device_id = D.device_id AND D.ignore = 0 AND `D`.`status` = '1' LIMIT " . $config['front_page_down_box_limit'];
     }
 
     foreach (dbFetchRows($sql) as $peer) {
@@ -120,7 +120,7 @@ if (filter_var($config['uptime_warning'], FILTER_VALIDATE_FLOAT) !== false && $c
     if (is_admin() === true || is_read() === true) {
         $sql = "SELECT * FROM `devices` AS D WHERE D.status = '1' AND D.uptime > 0 AND D.uptime < '" . $config['uptime_warning'] . "' AND D.ignore = 0 LIMIT " . $config['front_page_down_box_limit'];
     } else {
-        $sql = "SELECT * FROM `devices` AS D, devices_perms AS P WHERE D.device_id = P.device_id AND P.user_id = '" . $_SESSION['user_id'] . "' AND D.status = '1' AND D.uptime > 0 AND D.uptime < '" . $config['uptime_warning'] . "' AND D.ignore = 0 LIMIT " . $config['front_page_down_box_limit'];
+        $sql = "SELECT * FROM `devices` AS D, devices_perms AS P WHERE D.device_id = P.device_id AND P.user_id = '" . Session::get('user_id') . "' AND D.status = '1' AND D.uptime > 0 AND D.uptime < '" . $config['uptime_warning'] . "' AND D.ignore = 0 LIMIT " . $config['front_page_down_box_limit'];
     }
 
     foreach (dbFetchRows($sql) as $device) {
@@ -200,8 +200,8 @@ if ($config['enable_syslog']) {
         $query = "SELECT *,DATE_FORMAT(datetime, '" . $config['dateformat']['mysql']['compact'] . "') as humandate  FROM `eventlog` ORDER BY `datetime` DESC LIMIT 0,15";
         $alertquery = 'SELECT devices.device_id,name,state,time_logged FROM alert_log LEFT JOIN devices ON alert_log.device_id=devices.device_id LEFT JOIN alert_rules ON alert_log.rule_id=alert_rules.id ORDER BY `time_logged` DESC LIMIT 0,15';
     } else {
-        $query = "SELECT *,DATE_FORMAT(datetime, '" . $config['dateformat']['mysql']['compact'] . "') as humandate  FROM `eventlog` AS E, devices_perms AS P WHERE E.host = P.device_id AND P.user_id = " . $_SESSION['user_id'] . ' ORDER BY `datetime` DESC LIMIT 0,15';
-        $alertquery = 'SELECT devices.device_id,name,state,time_logged FROM alert_log LEFT JOIN devices ON alert_log.device_id=devices.device_id LEFT JOIN alert_rules ON alert_log.rule_id=alert_rules.id RIGHT JOIN devices_perms ON alert_log.device_id = devices_perms.device_id AND devices_perms.user_id = ' . $_SESSION['user_id'] . ' ORDER BY `time_logged` DESC LIMIT 0,15';
+        $query = "SELECT *,DATE_FORMAT(datetime, '" . $config['dateformat']['mysql']['compact'] . "') as humandate  FROM `eventlog` AS E, devices_perms AS P WHERE E.host = P.device_id AND P.user_id = " . Session::get('user_id') . ' ORDER BY `datetime` DESC LIMIT 0,15';
+        $alertquery = 'SELECT devices.device_id,name,state,time_logged FROM alert_log LEFT JOIN devices ON alert_log.device_id=devices.device_id LEFT JOIN alert_rules ON alert_log.rule_id=alert_rules.id RIGHT JOIN devices_perms ON alert_log.device_id = devices_perms.device_id AND devices_perms.user_id = ' . Session::get('user_id') . ' ORDER BY `time_logged` DESC LIMIT 0,15';
     }
 
     echo '<div class="container-fluid">

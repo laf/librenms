@@ -43,8 +43,8 @@ $db_vars = array(
 $cmd = $config['install_dir'] . '/build-base.php -l';
 
 foreach ($db_vars as $var => $opt) {
-    if ($_SESSION[$var]) {
-        $cmd .= " -$opt {$_SESSION[$var]}";
+    if (Session::get($var)) {
+        $cmd .= " -$opt " . Session::get($var);
     }
 }
 
@@ -60,7 +60,7 @@ if (($fp = popen($cmd . ' 2>&1', "r"))) {
 
     if (pclose($fp) === 0) {
         echo "Database is up to date!";
-        $_SESSION['build-ok'] = true;
+        Session::set('build-ok', true);
     } else {
         echo "Database schema update failed!";
     }

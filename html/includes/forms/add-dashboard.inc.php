@@ -21,11 +21,14 @@
  * @package LibreNMS
  * @subpackage Dashboards
  */
+
+use Delight\Cookie\Session;
+
 header('Content-type: application/json');
 
 $status    = 'error';
 $message   = 'unknown error';
-if (isset($_REQUEST['dashboard_name']) && ($dash_id = dbInsert(array('dashboard_name'=>$_REQUEST['dashboard_name'],'user_id'=>$_SESSION['user_id']), 'dashboards'))) {
+if (isset($_REQUEST['dashboard_name']) && ($dash_id = dbInsert(array('dashboard_name'=>$_REQUEST['dashboard_name'],'user_id'=> Session::get('user_id')), 'dashboards'))) {
     $status  = 'ok';
     $message = 'Created';
 } else {

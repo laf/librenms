@@ -13,11 +13,11 @@ if (is_demo_user()) {
     demo_account();
 } else {
     if ($_POST['action'] == 'changepass') {
-        if (authenticate($_SESSION['username'], $_POST['old_pass'])) {
+        if (authenticate(Session::get('username'), $_POST['old_pass'])) {
             if ($_POST['new_pass'] == '' || $_POST['new_pass2'] == '') {
                 $changepass_message = 'Password must not be blank.';
             } elseif ($_POST['new_pass'] == $_POST['new_pass2']) {
-                changepassword($_SESSION['username'], $_POST['new_pass']);
+                changepassword(Session::get('username'), $_POST['new_pass']);
                 $changepass_message = 'Password Changed.';
             } else {
                 $changepass_message = "Passwords don't match.";
@@ -35,7 +35,7 @@ if (is_demo_user()) {
 
     include 'includes/update-preferences-password.inc.php';
 
-    if (passwordscanchange($_SESSION['username'])) {
+    if (passwordscanchange(Session::get('username'))) {
         echo '<h3>Change Password</h3>';
         echo '<hr>';
         echo "<div class='well'>";
@@ -109,7 +109,7 @@ if (is_demo_user()) {
   </div>
 </div>";
                 if ($twofactor['counter'] !== false) {
-                    $twofactor['uri']   = 'otpauth://hotp/'.$_SESSION['username'].'?issuer=LibreNMS&counter='.$twofactor['counter'].'&secret='.$twofactor['key'];
+                    $twofactor['uri']   = 'otpauth://hotp/'.Session::get('username').'?issuer=LibreNMS&counter='.$twofactor['counter'].'&secret='.$twofactor['key'];
                     $twofactor['text'] .= "<div class='form-group'>
   <label for='twofactorcounter' class='col-sm-2 control-label'>Counter</label>
   <div class='col-sm-4'>
@@ -117,7 +117,7 @@ if (is_demo_user()) {
   </div>
 </div>";
                 } else {
-                    $twofactor['uri'] = 'otpauth://totp/'.$_SESSION['username'].'?issuer=LibreNMS&secret='.$twofactor['key'];
+                    $twofactor['uri'] = 'otpauth://totp/'.Session::get('username').'?issuer=LibreNMS&secret='.$twofactor['key'];
                 }
 
                 echo '<div id="twofactorqrcontainer">
@@ -212,7 +212,7 @@ if (is_admin() && !is_demo_user()) {
 } elseif (is_read()) {
     echo "<strong class='green'>Global Viewing Access</strong>";
 } elseif (is_normal_user()) {
-    foreach (dbFetchRows('SELECT * FROM `devices_perms` AS P, `devices` AS D WHERE `user_id` = ? AND P.device_id = D.device_id', array($_SESSION['user_id'])) as $perm) {
+    foreach (dbFetchRows('SELECT * FROM `devices_perms` AS P, `devices` AS D WHERE `user_id` = ? AND P.device_id = D.device_id', array(Session::get('user_id'))) as $perm) {
     // FIXME generatedevicelink?
         echo "<a href='device/device=".$perm['device_id']."'>".$perm['hostname'].'</a><br />';
         $dev_access = 1;

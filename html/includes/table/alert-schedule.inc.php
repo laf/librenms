@@ -16,7 +16,7 @@ $where = 1;
 
 $sql = " FROM `alert_schedule` AS S WHERE $where";
 if (is_normal_user()) {
-    $param[] = $_SESSION['user_id'];
+    $param[] = Session::get('user_id');
 }
 
 if (isset($searchPhrase) && !empty($searchPhrase)) {

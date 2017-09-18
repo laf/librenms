@@ -41,8 +41,8 @@ if (is_admin() === true || is_read() === true) {
         LIMIT $top
         ";
     $param[] = array(
-        $_SESSION['user_id'],
-        $_SESSION['user_id'],
+        Session::get('user_id'),
+        Session::get('user_id'),
     );
 }//end if
 

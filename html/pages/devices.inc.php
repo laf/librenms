@@ -207,7 +207,7 @@ if ($format == "graph") {
             if (!$location_filter || $device['location'] == $location_filter) {
                 $graph_type = "device_" . $subformat;
 
-                if ($_SESSION['widescreen']) {
+                if (Session::get('widescreen')) {
                     $width = 270;
                 } else {
                     $width = 315;
@@ -255,7 +255,7 @@ if ($format == "graph") {
         $platform = "SELECT `hardware` FROM `devices` AS `D`, `devices_perms` AS `P` WHERE `P`.`user_id` = ? AND `P`.`device_id` = `D`.`device_id` GROUP BY `hardware` ORDER BY `hardware`";
         $features = "SELECT `features` FROM `devices` AS `D`, `devices_perms` AS `P` WHERE `P`.`user_id` = ? AND `P`.`device_id` = `D`.`device_id` GROUP BY `features` ORDER BY `features`";
         $types = "SELECT `type` FROM `devices` AS `D`, `devices_perms` AS `P` WHERE `P`.`user_id` = ? AND `P`.`device_id` = `D`.`device_id` GROUP BY `type` ORDER BY `type`";
-        $param[] = $_SESSION['user_id'];
+        $param[] = Session::get('user_id');
     }
 
 

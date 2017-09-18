@@ -16,7 +16,7 @@ if (is_read() || is_admin()) {
     $sql = " FROM `alert_log` AS E LEFT JOIN devices AS D ON E.device_id=D.device_id RIGHT JOIN alert_rules AS R ON E.rule_id=R.id WHERE $where";
 } else {
     $sql     = " FROM `alert_log` AS E LEFT JOIN devices AS D ON E.device_id=D.device_id RIGHT JOIN alert_rules AS R ON E.rule_id=R.id RIGHT JOIN devices_perms AS P ON E.device_id = P.device_id WHERE $where AND P.user_id = ?";
-    $param[] = array($_SESSION['user_id']);
+    $param[] = array(Session::get('user_id'));
 }
 
 if (isset($searchPhrase) && !empty($searchPhrase)) {

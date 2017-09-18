@@ -7,7 +7,7 @@ $param = array();
 if (is_admin() === false && is_read() === false) {
     $perms_sql .= ' LEFT JOIN `devices_perms` AS `DP` ON `D`.`device_id` = `DP`.`device_id`';
     $where     .= ' AND `DP`.`user_id`=?';
-    $param[]    = array($_SESSION['user_id']);
+    $param[]    = array(Session::get('user_id'));
 }
 
 list($address,$prefix) = explode('/', $_POST['address']);

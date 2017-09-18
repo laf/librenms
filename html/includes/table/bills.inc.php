@@ -49,7 +49,7 @@ if ($prev) {
 if (is_admin() === false && is_read() === false) {
     $query  .= ' INNER JOIN `bill_perms` AS `BP` ON `bills`.`bill_id` = `BP`.`bill_id` ';
     $wheres[] = '`BP`.`user_id`=?';
-    $param[] = $_SESSION['user_id'];
+    $param[] = Session::get('user_id');
 }
 
 if (sizeof($wheres) > 0) {

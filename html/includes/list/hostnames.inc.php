@@ -30,5 +30,5 @@ if (is_admin() || is_read()) {
             LEFT JOIN `devices_perms` ON `devices`.`device_id` = `devices_perms`.`device_id`
             WHERE `devices_perms`.`user_id` = ?';
 
-    echo json_encode(dbFetchRows($sql, $_SESSION['user_id']));
+    echo json_encode(dbFetchRows($sql, Session::get('user_id')));
 }

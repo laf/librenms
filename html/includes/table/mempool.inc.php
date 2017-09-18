@@ -5,7 +5,7 @@ $sql        = ' FROM `mempools` AS `M` LEFT JOIN `devices` AS `D` ON `M`.`device
 if (is_admin() === false && is_read() === false) {
     $sql    .= ' LEFT JOIN `devices_perms` AS `DP` ON `M`.`device_id` = `DP`.`device_id`';
     $where  .= ' AND `DP`.`user_id`=?';
-    $param[] = $_SESSION['user_id'];
+    $param[] = Session::get('user_id');
 }
 
 $sql .= " WHERE $where";

@@ -21,23 +21,26 @@
  * @package LibreNMS
  * @subpackage Notifications
  */
+
+use Delight\Cookie\Session;
+
 header('Content-type: application/json');
 
 $status    = 'error';
 $message   = 'unknown error';
 if (isset($_REQUEST['notification_id']) && isset($_REQUEST['action'])) {
-    if ($_REQUEST['action'] == 'read' && dbInsert(array('notifications_id'=>$_REQUEST['notification_id'],'user_id'=>$_SESSION['user_id'],'key'=>'read','value'=>1), 'notifications_attribs')) {
+    if ($_REQUEST['action'] == 'read' && dbInsert(array('notifications_id' => $_REQUEST['notification_id'],'user_id' => Session::get('user_id'),'key'=>'read','value'=>1), 'notifications_attribs')) {
         $status  = 'ok';
         $message = 'Set as Read';
-    } elseif (is_admin() && $_REQUEST['action'] == 'stick' && dbInsert(array('notifications_id'=>$_REQUEST['notification_id'],'user_id'=>$_SESSION['user_id'],'key'=>'sticky','value'=>1), 'notifications_attribs')) {
+    } elseif (is_admin() && $_REQUEST['action'] == 'stick' && dbInsert(array('notifications_id' => $_REQUEST['notification_id'],'user_id' => Session::get('user_id'),'key'=>'sticky','value'=>1), 'notifications_attribs')) {
         $status  = 'ok';
         $message = 'Set as Sticky';
-    } elseif (is_admin() && $_REQUEST['action'] == 'unstick' && dbDelete('notifications_attribs', "notifications_id = ? && user_id = ? AND `key`='sticky'", array($_REQUEST['notification_id'],$_SESSION['user_id']))) {
+    } elseif (is_admin() && $_REQUEST['action'] == 'unstick' && dbDelete('notifications_attribs', "notifications_id = ? && user_id = ? AND `key`='sticky'", array($_REQUEST['notification_id'],Session::get('user_id')))) {
         $status  = 'ok';
         $message = 'Removed Sticky';
     }
 } elseif (is_admin() && $_REQUEST['action'] == 'create' && (isset($_REQUEST['title']) && isset($_REQUEST['body']))) {
-    if (dbInsert(array('title'=>$_REQUEST['title'],'body'=>$_REQUEST['body'],'checksum'=>hash('sha512', $_SESSION['user_id'].'.LOCAL.'.$_REQUEST['title']),'source'=>$_SESSION['user_id']), 'notifications')) {
+    if (dbInsert(array('title'=>$_REQUEST['title'],'body'=>$_REQUEST['body'],'checksum'=>hash('sha512', Session::get('user_id').'.LOCAL.'.$_REQUEST['title']),'source' => Session::get('user_id')), 'notifications')) {
         $status  = 'ok';
         $message = 'Created';
     }

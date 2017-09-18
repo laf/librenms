@@ -33,7 +33,7 @@
  * modules already existing.
  *
  * To save lots of redundant queries to the LDAP server and speed up the
- * libreNMS WebUI, all information is cached within the PHP $_SESSION as
+ * libreNMS WebUI, all information is cached within the PHP session as
  * long as specified in $config['auth_ldap_cache_ttl'] (Default: 300s).
  */
 
@@ -46,8 +46,8 @@ function init_auth()
 {
     global $ldap_connection, $config;
 
-    if (! isset($_SESSION['username'])) {
-        $_SESSION['username'] = '';
+    if (!Session::get('username')) {
+        Session::set('username', '');
     }
 
     /**
@@ -77,13 +77,13 @@ function authenticate($username, $password)
     global $config;
 
     if (isset($_SERVER['REMOTE_USER'])) {
-        $_SESSION['username'] = mres($_SERVER['REMOTE_USER']);
+        Session::set('username', mres($_SERVER['REMOTE_USER']));
 
-        if (user_exists($_SESSION['username'])) {
+        if (user_exists(Session::get('username'))) {
             return true;
         }
 
-        $_SESSION['username'] = $config['http_auth_guest'];
+        Session::set('username', $config['http_auth_guest']);
         return true;
     }
 

@@ -2,7 +2,7 @@
 
 global $config;
 
-if ($_SESSION['widescreen']) {
+if (Session::get('widescreen')) {
     if (!$graph_array['height']) {
         $graph_array['height'] = '110';
     }
@@ -24,14 +24,15 @@ if ($_SESSION['widescreen']) {
     $periods = $config['graphs']['mini']['normal'];
 }//end if
 
-if ($_SESSION['screen_width']) {
-    if ($_SESSION['screen_width'] < 1024 && $_SESSION['screen_width'] > 700) {
-        $graph_array['width'] = round(($_SESSION['screen_width'] - 90 )/2, 0);
+$screen_width = Session::get('screen_width');
+if ($screen_width) {
+    if ($screen_width < 1024 && $screen_width > 700) {
+        $graph_array['width'] = round(($screen_width - 90 )/2, 0);
     } else {
-        if ($_SESSION['screen_width'] > 1024) {
-            $graph_array['width'] = round(($_SESSION['screen_width'] - 90 )/count($periods)+1, 0);
+        if ($screen_width > 1024) {
+            $graph_array['width'] = round(($screen_width - 90 )/count($periods)+1, 0);
         } else {
-            $graph_array['width'] = $_SESSION['screen_width'] - 70;
+            $graph_array['width'] = $screen_width - 70;
         }
     }
 }

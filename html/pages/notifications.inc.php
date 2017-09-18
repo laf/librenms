@@ -74,7 +74,7 @@ foreach ($notifications['sticky'] as $notif) {
     echo "<strong><i class='fa fa-bell-o'></i>&nbsp;${notif['title']}</strong>";
     echo "<span class='pull-right'>";
 
-    if ($notif['user_id'] != $_SESSION['user_id']) {
+    if ($notif['user_id'] != Session::get('user_id')) {
         $sticky_user = get_user($notif['user_id']);
         echo "<code>Sticky by ${sticky_user['username']}</code>";
     } else {

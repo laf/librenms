@@ -1758,7 +1758,7 @@ function get_user_pref($name, $default = null, $user_id = null)
     }
 
     if (is_null($user_id)) {
-        $user_id = $_SESSION['user_id'];
+        $user_id = Session::get('user_id');
     }
 
     $pref = dbFetchCell(
@@ -1787,7 +1787,7 @@ function set_user_pref($name, $value, $user_id = null)
 {
     global $user_prefs;
     if (is_null($user_id)) {
-        $user_id = $_SESSION['user_id'];
+        $user_id = Session::get('user_id');
     }
 
     $pref = array(

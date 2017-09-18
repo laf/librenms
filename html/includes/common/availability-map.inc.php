@@ -166,7 +166,7 @@ if (defined('SHOW_SETTINGS')) {
         // Only show devices if mode is 0 or 2 (Only Devices or both)
         if ($config['webui']['availability_map_use_device_groups'] != 0) {
             $device_group = 'SELECT `D`.`device_id` FROM `device_group_device` AS `D` WHERE `device_group_id` = ?';
-            $param = array($_SESSION['group_view']);
+            $param = array(Session::get('group_view'));
             $devices = dbFetchRows($device_group, $param);
             foreach ($devices as $in_dev) {
                 $in_devices[] = $in_dev['device_id'];
@@ -179,7 +179,7 @@ if (defined('SHOW_SETTINGS')) {
         if (is_normal_user() === true) {
             $sql .= ' , `devices_perms` AS P WHERE D.`device_id` = P.`device_id` AND P.`user_id` = ? AND ';
             $param = array(
-                $_SESSION['user_id']
+                Session::get('user_id')
             );
         } else {
             $sql .= ' WHERE ';
@@ -338,7 +338,7 @@ if (defined('SHOW_SETTINGS')) {
             $sql = 'SELECT `G`.`id`, `G`.`name` FROM `device_groups` AS `G`';
             $dev_groups = dbFetchRows($sql);
 
-            if ($_SESSION['group_view'] == 0) {
+            if (Session::get('group_view') == 0) {
                 $selected = 'selected';
             } else {
                 $selected = '';
@@ -350,7 +350,7 @@ if (defined('SHOW_SETTINGS')) {
                 <option value="0" ' . $selected . '>show all devices</option>';
 
             foreach ($dev_groups as $dev_group) {
-                if ($_SESSION['group_view'] == $dev_group['id']) {
+                if (Session::get('group_view') == $dev_group['id']) {
                     $selected = 'selected';
                 } else {
                     $selected = '';

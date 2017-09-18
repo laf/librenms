@@ -41,7 +41,7 @@ if (is_admin() === true || is_read() === true) {
         ORDER BY total desc
         LIMIT $top
         ";
-    $param[] = array($_SESSION['user_id']);
+    $param[] = array(Session::get('user_id'));
 }//end if
 
 echo "<strong>Top $top devices (last $minutes minutes)</strong>\n";

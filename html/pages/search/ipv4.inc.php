@@ -33,7 +33,7 @@ $sql = 'SELECT `devices`.`device_id`,`hostname`,`sysName` FROM `devices`';
 if (is_admin() === false && is_read() === false) {
     $sql    .= ' LEFT JOIN `devices_perms` AS `DP` ON `devices`.`device_id` = `DP`.`device_id`';
     $where  .= ' WHERE `DP`.`user_id`=?';
-    $param[] = $_SESSION['user_id'];
+    $param[] = Session::get('user_id');
 }
 
 $sql .= " $where ORDER BY `hostname`";

@@ -31,7 +31,7 @@
         "symfony/yaml": "^2.8",
         "rmccue/requests": "^1.7",
         "ramsey/array_column": "^1.1",
-        "delight-im/cookie": "^2.0"
+        "delight-im/cookie": "^2.1.0"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "2.6.*",

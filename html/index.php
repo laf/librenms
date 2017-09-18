@@ -11,6 +11,8 @@
  *
  */
 
+use Delight\Cookie\Session;
+
 if (empty($_SERVER['PATH_INFO'])) {
     if (strstr($_SERVER['SERVER_SOFTWARE'], "nginx") && isset($_SERVER['PATH_TRANSLATED']) && isset($_SERVER['ORIG_SCRIPT_FILENAME'])) {
             $_SERVER['PATH_INFO'] = str_replace($_SERVER['PATH_TRANSLATED'] . $_SERVER['PHP_SELF'], "", $_SERVER['ORIG_SCRIPT_FILENAME']);
@@ -70,10 +72,10 @@ ini_set('allow_url_fopen', 0);
 ini_set('display_errors', 0);
 
 if (strstr($_SERVER['REQUEST_URI'], 'widescreen=yes')) {
-    $_SESSION['widescreen'] = 1;
+    Session::set('widescreen', 1);
 }
 if (strstr($_SERVER['REQUEST_URI'], 'widescreen=no')) {
-    unset($_SESSION['widescreen']);
+    Session::delete('widescreen');
 }
 
 # Load the settings for Multi-Tenancy.
@@ -181,12 +183,12 @@ foreach ((array)$config['webui']['custom_css'] as $custom_css) {
 
 <?php
 
-if (empty($_SESSION['screen_width']) && empty($_SESSION['screen_height'])) {
+if (empty(Session::get('screen_width')) && empty(Session::get('screen_height'))) {
     echo "<script>updateResolution();</script>";
 }
 
 if ((isset($vars['bare']) && $vars['bare'] != "yes") || !isset($vars['bare'])) {
-    if ($_SESSION['authenticated']) {
+    if (Session::get('authenticated')) {
         require 'includes/print-menubar.php';
     }
 } else {
@@ -209,7 +211,7 @@ if (isset($devel) || isset($vars['devel'])) {
     echo("</pre>");
 }
 
-if ($_SESSION['authenticated']) {
+if (Session::get('authenticated')) {
     // Authenticated. Print a page.
     if (isset($vars['page']) && !strstr("..", $vars['page']) &&  is_file("pages/" . $vars['page'] . ".inc.php")) {
         require "pages/" . $vars['page'] . ".inc.php";
@@ -302,7 +304,7 @@ if (dbFetchCell("SELECT COUNT(*) FROM `devices` WHERE `last_polled` <= DATE_ADD(
     $msg_box[] = array('type' => 'warning', 'message' => "<a href=\"poll-log/filter=unpolled/\">It appears as though you have some devices that haven't completed polling within the last 15 minutes, you may want to check that out :)</a>",'title' => 'Devices unpolled');
 }
 
-foreach (dbFetchRows('SELECT `notifications`.* FROM `notifications` WHERE NOT exists( SELECT 1 FROM `notifications_attribs` WHERE `notifications`.`notifications_id` = `notifications_attribs`.`notifications_id` AND `notifications_attribs`.`user_id` = ?) AND `severity` > 1', array($_SESSION['user_id'])) as $notification) {
+foreach (dbFetchRows('SELECT `notifications`.* FROM `notifications` WHERE NOT exists( SELECT 1 FROM `notifications_attribs` WHERE `notifications`.`notifications_id` = `notifications_attribs`.`notifications_id` AND `notifications_attribs`.`user_id` = ?) AND `severity` > 1', array(Session::get('user_id'))) as $notification) {
     $msg_box[] = array(
         'type' => 'error',
         'message' => "<a href='notifications/'>${notification['body']}</a>",
@@ -324,7 +326,7 @@ if (is_array($msg_box)) {
     echo("</script>");
 }
 
-if (is_array($sql_debug) && is_array($php_debug) && $_SESSION['authenticated'] === true) {
+if (is_array($sql_debug) && is_array($php_debug) && Session::get('authenticated') === true) {
     require_once "includes/print-debug.php";
 }
 

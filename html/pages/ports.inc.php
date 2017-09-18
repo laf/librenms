@@ -89,7 +89,7 @@ if ((isset($vars['searchbar']) && $vars['searchbar'] != "hide") || !isset($vars[
 if (is_read() || is_admin()) {
     $results = dbFetchRows("SELECT `device_id`,`hostname`, `sysName` FROM `devices` ORDER BY `hostname`");
 } else {
-    $results = dbFetchRows("SELECT `D`.`device_id`,`D`.`hostname`, `D`.`sysname` FROM `devices` AS `D`, `devices_perms` AS `P` WHERE `P`.`user_id` = ? AND `P`.`device_id` = `D`.`device_id` ORDER BY `hostname`", array($_SESSION['user_id']));
+    $results = dbFetchRows("SELECT `D`.`device_id`,`D`.`hostname`, `D`.`sysname` FROM `devices` AS `D`, `devices_perms` AS `P` WHERE `P`.`user_id` = ? AND `P`.`device_id` = `D`.`device_id` ORDER BY `hostname`", array(Session::get('user_id')));
 }
 foreach ($results as $data) {
     echo('        <option value="'.$data['device_id'].'"');
@@ -100,7 +100,7 @@ foreach ($results as $data) {
 }
 
 if (is_normal_user()) {
-    $results = dbFetchRows("SELECT `D`.`device_id`,`D`.`hostname`, `D`.`sysName` FROM `ports` AS `I` JOIN `devices` AS `D` ON `D`.`device_id`=`I`.`device_id` JOIN `ports_perms` AS `PP` ON `PP`.`port_id`=`I`.`port_id` WHERE `PP`.`user_id` = ? AND `PP`.`port_id` = `I`.`port_id` ORDER BY `hostname`", array($_SESSION['user_id']));
+    $results = dbFetchRows("SELECT `D`.`device_id`,`D`.`hostname`, `D`.`sysName` FROM `ports` AS `I` JOIN `devices` AS `D` ON `D`.`device_id`=`I`.`device_id` JOIN `ports_perms` AS `PP` ON `PP`.`port_id`=`I`.`port_id` WHERE `PP`.`user_id` = ? AND `PP`.`port_id` = `I`.`port_id` ORDER BY `hostname`", array(Session::get('user_id')));
 } else {
     $results = array();
 }
@@ -140,7 +140,7 @@ if (is_admin() === true || is_read() === true) {
     $sql = "SELECT `ifSpeed` FROM `ports` GROUP BY `ifSpeed` ORDER BY `ifSpeed`";
 } else {
     $sql = "SELECT `ifSpeed` FROM `ports` AS `I`, `devices` AS `D`, `devices_perms` AS `P`, `ports_perms` AS `PP` WHERE ((`P`.`user_id` = ? AND `P`.`device_id` = `D`.`device_id`) OR (`PP`.`user_id` = ? AND `PP`.`port_id` = `I`.`port_id` AND `I`.`device_id` = `D`.`device_id`)) AND `D`.`device_id` = `I`.`device_id` GROUP BY `ifSpeed` ORDER BY `ifSpeed`";
-    $param[] = array($_SESSION['user_id'],$_SESSION['user_id']);
+    $param[] = array(Session::get('user_id'),Session::get('user_id'));
 }
 foreach (dbFetchRows($sql, $param) as $data) {
     if ($data['ifSpeed']) {
@@ -163,7 +163,7 @@ if (is_admin() === true || is_read() === true) {
     $sql = "SELECT `ifType` FROM `ports` GROUP BY `ifType` ORDER BY `ifType`";
 } else {
     $sql = "SELECT `ifType` FROM `ports` AS `I`, `devices` AS `D`, `devices_perms` AS `P`, `ports_perms` AS `PP` WHERE ((`P`.`user_id` = ? AND `P`.`device_id` = `D`.`device_id`) OR (`PP`.`user_id` = ? AND `PP`.`port_id` = `I`.`port_id` AND `I`.`device_id` = `D`.`device_id`)) AND `D`.`device_id` = `I`.`device_id` GROUP BY `ifType` ORDER BY `ifType`";
-    $param[] = array($_SESSION['user_id'],$_SESSION['user_id']);
+    $param[] = array(Session::get('user_id'),Session::get('user_id'));
 }
 foreach (dbFetchRows($sql, $param) as $data) {
     if ($data['ifType']) {
@@ -184,7 +184,7 @@ if (is_admin() === true || is_read() === true) {
     $sql = "SELECT `port_descr_type` FROM `ports` GROUP BY `port_descr_type` ORDER BY `port_descr_type`";
 } else {
     $sql = "SELECT `port_descr_type` FROM `ports` AS `I`, `devices` AS `D`, `devices_perms` AS `P`, `ports_perms` AS `PP` WHERE ((`P`.`user_id` = ? AND `P`.`device_id` = `D`.`device_id`) OR (`PP`.`user_id` = ? AND `PP`.`port_id` = `I`.`port_id` AND `I`.`device_id` = `D`.`device_id`)) AND `D`.`device_id` = `I`.`device_id` GROUP BY `port_descr_type` ORDER BY `port_descr_type`";
-    $param[] = array($_SESSION['user_id'],$_SESSION['user_id']);
+    $param[] = array(Session::get('user_id'),Session::get('user_id'));
 }
 
 $ports = dbFetchRows($sql, $param);

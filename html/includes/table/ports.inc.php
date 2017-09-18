@@ -32,8 +32,8 @@ if (is_admin() === false && is_read() === false) {
     $sql .= ' LEFT JOIN `ports_perms` AS `PP` ON `ports`.`port_id` = `PP`.`port_id`';
 
     $where .= ' AND (`DP`.`user_id`=? OR `PP`.`user_id`=?)';
-    $param[] = $_SESSION['user_id'];
-    $param[] = $_SESSION['user_id'];
+    $param[] = Session::get('user_id');
+    $param[] = Session::get('user_id');
 }
 
 $sql .= ' LEFT JOIN `devices` AS `D` ON `ports`.`device_id` = `D`.`device_id`';

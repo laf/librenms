@@ -796,7 +796,7 @@ function getlocations()
     if (is_read() || is_admin()) {
         $rows = dbFetchRows('SELECT location FROM devices AS D GROUP BY location ORDER BY location');
     } else {
-        $rows = dbFetchRows('SELECT location FROM devices AS D, devices_perms AS P WHERE D.device_id = P.device_id AND P.user_id = ? GROUP BY location ORDER BY location', array($_SESSION['user_id']));
+        $rows = dbFetchRows('SELECT location FROM devices AS D, devices_perms AS P WHERE D.device_id = P.device_id AND P.user_id = ? GROUP BY location ORDER BY location', array(Session::get('user_id')));
     }
 
     foreach ($rows as $row) {
@@ -1562,11 +1562,11 @@ function get_dashboards($user_id = null)
     $default = get_user_pref('dashboard');
     $dashboards = dbFetchRows(
         "SELECT * FROM `dashboards` WHERE dashboards.access > 0 || dashboards.user_id = ?",
-        array(is_null($user_id) ? $_SESSION['user_id'] : $user_id)
+        array(is_null($user_id) ? Session::get('user_id') : $user_id)
     );
 
     $usernames = array(
-        $_SESSION['user_id'] => $_SESSION['username']
+        Session::set('user_id', Session::get('username'))
     );
 
     $result = array();

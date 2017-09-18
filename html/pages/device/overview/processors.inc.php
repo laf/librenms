@@ -60,13 +60,14 @@ if (count($processors)) {
     }//end foreach
 
     if ($config['cpu_details_overview'] === false) {
-        if ($_SESSION['screen_width']) {
-            if ($_SESSION['screen_width'] > 970) {
-                $graph_array['width'] = round(($_SESSION['screen_width'] - 390 )/2, 0);
+        $screen_width = Session::get('screen_width');
+        if ($screen_width) {
+            if ($screen_width > 970) {
+                $graph_array['width'] = round(($screen_width - 390 )/2, 0);
                 $graph_array['height'] = round($graph_array['width'] /3);
                 $graph_array['lazy_w'] = $graph_array['width'] + 80;
             } else {
-                $graph_array['width'] = $_SESSION['screen_width'] - 190;
+                $graph_array['width'] = $screen_width - 190;
                 $graph_array['height'] = round($graph_array['width'] /3);
                 $graph_array['lazy_w'] = $graph_array['width'] + 80;
             }

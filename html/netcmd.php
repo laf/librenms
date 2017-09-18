@@ -10,6 +10,8 @@
  * @copyright  (C) 2006 - 2012 Adam Armstrong
  */
 
+use Delight\Cookie\Session;
+
 ini_set('allow_url_fopen', 0);
 ini_set('display_errors', 0);
 
@@ -23,7 +25,7 @@ if ($_GET[debug]) {
 $init_modules = array('web', 'auth');
 require realpath(__DIR__ . '/..') . '/includes/init.php';
 
-if (!$_SESSION['authenticated']) {
+if (!Session::get('authenticated')) {
     echo 'unauthenticated';
     exit;
 }

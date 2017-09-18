@@ -3,6 +3,7 @@
 
 use LibreNMS\Device\WirelessSensor;
 use LibreNMS\ObjectCache;
+use Delight\Cookie\Session;
 
 $service_status   = get_service_status();
 $typeahead_limit  = $config['webui']['global_search_result_limit'];
@@ -11,7 +12,7 @@ $if_alerts        = dbFetchCell("SELECT COUNT(port_id) FROM `ports` WHERE `ifOpe
 if (is_read() || is_admin()) {
     $links['count']        = dbFetchCell("SELECT COUNT(*) FROM `links`");
 } else {
-    $links['count']       = dbFetchCell("SELECT COUNT(*) FROM `links` AS `L`, `devices` AS `D`, `devices_perms` AS `P` WHERE `P`.`user_id` = ? AND `P`.`device_id` = `D`.`device_id` AND `L`.`local_device_id` = `D`.`device_id`", array($_SESSION['user_id']));
+    $links['count']       = dbFetchCell("SELECT COUNT(*) FROM `links` AS `L`, `devices` AS `D`, `devices_perms` AS `P` WHERE `P`.`user_id` = ? AND `P`.`device_id` = `D`.`device_id` AND `L`.`local_device_id` = `D`.`device_id`", array(Session::get('user_id')));
 }
 
 if (isset($config['enable_bgp']) && $config['enable_bgp']) {
@@ -147,7 +148,7 @@ if (is_admin() === true || is_read() === true) {
     $sql = "SELECT `type`,COUNT(`type`) AS total_type FROM `devices` AS D WHERE 1 GROUP BY `type` ORDER BY `type`";
 } else {
     $sql = "SELECT `type`,COUNT(`type`) AS total_type FROM `devices` AS `D`, `devices_perms` AS `P` WHERE `P`.`user_id` = ? AND `P`.`device_id` = `D`.`device_id` GROUP BY `type` ORDER BY `type`";
-    $param[] = $_SESSION['user_id'];
+    $param[] = Session::get('user_id');
 }
 
 $device_types = dbFetchRows($sql, $param);
@@ -610,7 +611,7 @@ if (empty($notifications['count']) && empty($notifications['sticky_count'])) {
           <li role="presentation" class="divider"></li>
 <?php
 
-if ($_SESSION['authenticated']) {
+if (Session::get('authenticated')) {
     echo('
            <li><a href="logout/"><i class="fa fa-sign-out fa-fw fa-lg" aria-hidden="true"></i> Logout</a></li>');
 }
@@ -665,7 +666,7 @@ if (is_admin()) {
            <li role="presentation" class="divider"></li>');
 }
 
-if ($_SESSION['authenticated']) {
+if (Session::get('authenticated')) {
     echo('
            <li class="dropdown-submenu">
                <a href="#"><span class="countdown_timer" id="countdown_timer"></span></a>

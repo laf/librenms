@@ -21,13 +21,16 @@
  * @package LibreNMS
  * @subpackage Dashboards
  */
+
+use Delight\Cookie\Session;
+
 header('Content-type: application/json');
 
 $status    = 'error';
 $message   = 'unknown error';
 if (isset($_REQUEST['dashboard_id'])) {
-    dbDelete('users_widgets', 'user_id = ? && dashboard_id = ?', array($_SESSION['user_id'],$_REQUEST['dashboard_id']));
-    if (dbDelete('dashboards', 'user_id = ? && dashboard_id = ?', array($_SESSION['user_id'],$_REQUEST['dashboard_id']))) {
+    dbDelete('users_widgets', 'user_id = ? && dashboard_id = ?', array(Session::get('user_id'), $_REQUEST['dashboard_id']));
+    if (dbDelete('dashboards', 'user_id = ? && dashboard_id = ?', array(Session::get('user_id'), $_REQUEST['dashboard_id']))) {
         $status  = 'ok';
         $message = 'Deleted dashboard';
     } else {

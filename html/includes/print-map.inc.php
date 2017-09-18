@@ -28,7 +28,7 @@ if (!empty($device['hostname'])) {
 if (is_admin() === false && is_read() === false) {
     $join_sql    .= ' LEFT JOIN `devices_perms` AS `DP` ON `D1`.`device_id` = `DP`.`device_id`';
     $sql  .= ' AND `DP`.`user_id`=?';
-    $sql_array[] = $_SESSION['user_id'];
+    $sql_array[] = Session::get('user_id');
 }
 
 $devices_by_id = array();

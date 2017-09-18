@@ -99,7 +99,7 @@ $(function() {
     $interval = $widget_settings['time_interval'];
     (integer) $lastpoll_seconds = ($interval * 60);
     (integer) $interface_count = $widget_settings['interface_count'];
-    $params = array('user' => $_SESSION['user_id'], 'lastpoll' => array($lastpoll_seconds), 'count' => array($interface_count), 'filter' => ($widget_settings['interface_filter']?:(int)1));
+    $params = array('user' => Session::get('user_id'), 'lastpoll' => array($lastpoll_seconds), 'count' => array($interface_count), 'filter' => ($widget_settings['interface_filter']?:(int)1));
     if (is_admin() || is_read()) {
         $query = '
             SELECT p.*, devices.*, p.ifInOctets_rate + p.ifOutOctets_rate as total

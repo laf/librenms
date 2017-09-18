@@ -24,10 +24,10 @@ dbDelete('session', '`session_expiry` <  ?', array(time()));
 Session::start('Strict');
 
 $time = time() - 60 * 60 * 24 * $config['auth_remember'];
-Cookie::setcookie('sess_id', '', $time, '/', null, $config['secure_cookies'], true, 'Strict');
-Cookie::setcookie('PHPSESSID', '', $time, '/', null, $config['secure_cookies'], true, 'Strict');
-Cookie::setcookie('token', '', $time, '/', null, $config['secure_cookies'], true, 'Strict');
-Cookie::setcookie('auth', '', $time, '/', null, $config['secure_cookies'], true, 'Strict');
+setcookie('sess_id', '', $time, '/', null, $config['secure_cookies']);
+setcookie('PHPSESSID', '', $time, '/', null, $config['secure_cookies']);
+setcookie('token', '', $time, '/', null, $config['secure_cookies']);
+setcookie('auth', '', $time, '/', null, $config['secure_cookies']);
 
 if ($vars['page'] == 'logout' && session_authenticated()) {
     log_out_user();

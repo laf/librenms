@@ -11,6 +11,7 @@
 
 use Amenadiel\JpGraph\Graph\Graph;
 use Amenadiel\JpGraph\Plot\LinePlot;
+use Delight\Cookie\Session;
 
 ini_set('allow_url_fopen', 0);
 
@@ -34,7 +35,7 @@ require realpath(__DIR__ . '/..') . '/includes/init.php';
 $auth = is_client_authorized($_SERVER['REMOTE_ADDR']);
 
 if (get_client_ip() != $_SERVER['SERVER_ADDR']) {
-    if ($auth === false && !$_SESSION['authenticated']) {
+    if ($auth === false && !Session::get('authenticated')) {
         echo 'unauthenticated';
         exit;
     }

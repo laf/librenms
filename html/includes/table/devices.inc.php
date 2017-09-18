@@ -8,7 +8,7 @@ $sql = ' FROM `devices`';
 if (is_admin() === false && is_read() === false) {
     $sql .= ' LEFT JOIN `devices_perms` AS `DP` ON `devices`.`device_id` = `DP`.`device_id`';
     $where .= ' AND `DP`.`user_id`=?';
-    $param[] = $_SESSION['user_id'];
+    $param[] = Session::get('user_id');
 }
 
 if (!empty($_POST['location'])) {

@@ -11,6 +11,9 @@
  * option) any later version.  Please see LICENSE.txt at the top level of
  * the source code distribution for details.
  */
+
+use Delight\Cookie\Session;
+
 header('Content-type: text/plain');
 
 if (is_admin() === false) {
@@ -30,7 +33,7 @@ if (!is_numeric($_POST['user_id']) || !isset($_POST['token'])) {
     $create = dbInsert(array('user_id' => $_POST['user_id'], 'token_hash' => $_POST['token'], 'description' => $_POST['description']), 'api_tokens');
     if ($create > '0') {
         echo 'API token has been created';
-        $_SESSION['api_token'] = true;
+        Session::set('api_token', true);
         exit;
     } else {
         echo 'ERROR: An error occurred creating the API token';

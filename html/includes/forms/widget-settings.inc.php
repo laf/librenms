@@ -21,6 +21,9 @@
  * @package LibreNMS
  * @subpackage Widgets
  */
+
+use Delight\Cookie\Session;
+
 header('Content-type: application/json');
 
 $status    = 'error';
@@ -35,7 +38,7 @@ if ($widget_id < 1) {
     if (!is_array($widget_settings)) {
         $widget_settings = array();
     }
-    if (dbFetchCell('select 1 from users_widgets inner join dashboards on users_widgets.dashboard_id = dashboards.dashboard_id where user_widget_id = ? && (users_widgets.user_id = ? || dashboards.access = 2)', array($widget_id,$_SESSION['user_id'])) == 1) {
+    if (dbFetchCell('select 1 from users_widgets inner join dashboards on users_widgets.dashboard_id = dashboards.dashboard_id where user_widget_id = ? && (users_widgets.user_id = ? || dashboards.access = 2)', array($widget_id,Session::get('user_id'))) == 1) {
         if (dbUpdate(array('settings'=>json_encode($widget_settings)), 'users_widgets', 'user_widget_id=?', array($widget_id)) >= 0) {
             $status  = 'ok';
             $message = 'Updated';

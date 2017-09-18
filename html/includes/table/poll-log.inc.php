@@ -9,7 +9,7 @@ if (is_admin() === false) {
 $sql .= " LEFT JOIN `poller_groups` ON `D`.`poller_group`=`poller_groups`.`id`";
 
 if (is_admin() === false) {
-    $sql .= " WHERE D.device_id = P.device_id AND P.user_id = '".$_SESSION['user_id']."' AND D.ignore = '0'";
+    $sql .= " WHERE D.device_id = P.device_id AND P.user_id = '".Session::get('user_id')."' AND D.ignore = '0'";
 } else {
     $sql .= ' WHERE 1';
 }

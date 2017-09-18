@@ -12,10 +12,12 @@
  * the source code distribution for details.
  */
 
+use Delight\Cookie\Session;
+
 $init_modules = array('web', 'auth');
 require realpath(__DIR__ . '/..') . '/includes/init.php';
 
-if (!$_SESSION['authenticated']) {
+if (!Session::get('authenticated')) {
     echo "Unauthenticated\n";
     exit;
 }

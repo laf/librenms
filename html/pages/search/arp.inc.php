@@ -36,7 +36,7 @@ $sql = 'SELECT D.device_id AS device_id, `hostname`, `D`.`sysName` AS `sysName` 
 if (is_admin() === false && is_read() === false) {
     $sql    .= ' LEFT JOIN `devices_perms` AS `DP` ON `D`.`device_id` = `DP`.`device_id`';
     $where  .= ' AND `DP`.`user_id`=?';
-    $param[] = $_SESSION['user_id'];
+    $param[] = Session::get('user_id');
 }
 
 $sql .= " WHERE M.port_id = P.port_id AND P.device_id = D.device_id $where GROUP BY `D`.`device_id`, `D`.`hostname`, `D`.`sysName` ORDER BY `hostname`";

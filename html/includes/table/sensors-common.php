@@ -15,7 +15,7 @@ $param[] = mres($_POST['class']);
 
 if (is_admin() === false && is_read() === false) {
     $sql .= " AND D.device_id = P.device_id AND P.user_id = ?";
-    $param[] = $_SESSION['user_id'];
+    $param[] = Session::get('user_id');
 }
 
 if (isset($searchPhrase) && !empty($searchPhrase)) {

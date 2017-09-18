@@ -39,7 +39,7 @@ if (is_read() || is_admin()) {
     $sql   = 'FROM syslog AS S, devices_perms AS P ';
     $sql  .= 'WHERE S.device_id = P.device_id AND P.user_id = ? AND ';
     $sql  .= $where;
-    $param = array_merge(array($_SESSION['user_id']), $param);
+    $param = array_merge(array(Session::get('user_id')), $param);
 }
 
 $count_sql = "SELECT COUNT(*) $sql";

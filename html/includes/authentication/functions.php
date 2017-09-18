@@ -43,16 +43,17 @@ function log_out_user($message = 'Logged Out')
     clear_remember_me(Session::get('username'));
 
     Session::delete('username');
+    Session::delete('authenticated');
 
     $auth_message = $message; // global variable used to display a message to the user
 }
 
 /**
  * Log in the user and set up a few login tasks
- * $_SESSION['username'] must be set prior to calling this function
+ * username session must be set prior to calling this function
  * If twofactor authentication is enabled, it will be checked here.
  *
- * If everything goes well, $_SESSION['authenticated'] will be true after this function completes.
+ * If everything goes well, authenticated session will be true after this function completes.
  * @return bool If the user was successfully logged in.
  * @throws AuthenticationException if anything failed why trying to log in
  */
@@ -97,8 +98,8 @@ function log_in_user()
 }
 
 /**
- * Set or update the remember me cookie if $_SESSION['remember'] is set
- * If setting a new cookie, $_SESSION['username'] must be set
+ * Set or update the remember me cookie if remember session is set
+ * If setting a new cookie, username session must be set
  */
 function set_remember_me()
 {
@@ -140,7 +141,7 @@ function set_remember_me()
 
 /**
  * Check the remember me cookie
- * If the cookie is valid, $_SESSION['username'] will be set
+ * If the cookie is valid, username session will be set
  *
  * @param string $sess_id sess_id cookie value
  * @param string $token token cookie value
@@ -185,6 +186,7 @@ function clear_remember_me($username)
 
     $time = time() - 60 * 60 * 24 * $config['auth_remember']; // time in the past to make sure
 
+    Cookie::setcookie('PHPSESSID', '', $time, '/', null, $config['secure_cookies'], false, 'Strict');
     Cookie::setcookie('sess_id', '', $time, '/', null, $config['secure_cookies'], false, 'Strict');
     Cookie::setcookie('token', '', $time, '/', null, $config['secure_cookies'], false, 'Strict');
     Cookie::setcookie('auth', '', $time, '/', null, $config['secure_cookies'], false, 'Strict');

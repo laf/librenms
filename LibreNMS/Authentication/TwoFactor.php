@@ -207,7 +207,7 @@ class TwoFactor
 
     /**
      * Check a 2fa token this will be stored in $_POST['twofactor'] by the form
-     * If valid,  $_SESSION['twofactor'] = true will be set and this will return true
+     * If valid, twofactor session will be true will be set and this will return true
      *
      * @param string $token The 2fa token, stored in $_POST['twofactor'] by the form
      * @return bool If the token was valid

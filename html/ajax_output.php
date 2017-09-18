@@ -12,8 +12,10 @@
  * the source code distribution for details.
  */
 
-session_start();
-if (isset($_SESSION['stage']) && $_SESSION['stage'] == 2) {
+use Delight\Cookie\Session;
+
+Session::start();
+if (Session::get('stage') && Session::get('stage') == 2) {
     $init_modules = array('web', 'nodb');
     require realpath(__DIR__ . '/..') . '/includes/init.php';
 } else {

@@ -4,7 +4,7 @@ unset($vars['page']);
 
 // Setup here
 
-if ($_SESSION['widescreen']) {
+if (Session::get('widescreen')) {
     $graph_width=1700;
     $thumb_width=180;
 } else {
@@ -100,19 +100,21 @@ if (!$auth) {
     $graph_array['height'] = $config['webui']['min_graph_height'];
     $graph_array['width']  = $graph_width;
 
-    if ($_SESSION['screen_width']) {
-        if ($_SESSION['screen_width'] > 800) {
-            $graph_array['width'] = ($_SESSION['screen_width'] - ($_SESSION['screen_width']/10));
+    $screen_width = Session::get('screen_width');
+    if ($screen_width) {
+        if ($screen_width > 800) {
+            $graph_array['width'] = ($screen_width - ($screen_width/10));
         } else {
-            $graph_array['width'] = ($_SESSION['screen_width'] - ($_SESSION['screen_width']/4));
+            $graph_array['width'] = ($screen_width - ($screen_width/4));
         }
     }
 
-    if ($_SESSION['screen_height']) {
-        if ($_SESSION['screen_height'] > 960) {
-            $graph_array['height'] = ($_SESSION['screen_height'] - ($_SESSION['screen_height']/2));
+    $screen_height = Session::get('screen_height');
+    if ($screen_height) {
+        if ($screen_height > 960) {
+            $graph_array['height'] = ($screen_height - ($screen_heigh]/2));
         } else {
-            $graph_array['height'] = max($graph_array['height'], ($_SESSION['screen_height'] - ($_SESSION['screen_height']/1.5)));
+            $graph_array['height'] = max($graph_array['height'], ($screen_height - ($screen_height/1.5)));
         }
     }
 

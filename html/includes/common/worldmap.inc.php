@@ -171,7 +171,7 @@ var greenMarker = L.AwesomeMarkers.icon({
                     AND `devices`.`device_id` = `devices_perms`.`device_id`
                     AND `devices_perms`.`user_id` = ? AND `status` IN (".$widget_settings['status'].")
                     ORDER BY `status` ASC, `hostname`";
-            $param[] = $_SESSION['user_id'];
+            $param[] = Session::get('user_id');
         }
         foreach (dbFetchRows($sql, $param) as $map_devices) {
             $icon = 'greenMarker';

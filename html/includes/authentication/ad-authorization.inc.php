@@ -8,8 +8,8 @@ function init_auth()
 {
     global $ldap_connection, $config;
 
-    if (! isset($_SESSION['username'])) {
-        $_SESSION['username'] = '';
+    if (!(Session::get('username'))) {
+        Session::set('username', '');
     }
 
 // Disable certificate checking before connect if required
@@ -48,14 +48,14 @@ function authenticate($username, $password)
     global $config;
 
     if (isset($_SERVER['REMOTE_USER'])) {
-        $_SESSION['username'] = mres($_SERVER['REMOTE_USER']);
+        Session::set('username', mres($_SERVER['REMOTE_USER']));
 
-        if (user_exists($_SESSION['username'])) {
+        if (user_exists(Session::get('username'))) {
             adduser($username);
             return 1;
         }
 
-        $_SESSION['username'] = $config['http_auth_guest'];
+        Session::set('username', $config['http_auth_guest']);
         return true;
     }
 

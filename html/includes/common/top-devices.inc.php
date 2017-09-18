@@ -144,7 +144,7 @@ if (defined('SHOW_SETTINGS') || empty($widget_settings)) {
 
     $common_output[] = '<h4>Top ' . $device_count . ' devices (last ' . $interval . ' minutes)</h4>';
 
-    $params = array('user' => $_SESSION['user_id'], 'interval' => array($interval_seconds), 'count' => array($device_count));
+    $params = array('user' => Session::get('user_id'), 'interval' => array($interval_seconds), 'count' => array($device_count));
 
     if ($top_query === 'traffic') {
         if (is_admin() || is_read()) {
