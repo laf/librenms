@@ -526,6 +526,7 @@ function location_to_latlng($device)
                     }
                     break;
             }
+            echo $api_url.PHP_EOL;
             $curl_init = curl_init($api_url);
             set_curl_proxy($curl_init);
             curl_setopt($curl_init, CURLOPT_RETURNTRANSFER, true);

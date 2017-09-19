@@ -3,6 +3,10 @@
 $init_modules = array('web', 'auth');
 require realpath(__DIR__ . '/..') . '/includes/init.php';
 
+use Delight\Cookie\Session;
+
+Session::start('Lax');
+
 set_debug($_REQUEST['debug']);
 
 if (!Session::get('authenticated')) {

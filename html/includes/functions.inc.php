@@ -1566,7 +1566,7 @@ function get_dashboards($user_id = null)
     );
 
     $usernames = array(
-        Session::set('user_id', Session::get('username'))
+        Session::get('user_id') => Session::get('username')
     );
 
     $result = array();

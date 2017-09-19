@@ -26,6 +26,10 @@
 $init_modules = array('web');
 require realpath(__DIR__ . '/..') . '/includes/init.php';
 
+use Delight\Cookie\Session;
+
+Session::start('Lax');
+
 if (!session_authenticated()) {
     die('Unauthorized.');
 }

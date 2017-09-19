@@ -16,6 +16,8 @@
  * Code for Gridster.sort_by_row_and_col_asc(serialization) call is from http://gridster.net/demos/grid-from-serialize.html
  */
 
+use Delight\Cookie\Session;
+
 $no_refresh   = true;
 $default_dash = get_user_pref('dashboard', 0);
 

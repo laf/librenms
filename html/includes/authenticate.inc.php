@@ -21,7 +21,7 @@ if (!is_writable($config['temp_dir'])) {
 // Clear up any old sessions
 dbDelete('session', '`session_expiry` <  ?', array(time()));
 
-Session::start('Strict');
+Session::start('Lax');
 
 $time = time() - 60 * 60 * 24 * $config['auth_remember'];
 setcookie('sess_id', '', $time, '/', null, $config['secure_cookies']);

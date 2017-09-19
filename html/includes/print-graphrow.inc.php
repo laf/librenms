@@ -1,5 +1,7 @@
 <?php
 
+use Delight\Cookie\Session;
+
 global $config;
 
 if (Session::get('widescreen')) {

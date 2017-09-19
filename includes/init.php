@@ -27,6 +27,8 @@
  * @param array $modules Which modules to initialize
  */
 
+use Delight\Cookie\Session;
+
 global $config;
 
 $install_dir = realpath(__DIR__ . '/..');
@@ -35,6 +37,7 @@ chdir($install_dir);
 
 # composer autoload
 require $install_dir . '/vendor/autoload.php';
+
 if (version_compare(PHP_VERSION, '5.4', '>=')) {
     require_once $install_dir . '/lib/influxdb-php/vendor/autoload.php';
 }
@@ -44,6 +47,10 @@ if (!function_exists('module_selected')) {
     {
         return in_array($module, (array) $modules);
     }
+}
+
+if (module_selected('web', $init_modules)) {
+    Session::start('Lax');
 }
 
 // function only files
