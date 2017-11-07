@@ -93,7 +93,7 @@ class Poller implements ValidationGroup
 
     private function checkDeviceLastPolled(Validator $validator)
     {
-        if (count($devices = dbFetchColumn("SELECT `hostname` FROM `devices` WHERE (`last_polled` < DATE_ADD(NOW(), INTERVAL - 5 MINUTE) OR `last_polled` IS NULL) AND `ignore` = 0 AND `disabled` = 0 AND `status` = 1")) > 0) {
+        if (count($devices = dbFetchColumn("SELECT `hostname` FROM `devices` WHERE (`last_polled` < DATE_ADD(NOW(), INTERVAL - 5 MINUTE) OR `last_polled` IS NULL) AND `ignore` = 0 AND `disabled` = 0 AND `status` = 1 AND `snmp_disable` = 0")) > 0) {
             $result = ValidationResult::warn("Some devices have not been polled in the last 5 minutes. You may have performance issues.")
                 ->setList('Devices', $devices);
 
@@ -128,9 +128,9 @@ class Poller implements ValidationGroup
 
     private function checkLastDiscovered(Validator $validator)
     {
-        if (dbFetchCell('SELECT COUNT(*) FROM `devices` WHERE `last_discovered` IS NOT NULL') == 0) {
+        if (dbFetchCell('SELECT COUNT(*) FROM `devices` WHERE `last_discovered` IS NOT NULL AND `snmp_disable` = 0') == 0) {
             $validator->fail('Discovery has never run. Check the cron job');
-        } elseif (dbFetchCell("SELECT COUNT(*) FROM `devices` WHERE `last_discovered` <= DATE_ADD(NOW(), INTERVAL - 24 HOUR) AND `ignore` = 0 AND `disabled` = 0 AND `status` = 1") > 0) {
+        } elseif (dbFetchCell("SELECT COUNT(*) FROM `devices` WHERE `last_discovered` <= DATE_ADD(NOW(), INTERVAL - 24 HOUR) AND `ignore` = 0 AND `disabled` = 0 AND `status` = 1 AND `snmp_disable` = 0") > 0) {
             $validator->fail(
                 "Discovery has not completed in the last 24 hours.",
                 "Check the cron job to make sure it is running and using discovery-wrapper.py"
