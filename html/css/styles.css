@@ -2188,3 +2188,8 @@ label {
     margin: 0;
     border-radius: 0;
 }
+
+.alert-status {
+  display: inline-block;
+  width: 7px;
+}
