@@ -1,4 +1,17 @@
 <?php
+/*
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.  Please see LICENSE.txt at the top level of
+ * the source code distribution for details.
+ *
+ * @package    LibreNMS
+ * @subpackage webui
+ * @link       http://librenms.org
+ * @copyright  2017 LibreNMS
+ * @author     LibreNMS Contributors
+*/
 
 $where = 1;
 $param = array();
@@ -121,24 +134,24 @@ foreach (dbFetchRows($sql, $param) as $device) {
     }
 
     if ($device['status'] == '0') {
-        $extra = 'danger';
+        $extra = 'label-danger';
         $msg = $device['status_reason'];
     } else {
-        $extra = 'success';
+        $extra = 'label-success';
         $msg = 'up';
     }
 
     if ($device['ignore'] == '1') {
-        $extra = 'default';
+        $extra = 'label-default';
         $msg = 'ignored';
         if ($device['status'] == '1') {
-            $extra = 'warning';
+            $extra = 'label-warning';
             $msg = 'ignored';
         }
     }
 
     if ($device['disabled'] == '1') {
-        $extra = 'default';
+        $extra = 'label-default';
         $msg = 'disabled';
     }
 
