@@ -70,7 +70,7 @@ class DB:
                 else:
                     self.conn = MySQLdb.connect(host=db_server, port=db_port, user=db_username, passwd=db_password, db=db_dbname)
                 break
-            except (AttributeError, MySQLdb.OperationalError):
+            except MySQLdb.OperationalError, e:
                 log.warning('WARNING: MySQL Error, reconnecting.')
                 time.sleep(.5)
 
