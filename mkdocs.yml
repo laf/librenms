@@ -1,4 +1,5 @@
 site_name: LibreNMS Docs
+
 docs_dir: doc
 theme_dir: 'theme_v2'
 theme: null
