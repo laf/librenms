@@ -30,6 +30,8 @@ import sys
 import threading
 import time
 import MySQLdb
+import MySQLdb.cursors
+import MySQLdb.converters
 import logging
 import logging.handlers
 from datetime import datetime, timedelta
