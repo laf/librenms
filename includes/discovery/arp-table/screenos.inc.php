@@ -1,8 +1,9 @@
 <?php
 /**
- * Configuration.php
+ * screenos.inc.php
  *
- * Checks various config settings are correct.
+ * Juniper ScreenOS arp table support
+ * Has a buggy implementation of ipNetToMediaPhysAddress
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,28 +20,20 @@
  *
  * @package    LibreNMS
  * @link       http://librenms.org
- * @copyright  2017 Tony Murray
+ * @copyright  2018 Tony Murray
  * @author     Tony Murray <murraytony@gmail.com>
  */
 
-namespace LibreNMS\Validations;
+// collect arp data
+$nsIpArpTable = snmpwalk_group($device, 'nsIpArpTable', 'NETSCREEN-IP-ARP-MIB');
 
-use LibreNMS\Config;
-use LibreNMS\Validator;
+if (!empty($nsIpArpTable)) {
+    // get internal id to ifIndex map
+    $nsIfInfo = snmpwalk_group($device, 'nsIfInfo', 'NETSCREEN-INTERFACE-MIB', 0);
+    $nsIfInfo = array_flip($nsIfInfo['nsIfInfo']);
+}
 
-class Configuration extends BaseValidation
-{
-    /**
-     * Validate this module.
-     * To return ValidationResults, call ok, warn, fail, or result methods on the $validator
-     *
-     * @param Validator $validator
-     */
-    public function validate(Validator $validator)
-    {
-        // Test transports
-        if (Config::get('alerts.email.enable') == true) {
-            $validator->warn('You have the old alerting system enabled - this is to be deprecated on the 1st of June 2015: https://groups.google.com/forum/#!topic/librenms-project/1llxos4m0p4');
-        }
-    }
+foreach ($nsIpArpTable as $data) {
+    $ifIndex = $nsIfInfo[$data['nsIpArpIfIdx']];
+    $arp_data[$ifIndex]['ipNetToMediaPhysAddress'][$data['nsIpArpIp']] = $data['nsIpArpMac'];
 }

@@ -1,8 +1,8 @@
 <?php
 /**
- * Configuration.php
+ * InvalideModuleException.php
  *
- * Checks various config settings are correct.
+ * Thrown when the given name isn't a valid discovery or poller module
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,28 +19,12 @@
  *
  * @package    LibreNMS
  * @link       http://librenms.org
- * @copyright  2017 Tony Murray
+ * @copyright  2018 Tony Murray
  * @author     Tony Murray <murraytony@gmail.com>
  */
 
-namespace LibreNMS\Validations;
+namespace LibreNMS\Exceptions;
 
-use LibreNMS\Config;
-use LibreNMS\Validator;
-
-class Configuration extends BaseValidation
+class InvalidModuleException extends \Exception
 {
-    /**
-     * Validate this module.
-     * To return ValidationResults, call ok, warn, fail, or result methods on the $validator
-     *
-     * @param Validator $validator
-     */
-    public function validate(Validator $validator)
-    {
-        // Test transports
-        if (Config::get('alerts.email.enable') == true) {
-            $validator->warn('You have the old alerting system enabled - this is to be deprecated on the 1st of June 2015: https://groups.google.com/forum/#!topic/librenms-project/1llxos4m0p4');
-        }
-    }
 }
