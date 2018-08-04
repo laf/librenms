@@ -34,41 +34,22 @@ use LibreNMS\Proc;
  * @param bool $dual_process start an additional process that's output should be read after every command
  * @return bool the process(s) have been successfully started
  */
-function rrdtool_initialize($dual_process = true)
+function rrdtool_initialize()
 {
-    global $config, $rrd_sync_process, $rrd_async_process;
+    global $rrd_sync_process;
 
-    $command = $config['rrdtool'] . ' -';
-
-    $descriptor_spec = array(
-        0 => array('pipe', 'r'), // stdin  is a pipe that the child will read from
-        1 => array('pipe', 'w'), // stdout is a pipe that the child will write to
-        2 => array('pipe', 'w'), // stderr is a pipe that the child will write to
-    );
-
-    $cwd = $config['rrd_dir'];
-
-    if (!rrdtool_running($rrd_sync_process)) {
-        $rrd_sync_process = new Proc($command, $descriptor_spec, $cwd);
+    if (!$rrd_sync_process) {
+        //$rrd_sync_process = fsockopen('127.0.0.1', '1337', $errno, $errstr, 30);
+        $rrd_sync_process = fsockopen("unix:///run/rrdcached.sock");
+        if (!$rrd_sync_process) {
+            echo "RRD ERROR: $errstr ($errno)<br />\n";
+            exit;
+        } else {
+            fputs($rrd_sync_process, 'BATCH');
+        }
     }
 
-    if ($dual_process && !rrdtool_running($rrd_async_process)) {
-        $rrd_async_process = new Proc($command, $descriptor_spec, $cwd);
-        $rrd_async_process->setSynchronous(false);
-    }
-
-    return rrdtool_running($rrd_sync_process) && ($dual_process ? rrdtool_running($rrd_async_process) : true);
-}
-
-/**
- * Checks if the variable is a running rrdtool process
- *
- * @param $process
- * @return bool
- */
-function rrdtool_running(&$process)
-{
-    return isset($process) && $process instanceof Proc && $process->isRunning();
+    return $rrd_sync_process;
 }
 
 /**
@@ -77,16 +58,11 @@ function rrdtool_running(&$process)
  */
 function rrdtool_close()
 {
-    global $rrd_sync_process, $rrd_async_process;
+    global $rrd_sync_process;
     /** @var Proc $rrd_sync_process */
-    /** @var Proc $rrd_async_process */
 
-    if (rrdtool_running($rrd_sync_process)) {
-        $rrd_sync_process->close('quit');
-    }
-    if (rrdtool_running($rrd_async_process)) {
-        $rrd_async_process->close('quit');
-    }
+    fputs($rrd_sync_process, '.');
+    fclose($rrd_sync_process);
 }
 
 /**
@@ -105,7 +81,7 @@ function rrdtool_graph($graph_file, $options)
     if (rrdtool_initialize(false)) {
         $cmd = rrdtool_build_command('graph', $graph_file, $options);
 
-        $output = implode($rrd_sync_process->sendCommand($cmd));
+        $output = sendCommand($cmd);
 
         if ($debug) {
             echo "<p>$cmd</p>";
@@ -132,9 +108,8 @@ function rrdtool_graph($graph_file, $options)
  */
 function rrdtool($command, $filename, $options)
 {
-    global $config, $debug, $vdebug, $rrd_async_process, $rrd_sync_process;
+    global $config, $debug, $vdebug;
     /** @var Proc $rrd_sync_process */
-    /** @var Proc $rrd_async_process */
 
     $start_time = microtime(true);
 
@@ -155,12 +130,8 @@ function rrdtool($command, $filename, $options)
     }
 
     // send the command!
-    if ($command == 'last' && rrdtool_initialize(false)) {
-        // send this to our synchronous process so output is guaranteed
-        $output = $rrd_sync_process->sendCommand($cmd);
-    } elseif (rrdtool_initialize()) {
-        // don't care about the return of other commands, so send them to the faster async process
-        $output = $rrd_async_process->sendCommand($cmd);
+    if (rrdtool_initialize()) {
+        $output = sendCommand($cmd);
     } else {
         throw new Exception('rrdtool could not start');
     }
@@ -172,6 +143,18 @@ function rrdtool($command, $filename, $options)
     }
 
     recordRrdStatistic($command, $start_time);
+    return $output;
+}
+
+function sendCommand($command)
+{
+    global $rrd_sync_process;
+
+    fputs($rrd_sync_process, $command);
+    //return fgets($rrd_sync_process, 1024);
+    //while (!feof($rrd_sync_process)) {
+    //    $output .= fgets($rrd_sync_process, 128);
+    //}
     return $output;
 }
 
@@ -212,7 +195,6 @@ function rrdtool_build_command($command, $filename, $options)
         $filename = str_replace(array($config['rrd_dir'].'/', $config['rrd_dir']), '', $filename);
         $options = str_replace(array($config['rrd_dir'].'/', $config['rrd_dir']), '', $options);
 
-        return "$command $filename $options --daemon " . $config['rrdcached'];
     }
 
     return "$command $filename $options";
