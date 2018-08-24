@@ -39,8 +39,8 @@ function rrdtool_initialize()
     global $rrd_sync_process;
 
     if (!$rrd_sync_process) {
-        //$rrd_sync_process = fsockopen('127.0.0.1', '1337', $errno, $errstr, 30);
-        $rrd_sync_process = fsockopen("unix:///run/rrdcached.sock");
+        $rrd_sync_process = fsockopen('127.0.0.1', '1337', $errno, $errstr, 30);
+        //$rrd_sync_process = fsockopen("unix:///run/rrdcached.sock");
         if (!$rrd_sync_process) {
             echo "RRD ERROR: $errstr ($errno)<br />\n";
             exit;
@@ -152,9 +152,12 @@ function sendCommand($command)
 
     fputs($rrd_sync_process, $command);
     //return fgets($rrd_sync_process, 1024);
-    //while (!feof($rrd_sync_process)) {
+    //var_dump($rrd_sync_process);
+    //var_dump(fgets($rrd_sync_process, 1024));
+    while (!feof($rrd_sync_process)) {
     //    $output .= fgets($rrd_sync_process, 128);
-    //}
+        echo $output.PHP_EOL;
+    }
     return $output;
 }
 
@@ -234,7 +237,7 @@ function rrdtool_update($filename, $data)
     // Do some sanitation on the data if passed as an array.
 
     if (is_array($data)) {
-        $values[] = 'N';
+        $values[] = time();
         foreach ($data as $v) {
             if (!is_numeric($v)) {
                 $v = 'U';
