@@ -56,7 +56,11 @@ if (!function_exists('module_selected')) {
 
 // function only files
 require_once $install_dir . '/includes/dbFacile.php';
-require_once $install_dir . '/includes/rrdtool.inc.php';
+if (module_selected('polling', $init_modules)) {
+    require_once $install_dir . '/includes/rrdtool-batch.inc.php';
+} else {
+    require_once $install_dir . '/includes/rrdtool.inc.php';
+}
 require_once $install_dir . '/includes/influxdb.inc.php';
 require_once $install_dir . '/includes/prometheus.inc.php';
 require_once $install_dir . '/includes/opentsdb.inc.php';
