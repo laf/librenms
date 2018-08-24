@@ -40,6 +40,7 @@ function rrdtool_initialize()
 
     if (!$rrd_sync_process) {
         $rrd_sync_process = fsockopen('127.0.0.1', '1337', $errno, $errstr, 30);
+        //$rrd_sync_process = fsockopen("unix:///run/rrdcached.sock");
         socket_set_blocking($rrd_sync_process,false);
         if (!$rrd_sync_process) {
             echo "RRD ERROR: $errstr ($errno)<br />\n";
