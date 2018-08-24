@@ -238,6 +238,11 @@ class ModuleTestHelper
             // calculate valid modules
             $data_modules = array_keys(json_decode(file_get_contents($file), true));
 
+            if (json_last_error()) {
+                echo "Invalid json data: $base_name\n";
+                exit(1);
+            }
+
             if (empty($modules)) {
                 $valid_modules = $data_modules;
             } else {
@@ -515,7 +520,7 @@ class ModuleTestHelper
         $save_vedbug = $vdebug;
         if ($this->quiet) {
             $debug = true;
-            $vdebug = false;
+            $vdebug = true;
         }
         ob_start();
 
@@ -543,7 +548,7 @@ class ModuleTestHelper
         // Run the poller
         if ($this->quiet) {
             $debug = true;
-            $vdebug = false;
+            $vdebug = true;
         }
         ob_start();
 

@@ -140,12 +140,7 @@ class CommonFunctionsTest extends TestCase
 
     public function testResolveGlues()
     {
-        if (getenv('DBTEST')) {
-            dbConnect();
-            dbBeginTransaction();
-        } else {
-            $this->markTestSkipped('Database tests not enabled.  Set DBTEST=1 to enable.');
-        }
+        $this->dbSetUp();
 
         $this->assertFalse(ResolveGlues(array('dbSchema'), 'device_id'));
 
@@ -166,9 +161,7 @@ class CommonFunctionsTest extends TestCase
         $expected = array('ipv4_addresses.port_id', 'ports.device_id');
         $this->assertSame($expected, ResolveGlues(array('ipv4_addresses'), 'device_id'));
 
-        if (getenv('DBTEST')) {
-            dbRollbackTransaction();
-        }
+        $this->dbTearDown();
     }
 
     public function testFormatHostname()
@@ -221,5 +214,21 @@ class CommonFunctionsTest extends TestCase
         $this->assertEquals('Testing IP', format_hostname($device_ip));
         $this->assertEquals('Testing IP', format_hostname($device_ip, 'hostname.like'));
         $this->assertEquals('Testing IP', format_hostname($device_ip, '10.10.10.10'));
+    }
+
+    public function testPortAssociation()
+    {
+        $modes = [
+            1 => 'ifIndex',
+            2 => 'ifName',
+            3 => 'ifDescr',
+            4 => 'ifAlias',
+        ];
+
+        $this->assertEquals($modes, get_port_assoc_modes());
+        $this->assertEquals('ifIndex', get_port_assoc_mode_name(1));
+        $this->assertEquals(1, get_port_assoc_mode_id('ifIndex'));
+        $this->assertFalse(get_port_assoc_mode_name(666));
+        $this->assertFalse(get_port_assoc_mode_id('lucifer'));
     }
 }
