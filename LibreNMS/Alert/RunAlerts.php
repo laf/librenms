@@ -572,6 +572,8 @@ class RunAlerts
             }
 
             if (! $noiss) {
+                $tmp_alert = $this->loadAlerts('alerts.id = ' . $alert['alert_id'])[0];
+                $alert['state'] = $tmp_alert['state'];
                 $this->issueAlert($alert);
                 dbUpdate(['alerted' => $alert['state']], 'alerts', 'rule_id = ? && device_id = ?', [$alert['rule_id'], $alert['device_id']]);
             }
