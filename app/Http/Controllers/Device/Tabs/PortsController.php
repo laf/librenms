@@ -310,6 +310,10 @@ class PortsController implements DeviceTab
             $tabs[] = ['name' => __('port.tabs.xdsl'), 'url' => 'xdsl'];
         }
 
+        if ($device->portSecurity()->exists()) {
+            $tabs[] = ['name' => __('port.tabs.portsecurity'), 'url' => 'portsecurity'];
+        }
+
         return $tabs;
     }
 

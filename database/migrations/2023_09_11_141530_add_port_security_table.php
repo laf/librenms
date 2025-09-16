@@ -17,15 +17,14 @@ return new class extends Migration
             $table->id();
             $table->integer('port_id')->unsigned()->default(0)->unique();
             $table->integer('device_id')->unsigned()->default(0)->index();
-            $table->string('cpsIfPortSecurityEnable', 5)->nullable();
-            $table->string('cpsIfPortSecurityStatus', 32)->nullable();
-            $table->integer('cpsIfMaxSecureMacAddr')->nullable();
-            $table->integer('cpsIfCurrentSecureMacAddrCount')->nullable();
-            $table->string('cpsIfViolationAction', 32)->nullable();
-            $table->int('cpsIfViolationCount')->nullable();
-            $table->string('cpsIfSecureLastMacAddress', 20)->nullable();
-            $table->string('cpsIfStickyEnable', 5)->nullable();
-            // $table->integer('cpsIfSecureLastMacAddrVlanId')->nullable();
+            $table->string('port_security_enable', 5)->nullable();
+            $table->string('status', 32)->nullable();
+            $table->integer('max_addresses')->nullable();
+            $table->integer('address_count')->nullable();
+            $table->string('violation_action', 32)->nullable();
+            $table->int('violation_count')->nullable();
+            $table->string('last_mac_address', 20)->nullable();
+            $table->string('sticky_enable', 5)->nullable();
         });
     }
 
