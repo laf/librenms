@@ -206,23 +206,29 @@ readonly class AlertRules
             Log::info(PHP_EOL . 'Status: %gOK%n', ['color' => true]);
         }
 
+        // Grouped "until change" ACKs apply to the whole incident: any add/remove
+        // unacks remaining faults. Per-entity faults are independent, so a sibling
+        // matching or recovering must not lift another entity's ACK.
         if ($added > 0 || $removed > 0) {
-            $acked = AlertFault::query()
-                ->where('rule_id', $rule->id)
-                ->where('device_id', $this->device->device_id)
-                ->where('open', 1)
-                ->where('state', AlertState::ACKNOWLEDGED)
-                ->get();
+            $openCount = AlertUtil::openEntityCountForRuleDevice($rule->id, $this->device->device_id);
+            if (! AlertUtil::shouldNotifyPerEntity($rule, $openCount)) {
+                $acked = AlertFault::query()
+                    ->where('rule_id', $rule->id)
+                    ->where('device_id', $this->device->device_id)
+                    ->where('open', 1)
+                    ->where('state', AlertState::ACKNOWLEDGED)
+                    ->get();
 
-            foreach ($acked as $fault) {
-                $info = is_array($fault->info) ? $fault->info : [];
-                if (filter_var($info['until_clear'] ?? true, FILTER_VALIDATE_BOOLEAN)) {
-                    continue;
+                foreach ($acked as $fault) {
+                    $info = is_array($fault->info) ? $fault->info : [];
+                    if (filter_var($info['until_clear'] ?? true, FILTER_VALIDATE_BOOLEAN)) {
+                        continue;
+                    }
+
+                    $fault->state = AlertState::ACTIVE;
+                    $fault->alerted = 0;
+                    $fault->save();
                 }
-
-                $fault->state = AlertState::ACTIVE;
-                $fault->alerted = 0;
-                $fault->save();
             }
         }
 
