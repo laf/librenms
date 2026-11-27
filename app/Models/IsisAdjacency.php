@@ -71,6 +71,10 @@ class IsisAdjacency extends PortRelatedModel implements Keyable
         'isisISAdjAreaAddress',
         'isisISAdjIPAddrType',
         'isisISAdjIPAddrAddress',
+        'isisCircLevelMetricL1',
+        'isisCircLevelWideMetricL1',
+        'isisCircLevelMetricL2',
+        'isisCircLevelWideMetricL2',
     ];
 
     // ---- Define Relationships ----
